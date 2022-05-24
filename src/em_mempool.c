@@ -3,8 +3,8 @@
 #include "em_mempool.h"
 
 int em_create_mpool_with_mem(em_mpool_t *mp,
-							  int block_num,
 							  int block_size,
+							  int block_num,
 							  em_blockmng_t **block_ptr,
 							  em_blockmng_t *block,
 							  void *rawdata)
@@ -27,13 +27,13 @@ int em_create_mpool_with_mem(em_mpool_t *mp,
 	return 0;
 }
 
-int em_create_mpool(em_mpool_t *mp, int block_num, int block_size)
+int em_create_mpool(em_mpool_t *mp, int block_size, int block_num)
 {
 	em_blockmng_t **block_ptr = (em_blockmng_t **)malloc(sizeof(em_blockmng_t *) * block_num);
 	em_blockmng_t *block = (em_blockmng_t *)malloc(sizeof(em_blockmng_t) * block_num);
 	void *rawdata = malloc(block_size * block_num);
 
-	return em_create_mpool_with_mem(mp, block_num, block_size,
+	return em_create_mpool_with_mem(mp, block_size, block_num,
 									 block_ptr, block, rawdata);
 }
 

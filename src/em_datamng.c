@@ -24,7 +24,7 @@ int em_create_datamng_with_mem(em_datamng_t *dm,
 								void *rawdata,
 								em_blockadd_t *adddata)
 {
-	em_create_mpool_with_mem(&dm->mp, data_num, data_size,
+	em_create_mpool_with_mem(&dm->mp, data_size, data_num,
 							  block_ptr, block, rawdata);
 
 	return _em_init_datamng(dm, adddata);
@@ -34,7 +34,7 @@ int em_create_datamng(em_datamng_t *dm, int data_size, int data_num)
 {
 	em_blockadd_t *adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
 
-	em_create_mpool(&dm->mp, data_num, data_size);
+	em_create_mpool(&dm->mp, data_size, data_num);
 	//dm->adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
 
 	return _em_init_datamng(dm, adddata);

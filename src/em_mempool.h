@@ -19,15 +19,15 @@ typedef struct
 } em_mpool_t;
 
 int em_create_mpool_with_mem(em_mpool_t *mp,
-							  int block_num,
 							  int block_size,
+							  int block_num,
 							  em_blockmng_t **block_ptr,
 							  em_blockmng_t *block,
 							  void *rawdata);
 
 int em_create_mpool(em_mpool_t *mp,
-					 int block_num,
-					 int block_size);
+					 int block_size,
+					 int block_num);
 
 int em_delete_mpool(em_mpool_t *mp);
 
