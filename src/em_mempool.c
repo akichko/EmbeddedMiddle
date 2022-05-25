@@ -96,13 +96,13 @@ int em_free_block_by_dataidx(em_mpool_t *mp, int data_offset)
 		return -1;
 
 	int index = mp->block[data_offset].index_ptr;
-
 	mp->num_used--;
+	int data_offset2 = mp->block_ptr[mp->num_used]->index;
 
-	mp->block[mp->num_used].index_ptr = index;
-	mp->block[data_offset].index_ptr = mp->num_used;
-	mp->block_ptr[index] = &mp->block[mp->num_used];
-	mp->block_ptr[mp->num_used] = &mp->block[data_offset];
+	mp->block[data_offset2].index_ptr = index; //?
+	mp->block[data_offset].index_ptr = mp->num_used; // OK
+	mp->block_ptr[index] = &mp->block[data_offset2]; //?
+	mp->block_ptr[mp->num_used] = &mp->block[data_offset]; //OK
 
 	return 0;
 }
