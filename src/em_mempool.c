@@ -90,19 +90,21 @@ int em_alloc_block(em_mpool_t *mp, void **block_data)
 	return 0;
 }
 
-int em_free_block_by_dataidx(em_mpool_t *mp, int data_offset)
+int em_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 {
-	if (mp->num_used <= 0)
+	int del_index = mp->block[del_offset].index_ptr;
+	if (mp->num_used <= 0 || del_index >= mp->num_used){
+		printf("em_free_block index error\n");
 		return -1;
+	}
 
-	int index = mp->block[data_offset].index_ptr;
 	mp->num_used--;
-	int data_offset2 = mp->block_ptr[mp->num_used]->index;
+	int swap_offset = mp->block_ptr[mp->num_used]->index;
 
-	mp->block[data_offset2].index_ptr = index; //?
-	mp->block[data_offset].index_ptr = mp->num_used; // OK
-	mp->block_ptr[index] = &mp->block[data_offset2]; //?
-	mp->block_ptr[mp->num_used] = &mp->block[data_offset]; //OK
+	mp->block[swap_offset].index_ptr = del_index;
+	mp->block[del_offset].index_ptr = mp->num_used;
+	mp->block_ptr[del_index] = &mp->block[swap_offset];
+	mp->block_ptr[mp->num_used] = &mp->block[del_offset];
 
 	return 0;
 }

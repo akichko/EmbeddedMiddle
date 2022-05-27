@@ -27,9 +27,11 @@ int main()
 	em_print_datamng(&dm);
 
 	ret = em_get_block(&dm, 2, &block);
-	printf("get_block ret:%d id=2\n", ret);
+	printf("get_block id=2 -> ret:%d val=%d\n", ret,
+		   ((em_test_t *)block->data_ptr)->attr1);
+
 	ret = em_get_block(&dm, 5, &block);
-	printf("get_block ret:%d id=5\n", ret);
+	printf("get_block id=5 -> ret:%d\n", ret);
 
 	printf("add id=1\n");
 	em_set_data(&dm, &test_data, 1);

@@ -104,6 +104,7 @@ void *em_malloc(em_memmng_t *mm, int size)
 		}
 	}
 
+	printf("allocation failed\n");
 	return NULL;
 }
 
@@ -111,10 +112,9 @@ int em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
 	int index = (addr - mm->memory) / mm->mem_unit_size;
-
 	printf("free %d (%p)\n", index, addr);
 
-	//空きレコード検索
+	//管理レコード検索
 	em_meminfo_t *meminfo_used;
 	em_meminfo_t *back_meminfo;
 	em_meminfo_t *next_meminfo;
@@ -158,7 +158,7 @@ int em_free(em_memmng_t *mm, void *addr)
 					back_meminfo->mem_length += meminfo_used->mem_length;
 					back_meminfo->mem_length += next_meminfo->mem_length;
 					back_meminfo->next_meminfo = next_meminfo->next_meminfo;
-					next_meminfo->back_meminfo = back_meminfo->back_meminfo;
+					next_meminfo->next_meminfo->back_meminfo = back_meminfo;
 					em_free_block(&mm->mp_free, next_meminfo);
 				}
 			}

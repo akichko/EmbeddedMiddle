@@ -40,7 +40,7 @@ int em_alloc_blockmng(em_mpool_t *mp,
 					   em_blockmng_t **block_mng);
 
 int em_free_block_by_dataidx(em_mpool_t *mp,
-							  int data_offset);
+							  int del_offset);
 
 int em_free_block(em_mpool_t *mp,
 				   void *block_data);

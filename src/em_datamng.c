@@ -17,15 +17,15 @@ static int _em_init_datamng(em_datamng_t *dm, em_blockadd_t *adddata)
 }
 
 int em_create_datamng_with_mem(em_datamng_t *dm,
-								int data_size,
-								int data_num,
-								em_blockmng_t **block_ptr,
-								em_blockmng_t *block,
-								void *rawdata,
-								em_blockadd_t *adddata)
+							   int data_size,
+							   int data_num,
+							   em_blockmng_t **block_ptr,
+							   em_blockmng_t *block,
+							   void *rawdata,
+							   em_blockadd_t *adddata)
 {
 	em_create_mpool_with_mem(&dm->mp, data_size, data_num,
-							  block_ptr, block, rawdata);
+							 block_ptr, block, rawdata);
 
 	return _em_init_datamng(dm, adddata);
 }
@@ -35,7 +35,7 @@ int em_create_datamng(em_datamng_t *dm, int data_size, int data_num)
 	em_blockadd_t *adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
 
 	em_create_mpool(&dm->mp, data_size, data_num);
-	//dm->adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
+	// dm->adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
 
 	return _em_init_datamng(dm, adddata);
 }
@@ -58,7 +58,7 @@ int em_print_datamng(em_datamng_t *dm)
 		{
 			printf("   ");
 		}
-		printf("[%d:%d:%d] ",
+		printf("[%ld:%d:%d] ",
 			   dm->adddata[dm->mp.block_ptr[i]->index].id,
 			   dm->adddata[dm->mp.block_ptr[i]->index].count,
 			   *(int *)(dm->mp.block_ptr[i]->data_ptr));
@@ -68,7 +68,7 @@ int em_print_datamng(em_datamng_t *dm)
 	return 0;
 }
 
-int em_get_block(em_datamng_t *dm, int id, em_blockmng_t **block)
+int em_get_block(em_datamng_t *dm, unsigned long id, em_blockmng_t **block)
 {
 	// em_blockmng_t *tmp_block;
 	int data_index;
@@ -84,7 +84,7 @@ int em_get_block(em_datamng_t *dm, int id, em_blockmng_t **block)
 	return -1;
 }
 
-int em_set_data(em_datamng_t *dm, void *data, int id)
+int em_set_data(em_datamng_t *dm, void *data, unsigned long id)
 {
 	em_blockmng_t *block_tmp;
 	int ret = em_get_block(dm, id, &block_tmp);
@@ -100,7 +100,35 @@ int em_set_data(em_datamng_t *dm, void *data, int id)
 	return 0;
 }
 
-int em_del_block(em_datamng_t *dm, int id)
+void *em_get_data_ptr(em_datamng_t *dm, unsigned long id)
+{
+	em_blockmng_t *block_tmp;
+
+	int ret = em_get_block(dm, id, &block_tmp);
+	if (ret != 0)
+	{
+		return NULL;
+	}
+
+	return block_tmp->data_ptr;
+}
+
+int em_get_data(em_datamng_t *dm, unsigned long id, void *data)
+{
+	//em_blockmng_t *block_tmp;
+	//int ret = em_get_block(dm, id, &block_tmp);
+	void *data_ptr = em_get_data_ptr(dm, id);
+	if (data_ptr == NULL)
+	{
+		return -1;
+	}
+
+	memcpy(data, data_ptr, dm->mp.block_size);
+
+	return 0;
+}
+
+int em_del_block(em_datamng_t *dm, unsigned long id)
 {
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
