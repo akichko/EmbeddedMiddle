@@ -20,6 +20,8 @@ em_tasksetting_t tasklist[] = {
 	{TASK_ID_APP2, 2, 0, thread2},
 	{TASK_ID_APP3, 3, 0, thread1}};
 
+em_taskmng_t tm;
+
 //
 // Main thread.
 //
@@ -29,11 +31,11 @@ int main(int argc, char **argv)
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	ret = em_init_tasks(task_num);
+	ret = em_init_tasks(&tm, task_num);
 
 	for (int i = 0; i < task_num; i++)
 	{
-		ret = em_create_task(tasklist[i]);
+		ret = em_create_task(&tm, tasklist[i]);
 		if (ret)
 		{
 			printf("pthread_create[Thread %d]\n", i);
@@ -43,7 +45,7 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < task_num; i++)
 	{
-		ret = em_delete_task(tasklist[i].task_id);
+		ret = em_delete_task(&tm, tasklist[i].task_id);
 		if (ret != 0)
 		{
 			printf("em_delete_task Error\n");
@@ -60,7 +62,7 @@ int thread1()
 	printf("Thread1 started.\n");
 	int t = 3;
 	sleep(t);
-	printf("Thread1 (task id = %d) ended. %ds\n", em_get_task_id(), t);
+	printf("Thread1 (task id = %d) ended. %ds\n", em_get_task_id(&tm), t);
 
 	return 1;
 }
@@ -72,7 +74,7 @@ int thread2()
 
 	int t = 1;
 	sleep(t);
-	printf("Thread2 (task id = %d) ended. %ds\n", em_get_task_id(), t);
+	printf("Thread2 (task id = %d) ended. %ds\n", em_get_task_id(&tm), t);
 
 	return 2;
 }
