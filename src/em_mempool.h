@@ -1,11 +1,13 @@
 #ifndef __EM_MEMPOOL_H__
 #define __EM_MEMPOOL_H__
 
+#include "em_mutex.h"
+
 typedef struct
 {
-	int index;
-	int index_ptr; // block->index
-	void *data_ptr;
+	int index; //block index
+	int index_ptr; //search index from
+	void *data_ptr; //raw data
 } em_blockmng_t;
 
 typedef struct
@@ -16,6 +18,8 @@ typedef struct
 	em_blockmng_t **block_ptr;
 	em_blockmng_t *block;
 	void *rawdata; //実体
+	em_sem_t sem;
+	em_mutex_t mtx;
 } em_mpool_t;
 
 int em_create_mpool_with_mem(em_mpool_t *mp,

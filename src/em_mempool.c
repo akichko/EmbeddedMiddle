@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "em_mempool.h"
+#include "em_mutex.h"
 
 int em_create_mpool_with_mem(em_mpool_t *mp,
-							  int block_size,
-							  int block_num,
-							  em_blockmng_t **block_ptr,
-							  em_blockmng_t *block,
-							  void *rawdata)
+							 int block_size,
+							 int block_num,
+							 em_blockmng_t **block_ptr,
+							 em_blockmng_t *block,
+							 void *rawdata)
 {
 	mp->num_max = block_num;
 	mp->num_used = 0;
@@ -15,6 +16,8 @@ int em_create_mpool_with_mem(em_mpool_t *mp,
 	mp->block_ptr = block_ptr;
 	mp->block = block;
 	mp->rawdata = rawdata;
+	em_sem_init(&mp->sem, block_num);
+	em_mutex_init(&mp->mtx);
 
 	for (int i = 0; i < mp->num_max; i++)
 	{
@@ -34,7 +37,7 @@ int em_create_mpool(em_mpool_t *mp, int block_size, int block_num)
 	void *rawdata = malloc(block_size * block_num);
 
 	return em_create_mpool_with_mem(mp, block_size, block_num,
-									 block_ptr, block, rawdata);
+									block_ptr, block, rawdata);
 }
 
 int em_delete_mpool(em_mpool_t *mp)
@@ -42,7 +45,8 @@ int em_delete_mpool(em_mpool_t *mp)
 	free(mp->block_ptr);
 	free(mp->block);
 	free(mp->rawdata);
-
+	em_sem_destroy(&mp->sem);
+	em_mutex_destroy(&mp->mtx);
 	return 0;
 }
 
@@ -68,12 +72,19 @@ int em_print_mpool(em_mpool_t *mp)
 
 int em_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
 {
+	// sem wait
+	em_sem_wait(&mp->sem, EM_NO_TIMEOUT);
+	// lock
 	if (mp->num_used >= mp->num_max)
+	{
+		// unlock
 		return -1;
+	}
 
 	*block_mng = mp->block_ptr[mp->num_used];
 	mp->num_used++;
 
+	// unlock
 	return 0;
 }
 
@@ -92,8 +103,11 @@ int em_alloc_block(em_mpool_t *mp, void **block_data)
 
 int em_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 {
+	// lock
 	int del_index = mp->block[del_offset].index_ptr;
-	if (mp->num_used <= 0 || del_index >= mp->num_used){
+	if (mp->num_used <= 0 || del_index >= mp->num_used)
+	{
+		// unlock
 		printf("em_free_block index error\n");
 		return -1;
 	}
@@ -105,6 +119,10 @@ int em_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 	mp->block[del_offset].index_ptr = mp->num_used;
 	mp->block_ptr[del_index] = &mp->block[swap_offset];
 	mp->block_ptr[mp->num_used] = &mp->block[del_offset];
+
+	// unlock
+	// sem_post
+	em_sem_post(&mp->sem);
 
 	return 0;
 }

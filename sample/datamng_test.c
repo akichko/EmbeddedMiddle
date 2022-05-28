@@ -18,10 +18,11 @@ int main()
 	em_create_datamng(&dm, sizeof(em_test_t), 10);
 	em_print_datamng(&dm);
 
-	printf("add id=1,2,3\n");
+	//printf("add id=1,2,3\n");
 	for (int i = 0; i < 3; i++)
 	{
 		test_data.attr1 = i + 10;
+		printf("add id=%d\n", i+1);
 		em_set_data(&dm, &test_data, i + 1);
 	}
 	em_print_datamng(&dm);
