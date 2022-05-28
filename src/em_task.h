@@ -21,7 +21,7 @@ typedef struct
 
 static void *thread_starter(void *func);
 
-int em_init_tasks(em_taskmng_t* tm, int num_max_task);
+int em_init_taskmng(em_taskmng_t* tm, int num_max_task);
 int em_create_task(em_taskmng_t* tm, em_tasksetting_t tasksetting);
 int em_delete_task(em_taskmng_t* tm, em_taskid_t task_id);
 em_taskid_t em_get_task_id(em_taskmng_t* tm);

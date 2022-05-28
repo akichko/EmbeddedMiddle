@@ -17,7 +17,7 @@ int em_create_mpool_with_mem(em_mpool_t *mp,
 	mp->block = block;
 	mp->rawdata = rawdata;
 	em_sem_init(&mp->sem, block_num);
-	em_mutex_init(&mp->mtx);
+	em_mutex_init(&mp->mutex);
 
 	for (int i = 0; i < mp->num_max; i++)
 	{
@@ -46,7 +46,7 @@ int em_delete_mpool(em_mpool_t *mp)
 	free(mp->block);
 	free(mp->rawdata);
 	em_sem_destroy(&mp->sem);
-	em_mutex_destroy(&mp->mtx);
+	em_mutex_destroy(&mp->mutex);
 	return 0;
 }
 
@@ -70,6 +70,7 @@ int em_print_mpool(em_mpool_t *mp)
 	return 0;
 }
 
+//再検討
 int em_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
 {
 	// sem wait

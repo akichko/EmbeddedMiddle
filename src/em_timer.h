@@ -4,13 +4,18 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/timerfd.h>
-#include <bits/types/struct_timespec.h>
 
-struct timespec em_convert_time(int milliseconds);
+struct timespec em_calc_timespec(int milliseconds);
 
 struct timespec em_get_timestamp();
 
 struct timespec em_get_offset_timestamp(int milliseconds);
+
+struct timespec em_timespec_add(struct timespec a, struct timespec b);
+
+struct timespec em_timespec_sub(struct timespec a, struct timespec b);
+
+void em_print_timespec(struct timespec ts);
 
 int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int interval_ms);
 

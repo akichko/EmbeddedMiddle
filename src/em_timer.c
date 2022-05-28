@@ -16,12 +16,47 @@ struct timespec em_get_timestamp()
 	return ts;
 }
 
+struct timespec em_timespec_add(struct timespec a, struct timespec b)
+{
+	struct timespec ret = a;
+
+	ret.tv_sec += b.tv_sec;
+	ret.tv_nsec += b.tv_nsec;
+	if (ret.tv_nsec >= 1000000000)
+	{
+		ret.tv_sec += 1;
+		ret.tv_nsec -= 1000000000;
+	}
+
+	return ret;
+}
+
+struct timespec em_timespec_sub(struct timespec a, struct timespec b)
+{
+	struct timespec ret = a;
+
+	ret.tv_sec -= b.tv_sec;
+	ret.tv_nsec -= b.tv_nsec;
+	if (ret.tv_nsec < 0)
+	{
+		ret.tv_sec -= 1;
+		ret.tv_nsec += 1000000000;
+	}
+
+	return ret;
+}
+
+void em_print_timespec(struct timespec ts)
+{
+	printf("%10ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
+}
+
 struct timespec em_get_offset_timestamp(int milliseconds)
 {
 	struct timespec ts = em_get_timestamp();
 
 	ts.tv_sec += (milliseconds / 1000);
-	ts.tv_nsec = (milliseconds % 1000) * 1000000;
+	ts.tv_nsec += (milliseconds % 1000) * 1000000;
 	if (ts.tv_nsec >= 1000000000)
 	{
 		ts.tv_sec += 1;
@@ -31,7 +66,7 @@ struct timespec em_get_offset_timestamp(int milliseconds)
 	return ts;
 }
 
-struct timespec em_convert_time(int milliseconds)
+struct timespec em_calc_timespec(int milliseconds)
 {
 	struct timespec ts;
 	ts.tv_sec = (milliseconds / 1000);
@@ -44,7 +79,6 @@ int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int inte
 {
 	struct sigevent se;
 	struct itimerspec ts;
-	int status;
 	int ret;
 
 	se.sigev_notify = SIGEV_THREAD;
@@ -52,24 +86,18 @@ int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int inte
 	se.sigev_value.sival_ptr = timer_id;
 	se.sigev_notify_attributes = NULL;
 
-	ts.it_value = em_convert_time(interval_ms);
-	ts.it_interval = em_convert_time(interval_ms);
-	// ts.it_value.tv_sec = (interval_ms / 1000);
-	// ts.it_value.tv_nsec = (interval_ms % 1000) * 1000000;
-	// ts.it_interval.tv_sec = interval_ms / 1000;
-	// ts.it_interval.tv_nsec = (interval_ms % 1000) * 1000000;
+	ts.it_value = em_calc_timespec(interval_ms);
+	ts.it_interval = em_calc_timespec(interval_ms);
 
-	printf("create timer\n");
-
-	status = timer_create(CLOCK_MONOTONIC, &se, timer_id);
-	if (status == -1)
+	ret = timer_create(CLOCK_MONOTONIC, &se, timer_id);
+	if (ret == -1)
 	{
 		printf("Fail to creat timer\n");
 		return -1;
 	}
 
-	status = timer_settime(*timer_id, 0, &ts, 0);
-	if (status == -1)
+	ret = timer_settime(*timer_id, 0, &ts, 0);
+	if (ret == -1)
 	{
 		printf("Fail to set timer\n");
 		return -2;
@@ -87,9 +115,6 @@ int em_timer_delete(timer_t timer_id)
 	{
 		printf("timer delete error!!\n");
 	}
-	else
-	{
-		printf("timer deleted\n");
-	}
+
 	return ret;
 }

@@ -18,7 +18,7 @@ static void *thread_starter(void *func)
 	pthread_exit(ret);
 }
 
-int em_init_tasks(em_taskmng_t* tm, int num_max_task)
+int em_init_taskmng(em_taskmng_t* tm, int num_max_task)
 {
 	em_create_datamng(&tm->task_thread_mng, sizeof(pthread_t), num_max_task);
 	em_create_datamng(&tm->thread_task_mng, sizeof(em_taskid_t), num_max_task);

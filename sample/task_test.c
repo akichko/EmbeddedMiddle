@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	ret = em_init_tasks(&tm, task_num);
+	ret = em_init_taskmng(&tm, task_num);
 
 	for (int i = 0; i < task_num; i++)
 	{

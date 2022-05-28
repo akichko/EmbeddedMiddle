@@ -19,7 +19,7 @@ typedef struct
 	em_blockmng_t *block;
 	void *rawdata; //実体
 	em_sem_t sem;
-	em_mutex_t mtx;
+	em_mutex_t mutex;
 } em_mpool_t;
 
 int em_create_mpool_with_mem(em_mpool_t *mp,
