@@ -15,10 +15,10 @@ typedef struct
 	em_blockadd_t *adddata;
 } em_datamng_t;
 
-static int _em_init_datamng(em_datamng_t *dm,
+static int _em_datamng_init(em_datamng_t *dm,
 							em_blockadd_t *adddata);
 
-int em_create_datamng_with_mem(em_datamng_t *dm,
+int em_datamng_create_with_mem(em_datamng_t *dm,
 							   int data_size,
 							   int data_num,
 							   em_blockmng_t **block_ptr,
@@ -26,30 +26,30 @@ int em_create_datamng_with_mem(em_datamng_t *dm,
 							   void *rawdata,
 							   em_blockadd_t *adddata);
 
-int em_create_datamng(em_datamng_t *dm,
+int em_datamng_create(em_datamng_t *dm,
 					  int data_size,
 					  int data_num);
 
-int em_delete_datamng(em_datamng_t *dm);
+int em_datamng_delete(em_datamng_t *dm);
 
-int em_print_datamng(em_datamng_t *dm);
+int em_datamng_print(em_datamng_t *dm);
 
-int em_get_block(em_datamng_t *dm,
+int em_datamng_get_block(em_datamng_t *dm,
 				 unsigned long id,
 				 em_blockmng_t **block);
 
-int em_set_data(em_datamng_t *dm,
-				void *data,
-				unsigned long id);
-
-void *em_get_data_ptr(em_datamng_t *dm,
-					  unsigned long id);
-
-int em_get_data(em_datamng_t *dm,
+int em_datamng_set_data(em_datamng_t *dm,
 				unsigned long id,
 				void *data);
 
-int em_del_block(em_datamng_t *dm,
+void *em_datamng_get_data_ptr(em_datamng_t *dm,
+					  unsigned long id);
+
+int em_datamng_get_data(em_datamng_t *dm,
+				unsigned long id,
+				void *data);
+
+int em_datamng_del_block(em_datamng_t *dm,
 				 unsigned long id);
 
 #endif //__EM_DATAMNG_H__

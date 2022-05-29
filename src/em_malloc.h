@@ -18,6 +18,7 @@ typedef struct
 {
 	int mem_total_size;
 	int mem_unit_size;
+	int mem_used_bsize;
 	em_mpool_t mp_used;
 	em_mpool_t mp_free;
 	void *memory;

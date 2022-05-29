@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "em_queue.h"
+#include "em_mutex.h"
 
-int em_create_queue_with_mem(em_queue_t *qu,
+int em_queue_create_with_mem(em_queue_t *qu,
 							 int block_size,
 							 int block_num,
 							 void **block_ptr,
@@ -16,6 +17,8 @@ int em_create_queue_with_mem(em_queue_t *qu,
 	qu->rawdata = rawdata;
 	qu->head_ptr = 0;
 	qu->tail_ptr = 0;
+	em_sem_init(&qu->sem, 0);
+	em_mutex_init(&qu->mutex);
 
 	for (int i = 0; i < qu->num_max; i++)
 	{
@@ -25,42 +28,42 @@ int em_create_queue_with_mem(em_queue_t *qu,
 	return 0;
 }
 
-int em_create_queue(em_queue_t *qu,
+int em_queue_create(em_queue_t *qu,
 					int block_size,
 					int block_num)
 {
 	void *rawdata = malloc(block_size * block_num);
 	void **block_ptr = (void **)malloc(sizeof(void *) * block_num);
 
-	return em_create_queue_with_mem(qu, block_size, block_num, block_ptr, rawdata);
+	return em_queue_create_with_mem(qu, block_size, block_num, block_ptr, rawdata);
 }
 
-int em_delete_queue(em_queue_t *qu)
+int em_queue_delete(em_queue_t *qu)
 {
 	free(qu->block_ptr);
 	free(qu->rawdata);
+	em_sem_destroy(&qu->sem);
+	em_mutex_destroy(&qu->mutex);
 
 	return 0;
 }
 
-int em_print_queue(em_queue_t *qu)
+int em_queue_print(em_queue_t *qu)
 {
-	printf("print: %d / %d, bsize=%d head=%d tail=%d\n",
+	printf("print: usage=%d/%d bsize=%d head=%d tail=%d\n",
 		   qu->num_used, qu->num_max,
 		   qu->block_size, qu->head_ptr, qu->tail_ptr);
 
 	return 0;
 }
 
-void *em_get_enqueue_get_dataptr(em_queue_t *qu)
+void *em_enqueue_get_dataptr(em_queue_t *qu)
 {
 	if (qu->num_used >= qu->num_max)
 		return NULL;
 
-	if (qu->head_ptr + 1 < qu->num_max)
-		return qu->block_ptr[qu->head_ptr + 1];
-	else
-		return qu->block_ptr[0];
+	return qu->block_ptr[qu->head_ptr];
+
 }
 
 int em_enqueue_increment(em_queue_t *qu)
@@ -78,16 +81,30 @@ int em_enqueue_increment(em_queue_t *qu)
 	return 0;
 }
 
-int em_enqueue(em_queue_t *qu, void *block_data)
+int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 {
+	int ret;
 	void *tmp;
-	tmp = em_get_enqueue_get_dataptr(qu);
-	if (tmp == NULL)
+	// lock
+	ret = em_mutex_lock(&qu->mutex, timeout_ms);
+	if (ret != 0)
 		return -1;
+
+	tmp = em_enqueue_get_dataptr(qu);
+	if (tmp == NULL)
+	{
+		em_mutex_unlock(&qu->mutex);
+		return -1;
+	}
 
 	memcpy(tmp, block_data, qu->block_size);
 
-	return em_enqueue_increment(qu);
+	ret = em_enqueue_increment(qu);
+	// unlock
+	em_mutex_unlock(&qu->mutex);
+	em_sem_post(&qu->sem);
+
+	return 0;
 }
 
 void *em_dequeue_get_dataptr(em_queue_t *qu)
@@ -95,10 +112,7 @@ void *em_dequeue_get_dataptr(em_queue_t *qu)
 	if (qu->num_used <= 0)
 		return NULL;
 
-	if (qu->tail_ptr + 1 < qu->num_max)
-		return qu->block_ptr[qu->tail_ptr + 1];
-	else
-		return qu->block_ptr[0];
+	return qu->block_ptr[qu->tail_ptr];
 
 }
 
@@ -118,15 +132,36 @@ int em_dequeue_increment(em_queue_t *qu)
 	return 0;
 }
 
-int em_dequeue(em_queue_t *qu, void *block_data)
+int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 {
+	int ret;
 	void *tmp;
+
+	ret = em_sem_wait(&qu->sem, timeout_ms);
+	if (ret != 0)
+	{
+		printf("em_dequeue timeout\n");
+		return -1;
+	}
+	// lock
+	ret = em_mutex_lock(&qu->mutex, timeout_ms);
+	if (ret != 0)
+	{
+		return -1;
+	}
+
 	tmp = em_dequeue_get_dataptr(qu);
 
 	if (tmp == NULL)
+	{
+		em_mutex_unlock(&qu->mutex);
 		return -1;
+	}
 
 	memcpy(block_data, tmp, qu->block_size);
 
-	return em_dequeue_increment(qu);
+	ret = em_dequeue_increment(qu);
+	// unlock
+	em_mutex_unlock(&qu->mutex);
+	return 0;
 }

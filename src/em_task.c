@@ -20,8 +20,8 @@ static void *thread_starter(void *func)
 
 int em_init_taskmng(em_taskmng_t* tm, int num_max_task)
 {
-	em_create_datamng(&tm->task_thread_mng, sizeof(pthread_t), num_max_task);
-	em_create_datamng(&tm->thread_task_mng, sizeof(em_taskid_t), num_max_task);
+	em_datamng_create(&tm->task_thread_mng, sizeof(pthread_t), num_max_task);
+	em_datamng_create(&tm->thread_task_mng, sizeof(em_taskid_t), num_max_task);
 }
 
 int em_create_task(em_taskmng_t* tm, em_tasksetting_t tasksetting)
@@ -41,8 +41,8 @@ int em_create_task(em_taskmng_t* tm, em_tasksetting_t tasksetting)
 	}
 	printf("TaskId %d created. threadId=%ld\n", tasksetting.task_id, thread_id);
 
-	em_set_data(&tm->task_thread_mng, &thread_id, tasksetting.task_id);
-	em_set_data(&tm->thread_task_mng, &tasksetting.task_id, thread_id);
+	em_datamng_set_data(&tm->task_thread_mng, tasksetting.task_id, &thread_id);
+	em_datamng_set_data(&tm->thread_task_mng, thread_id, &tasksetting.task_id);
 
 	return 0;
 }
@@ -54,7 +54,7 @@ int em_delete_task(em_taskmng_t* tm, em_taskid_t task_id)
 
 	void *th_ret;
 
-	ret = em_get_data(&tm->task_thread_mng, task_id, &thread_id);
+	ret = em_datamng_get_data(&tm->task_thread_mng, task_id, &thread_id);
 	if (ret != 0)
 	{
 		printf("task %d not found\n", task_id);
@@ -67,8 +67,8 @@ int em_delete_task(em_taskmng_t* tm, em_taskid_t task_id)
 	if (th_ret != NULL)
 	{
 		free(th_ret); // Free return value memory.
-		em_del_block(&tm->task_thread_mng, task_id);
-		em_del_block(&tm->thread_task_mng, thread_id);
+		em_datamng_del_block(&tm->task_thread_mng, task_id);
+		em_datamng_del_block(&tm->thread_task_mng, thread_id);
 	}
 
 	return 0;
@@ -80,7 +80,7 @@ em_taskid_t em_get_task_id(em_taskmng_t* tm)
 	pthread_t thread_id = pthread_self();
 	em_taskid_t task_id;
 
-	ret = em_get_data(&tm->thread_task_mng, thread_id, &task_id);
+	ret = em_datamng_get_data(&tm->thread_task_mng, thread_id, &task_id);
 	if (ret != 0)
 	{
 		printf("task %d not found\n", task_id);

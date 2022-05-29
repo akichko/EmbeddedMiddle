@@ -3,7 +3,7 @@
 #include "em_mempool.h"
 #include "em_mutex.h"
 
-int em_create_mpool_with_mem(em_mpool_t *mp,
+int em_mpool_create_with_mem(em_mpool_t *mp,
 							 int block_size,
 							 int block_num,
 							 em_blockmng_t **block_ptr,
@@ -30,17 +30,17 @@ int em_create_mpool_with_mem(em_mpool_t *mp,
 	return 0;
 }
 
-int em_create_mpool(em_mpool_t *mp, int block_size, int block_num)
+int em_mpool_create(em_mpool_t *mp, int block_size, int block_num)
 {
 	em_blockmng_t **block_ptr = (em_blockmng_t **)malloc(sizeof(em_blockmng_t *) * block_num);
 	em_blockmng_t *block = (em_blockmng_t *)malloc(sizeof(em_blockmng_t) * block_num);
 	void *rawdata = malloc(block_size * block_num);
 
-	return em_create_mpool_with_mem(mp, block_size, block_num,
+	return em_mpool_create_with_mem(mp, block_size, block_num,
 									block_ptr, block, rawdata);
 }
 
-int em_delete_mpool(em_mpool_t *mp)
+int em_mpool_delete(em_mpool_t *mp)
 {
 	free(mp->block_ptr);
 	free(mp->block);
@@ -50,7 +50,7 @@ int em_delete_mpool(em_mpool_t *mp)
 	return 0;
 }
 
-int em_print_mpool(em_mpool_t *mp)
+int em_mpool_print(em_mpool_t *mp)
 {
 	printf("print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
 
@@ -71,7 +71,7 @@ int em_print_mpool(em_mpool_t *mp)
 }
 
 //再検討
-int em_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
+int em_mpool_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
 {
 	// sem wait
 	em_sem_wait(&mp->sem, EM_NO_TIMEOUT);
@@ -89,10 +89,10 @@ int em_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
 	return 0;
 }
 
-int em_alloc_block(em_mpool_t *mp, void **block_data)
+int em_mpool_alloc_block(em_mpool_t *mp, void **block_data)
 {
 	em_blockmng_t *block_mng;
-	int ret = em_alloc_blockmng(mp, &block_mng);
+	int ret = em_mpool_alloc_blockmng(mp, &block_mng);
 	if (ret != 0)
 	{
 		return -1;
@@ -102,7 +102,7 @@ int em_alloc_block(em_mpool_t *mp, void **block_data)
 	return 0;
 }
 
-int em_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
+int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 {
 	// lock
 	int del_index = mp->block[del_offset].index_ptr;
@@ -128,11 +128,11 @@ int em_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 	return 0;
 }
 
-int em_free_block(em_mpool_t *mp, void *block_data)
+int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 {
 	int data_offset = (block_data - mp->rawdata) / mp->block_size;
 
 	printf("free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 
-	return em_free_block_by_dataidx(mp, data_offset);
+	return em_mpool_free_block_by_dataidx(mp, data_offset);
 }

@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <string.h>
 
 #include "em_datamng.h"
 
-static int _em_init_datamng(em_datamng_t *dm, em_blockadd_t *adddata)
+static int _em_datamng_init(em_datamng_t *dm, em_blockadd_t *adddata)
 {
 	dm->adddata = adddata;
 	for (int i = 0; i < dm->mp.num_max; i++)
@@ -16,7 +17,7 @@ static int _em_init_datamng(em_datamng_t *dm, em_blockadd_t *adddata)
 	return 0;
 }
 
-int em_create_datamng_with_mem(em_datamng_t *dm,
+int em_datamng_create_with_mem(em_datamng_t *dm,
 							   int data_size,
 							   int data_num,
 							   em_blockmng_t **block_ptr,
@@ -24,31 +25,31 @@ int em_create_datamng_with_mem(em_datamng_t *dm,
 							   void *rawdata,
 							   em_blockadd_t *adddata)
 {
-	em_create_mpool_with_mem(&dm->mp, data_size, data_num,
+	em_mpool_create_with_mem(&dm->mp, data_size, data_num,
 							 block_ptr, block, rawdata);
 
-	return _em_init_datamng(dm, adddata);
+	return _em_datamng_init(dm, adddata);
 }
 
-int em_create_datamng(em_datamng_t *dm, int data_size, int data_num)
+int em_datamng_create(em_datamng_t *dm, int data_size, int data_num)
 {
 	em_blockadd_t *adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_num);
 
-	em_create_mpool(&dm->mp, data_size, data_num);
+	em_mpool_create(&dm->mp, data_size, data_num);
 	// dm->adddata = (em_blockadd_t *)malloc(sizeof(em_blockadd_t) * data_size);
 
-	return _em_init_datamng(dm, adddata);
+	return _em_datamng_init(dm, adddata);
 }
 
-int em_delete_datamng(em_datamng_t *dm)
+int em_datamng_delete(em_datamng_t *dm)
 {
-	em_delete_mpool(&dm->mp);
+	em_mpool_delete(&dm->mp);
 	free(dm->adddata);
 
 	return 0;
 }
 
-int em_print_datamng(em_datamng_t *dm)
+int em_datamng_print(em_datamng_t *dm)
 {
 	printf("print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
 
@@ -68,7 +69,7 @@ int em_print_datamng(em_datamng_t *dm)
 	return 0;
 }
 
-int em_get_block(em_datamng_t *dm, unsigned long id, em_blockmng_t **block)
+int em_datamng_get_block(em_datamng_t *dm, unsigned long id, em_blockmng_t **block)
 {
 	// em_blockmng_t *tmp_block;
 	int data_index;
@@ -84,14 +85,14 @@ int em_get_block(em_datamng_t *dm, unsigned long id, em_blockmng_t **block)
 	return -1;
 }
 
-int em_set_data(em_datamng_t *dm, void *data, unsigned long id)
+int em_datamng_set_data(em_datamng_t *dm, unsigned long id, void *data)
 {
 	em_blockmng_t *block_tmp;
-	int ret = em_get_block(dm, id, &block_tmp);
+	int ret = em_datamng_get_block(dm, id, &block_tmp);
 	if (ret != 0)
 	{
 		// em_blockadd_t *adddata;
-		em_alloc_blockmng(&dm->mp, &block_tmp);
+		em_mpool_alloc_blockmng(&dm->mp, &block_tmp);
 		memcpy(block_tmp->data_ptr, data, dm->mp.block_size);
 		dm->adddata[block_tmp->index].id = id;
 	}
@@ -100,11 +101,11 @@ int em_set_data(em_datamng_t *dm, void *data, unsigned long id)
 	return 0;
 }
 
-void *em_get_data_ptr(em_datamng_t *dm, unsigned long id)
+void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 {
 	em_blockmng_t *block_tmp;
 
-	int ret = em_get_block(dm, id, &block_tmp);
+	int ret = em_datamng_get_block(dm, id, &block_tmp);
 	if (ret != 0)
 	{
 		return NULL;
@@ -113,11 +114,11 @@ void *em_get_data_ptr(em_datamng_t *dm, unsigned long id)
 	return block_tmp->data_ptr;
 }
 
-int em_get_data(em_datamng_t *dm, unsigned long id, void *data)
+int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
 {
 	//em_blockmng_t *block_tmp;
-	//int ret = em_get_block(dm, id, &block_tmp);
-	void *data_ptr = em_get_data_ptr(dm, id);
+	//int ret = em_datamng_get_block(dm, id, &block_tmp);
+	void *data_ptr = em_datamng_get_data_ptr(dm, id);
 	if (data_ptr == NULL)
 	{
 		return -1;
@@ -128,7 +129,7 @@ int em_get_data(em_datamng_t *dm, unsigned long id, void *data)
 	return 0;
 }
 
-int em_del_block(em_datamng_t *dm, unsigned long id)
+int em_datamng_del_block(em_datamng_t *dm, unsigned long id)
 {
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
@@ -140,7 +141,7 @@ int em_del_block(em_datamng_t *dm, unsigned long id)
 			if (dm->adddata[data_index].count <= 0)
 			{
 				// dm->adddata[data_index].id = -1;
-				em_free_block_by_dataidx(&dm->mp, data_index);
+				em_mpool_free_block_by_dataidx(&dm->mp, data_index);
 			}
 			return 0;
 		}

@@ -21,12 +21,13 @@ int em_create_memmng(em_memmng_t *mm,
 {
 	mm->mem_total_size = mem_total_size;
 	mm->mem_unit_size = mem_unit_size;
-	em_create_mpool(&mm->mp_used, sizeof(em_meminfo_t), 100);
-	em_create_mpool(&mm->mp_free, sizeof(em_meminfo_t), 100);
+	mm->mem_used_bsize = 0;
+	em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), 100);
+	em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), 100);
 	mm->memory = malloc(mem_total_size);
 
 	em_meminfo_t *initial_meminfo;
-	em_alloc_block(&mm->mp_free, (void **)&initial_meminfo);
+	em_mpool_alloc_block(&mm->mp_free, (void **)&initial_meminfo);
 	em_set_meminfo_t(&mm->first_meminfo, -1, 0, 1, initial_meminfo, NULL);
 	em_set_meminfo_t(&mm->last_meminfo, -2, 0, 1, NULL, initial_meminfo);
 	em_set_meminfo_t(initial_meminfo, 0, mem_total_size / mem_unit_size, 0,
@@ -40,24 +41,26 @@ int em_delete_memmng(em_memmng_t *mm)
 
 int em_print_memmng(em_memmng_t *mm)
 {
-	int total_used = 0;
-	int total_free = 0;
+	int total_used = mm->mem_used_bsize;
+	int total_free = (mm->mem_total_size / mm->mem_unit_size) - mm->mem_used_bsize;
 	em_meminfo_t *meminfo;
 	printf("mem used: ");
 	for (int i = 0; i < mm->mp_used.num_used; i++)
 	{
 		meminfo = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
-		total_used += meminfo->mem_length;
+		//total_used += meminfo->mem_length;
 		printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
 	}
 	printf("\n    free: ");
 	for (int i = 0; i < mm->mp_free.num_used; i++)
 	{
 		meminfo = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
-		total_free += meminfo->mem_length;
+		//total_free += meminfo->mem_length;
 		printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
 	}
-	printf("\n    usage: %.1f%% (%d/%d) \n", total_used * 100.0/total_free, total_used, total_free);
+	printf("\n    usage: %.1f%% (%d/%d) \n",
+		   total_used * 100.0 / total_free,
+		   total_used, total_free);
 	return 0;
 }
 
@@ -79,7 +82,8 @@ void *em_malloc(em_memmng_t *mm, int size)
 		meminfo_free = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
 		if (meminfo_free->mem_length >= length)
 		{
-			em_alloc_block(&mm->mp_used, (void **)&meminfo_used);
+			mm->mem_used_bsize += length;
+			em_mpool_alloc_block(&mm->mp_used, (void **)&meminfo_used);
 			meminfo_used->mem_index = meminfo_free->mem_index;
 			meminfo_used->mem_length = length;
 			meminfo_used->back_meminfo = meminfo_free->back_meminfo;
@@ -90,7 +94,7 @@ void *em_malloc(em_memmng_t *mm, int size)
 			if (meminfo_free->mem_length == length) // meminfo_free削除
 			{
 				meminfo_used->next_meminfo = meminfo_free->next_meminfo;
-				em_free_block(&mm->mp_free, meminfo_free);
+				em_mpool_free_block(&mm->mp_free, meminfo_free);
 			}
 			else
 			{
@@ -131,7 +135,7 @@ int em_free(em_memmng_t *mm, void *addr)
 			{
 				if (next_meminfo->is_used) // free管理レコード追加
 				{
-					em_alloc_block(&mm->mp_free, (void **)&new_meminfo);
+					em_mpool_alloc_block(&mm->mp_free, (void **)&new_meminfo);
 					memcpy(new_meminfo, meminfo_used, sizeof(em_meminfo_t));
 					new_meminfo->is_used = 0;
 					back_meminfo->next_meminfo = new_meminfo;
@@ -159,11 +163,12 @@ int em_free(em_memmng_t *mm, void *addr)
 					back_meminfo->mem_length += next_meminfo->mem_length;
 					back_meminfo->next_meminfo = next_meminfo->next_meminfo;
 					next_meminfo->next_meminfo->back_meminfo = back_meminfo;
-					em_free_block(&mm->mp_free, next_meminfo);
+					em_mpool_free_block(&mm->mp_free, next_meminfo);
 				}
 			}
-			em_free_block(&mm->mp_used, meminfo_used);
+			em_mpool_free_block(&mm->mp_used, meminfo_used);
 
+			mm->mem_used_bsize -= meminfo_used->mem_length;
 			return 0;
 		}
 	}
