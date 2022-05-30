@@ -13,7 +13,7 @@ int main()
 	printf("alloc\n");
 	for (int i = 0; i < 5; i++)
 	{
-		em_mpool_alloc_block(&mp, (void **)&idata[i]);
+		em_mpool_alloc_block(&mp, (void **)&idata[i], 0);
 		*idata[i] = i + 1;
 	}
 	em_mpool_print(&mp);
@@ -27,7 +27,7 @@ int main()
 	printf("alloc2\n");
 	for (int i = 5; i < 10; i++)
 	{
-		em_mpool_alloc_block(&mp, (void **)&idata[i]);
+		em_mpool_alloc_block(&mp, (void **)&idata[i], 0);
 		*idata[i] = i + 1;
 		em_mpool_print(&mp);
 	}
@@ -35,7 +35,7 @@ int main()
 	em_mpool_print(&mp);
 	em_mpool_free_block(&mp, idata[9]);
 	em_mpool_print(&mp);
-	em_mpool_alloc_block(&mp, (void **)&idata[0]);
+	em_mpool_alloc_block(&mp, (void **)&idata[0], 0);
 	*idata[0] = 11;
 	em_mpool_print(&mp);
 

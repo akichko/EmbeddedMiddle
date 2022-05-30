@@ -41,8 +41,8 @@ int em_create_task(em_taskmng_t* tm, em_tasksetting_t tasksetting)
 	}
 	printf("TaskId %d created. threadId=%ld\n", tasksetting.task_id, thread_id);
 
-	em_datamng_set_data(&tm->task_thread_mng, tasksetting.task_id, &thread_id);
-	em_datamng_set_data(&tm->thread_task_mng, thread_id, &tasksetting.task_id);
+	em_datamng_add_data(&tm->task_thread_mng, tasksetting.task_id, &thread_id);
+	em_datamng_add_data(&tm->thread_task_mng, thread_id, &tasksetting.task_id);
 
 	return 0;
 }
@@ -67,8 +67,8 @@ int em_delete_task(em_taskmng_t* tm, em_taskid_t task_id)
 	if (th_ret != NULL)
 	{
 		free(th_ret); // Free return value memory.
-		em_datamng_del_block(&tm->task_thread_mng, task_id);
-		em_datamng_del_block(&tm->thread_task_mng, thread_id);
+		em_datamng_remove_data(&tm->task_thread_mng, task_id);
+		em_datamng_remove_data(&tm->thread_task_mng, thread_id);
 	}
 
 	return 0;

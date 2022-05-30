@@ -6,13 +6,13 @@
 
 int em_mutex_init(em_mutex_t *mutex)
 {
-	mutex->mtx = malloc(sizeof(pthread_mutex_t));
-	pthread_mutex_init((pthread_mutex_t *)mutex->mtx, NULL);
+	//mutex->mtx = malloc(sizeof(pthread_mutex_t));
+	pthread_mutex_init(&mutex->mtx, NULL);
 }
 
 int em_mutex_destroy(em_mutex_t *mutex)
 {
-	pthread_mutex_destroy((pthread_mutex_t *)mutex->mtx);
+	pthread_mutex_destroy(&mutex->mtx);
 }
 
 int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)
@@ -20,13 +20,13 @@ int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)
 	int ret;
 	if (timeout_ms == EM_NO_TIMEOUT)
 	{
-		pthread_mutex_lock((pthread_mutex_t *)mutex->mtx);
+		pthread_mutex_lock(&mutex->mtx);
 	}
 	else
 	{
 		struct timespec ts = em_get_offset_timestamp(timeout_ms);
 
-		ret = pthread_mutex_timedlock((pthread_mutex_t *)mutex->mtx, &ts);
+		ret = pthread_mutex_timedlock(&mutex->mtx, &ts);
 		if (ret != 0)
 		{
 			// printf("Error: em_mutex_lock\n");
@@ -38,5 +38,5 @@ int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)
 
 int em_mutex_unlock(em_mutex_t *mutex)
 {
-	pthread_mutex_unlock((pthread_mutex_t *)mutex->mtx);
+	pthread_mutex_unlock(&mutex->mtx);
 }

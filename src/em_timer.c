@@ -83,6 +83,35 @@ struct timeval em_calc_timeval(int milliseconds)
 
 	return tv;
 }
+
+int em_tick_init(em_timemng_t *tm)
+{
+	struct timespec ts;
+	tm->is_initialized = 0;
+
+	if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+	{
+		printf("Error: em_tick_init\n");
+		return -1;
+	}
+	tm->init_time = ts;
+	tm->is_initialized = 1;
+	return 0;
+}
+
+int em_get_tick_count(em_timemng_t *tm)
+{
+	if (tm->is_initialized == 0)
+	{
+		return -1;
+	}
+
+	struct timespec current_ts = em_get_timestamp();
+	struct timespec ret = em_timespec_sub(current_ts, tm->init_time);
+
+	return ret.tv_sec * 1000 + ret.tv_nsec / 1000000;
+}
+
 int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int interval_ms)
 {
 	struct sigevent se;

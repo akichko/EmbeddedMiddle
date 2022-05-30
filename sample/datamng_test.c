@@ -23,31 +23,31 @@ int main()
 	{
 		test_data.attr1 = i + 10;
 		printf("add id=%d\n", i+1);
-		em_datamng_set_data(&dm, i + 1, &test_data);
+		em_datamng_add_data(&dm, i + 1, &test_data);
 	}
 	em_datamng_print(&dm);
 
-	ret = em_datamng_get_block(&dm, 2, &block);
+	ret = _em_datamng_get_blockinfo(&dm, 2, &block);
 	printf("get_block id=2 -> ret:%d val=%d\n", ret,
 		   ((em_test_t *)block->data_ptr)->attr1);
 
-	ret = em_datamng_get_block(&dm, 5, &block);
+	ret = _em_datamng_get_blockinfo(&dm, 5, &block);
 	printf("get_block id=5 -> ret:%d\n", ret);
 
 	printf("add id=1\n");
-	em_datamng_set_data(&dm, 1, &test_data);
+	em_datamng_add_data(&dm, 1, &test_data);
 	em_datamng_print(&dm);
 
 	printf("del id=2\n");
-	em_datamng_del_block(&dm, 2);
+	em_datamng_remove_data(&dm, 2);
 	em_datamng_print(&dm);
 
 	printf("add id=5\n");
-	em_datamng_set_data(&dm, 5, &test_data);
+	em_datamng_add_data(&dm, 5, &test_data);
 	em_datamng_print(&dm);
 
 	printf("del id=1\n");
-	em_datamng_del_block(&dm, 1);
+	em_datamng_remove_data(&dm, 1);
 	em_datamng_print(&dm);
 
 	em_datamng_delete(&dm);

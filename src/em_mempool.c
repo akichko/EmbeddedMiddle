@@ -70,41 +70,48 @@ int em_mpool_print(em_mpool_t *mp)
 	return 0;
 }
 
-//再検討
-int em_mpool_alloc_blockmng(em_mpool_t *mp, em_blkinfo_t **block_mng)
+// unsafe
+int _em_mpool_alloc_blockmng(em_mpool_t *mp, em_blkinfo_t **block_mng)
 {
-	// sem wait
-	em_sem_wait(&mp->sem, EM_NO_TIMEOUT);
-	// lock
 	if (mp->num_used >= mp->num_max)
 	{
-		// unlock
 		return -1;
 	}
 
 	*block_mng = mp->block_ptr[mp->num_used];
 	mp->num_used++;
 
-	// unlock
 	return 0;
 }
 
-int em_mpool_alloc_block(em_mpool_t *mp, void **block_data)
+int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 {
-	em_blkinfo_t *block_mng;
-	int ret = em_mpool_alloc_blockmng(mp, &block_mng);
-	if (ret != 0)
-	{
+	// lock
+	if (0 != em_sem_wait(&mp->sem, timeout_ms))
 		return -1;
+	if (0 != em_mutex_lock(&mp->mutex, timeout_ms))
+	{
+		em_sem_post(&mp->sem);
+		return -2;
 	}
-	*block_data = block_mng->data_ptr;
 
-	return 0;
+	em_blkinfo_t *block_mng;
+	int ret = -1;
+	ret = _em_mpool_alloc_blockmng(mp, &block_mng);
+	if (ret == 0)
+	{
+		*block_data = block_mng->data_ptr;
+		ret = 0;
+	}
+
+	em_mutex_unlock(&mp->mutex);
+	return ret;
 }
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 {
-	// lock
+	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
+
 	int del_index = mp->block[del_offset].index_ptr;
 	if (mp->num_used <= 0 || del_index >= mp->num_used)
 	{
@@ -121,10 +128,8 @@ int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 	mp->block_ptr[del_index] = &mp->block[swap_offset];
 	mp->block_ptr[mp->num_used] = &mp->block[del_offset];
 
-	// unlock
-	// sem_post
+	em_mutex_unlock(&mp->mutex);
 	em_sem_post(&mp->sem);
-
 	return 0;
 }
 
@@ -134,5 +139,5 @@ int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 
 	printf("free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 
-	return em_mpool_free_block_by_dataidx(mp, data_offset);
+	return em_mpool_free_block_by_dataidx(mp, data_offset); // with lock
 }

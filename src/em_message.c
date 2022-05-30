@@ -24,7 +24,7 @@ int em_msgmng_add_mqueue(em_msgmng_t *mm, int id, int mqueue_length)
 	em_queue_t *qu = &mm->mqueue[mm->mqueue_num_used];
 	em_queue_create(qu, sizeof(em_msg_t), mqueue_length);
 
-	em_datamng_set_data(&mm->taskid_queue_mng, id, (void *)&qu);
+	em_datamng_add_data(&mm->taskid_queue_mng, id, (void *)&qu);
 	mm->mqueue_num_used++;
 }
 

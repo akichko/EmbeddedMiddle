@@ -13,6 +13,7 @@ typedef struct
 {
 	em_mpool_t mp;
 	em_idcnt_t *idcnt;
+	em_mutex_t mutex;
 } em_datamng_t;
 
 static int _em_datamng_init(em_datamng_t *dm,
@@ -34,22 +35,25 @@ int em_datamng_delete(em_datamng_t *dm);
 
 int em_datamng_print(em_datamng_t *dm);
 
-int em_datamng_get_block(em_datamng_t *dm,
-				 unsigned long id,
-				 em_blkinfo_t **block);
+int _em_datamng_get_blockinfo(em_datamng_t *dm,
+							  unsigned long id,
+							  em_blkinfo_t **block);
 
-int em_datamng_set_data(em_datamng_t *dm,
-				unsigned long id,
-				void *data);
+int em_datamng_add_data(em_datamng_t *dm,
+						unsigned long id,
+						void *data);
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm,
-					  unsigned long id);
+void *_em_datamng_get_data_ptr(em_datamng_t *dm,
+							   unsigned long id);
 
 int em_datamng_get_data(em_datamng_t *dm,
-				unsigned long id,
-				void *data);
+						unsigned long id,
+						void *data);
 
-int em_datamng_del_block(em_datamng_t *dm,
-				 unsigned long id);
+int em_datamng_get_data_cnt(em_datamng_t *dm,
+							unsigned long id);
+
+int em_datamng_remove_data(em_datamng_t *dm,
+						   unsigned long id);
 
 #endif //__EM_DATAMNG_H__

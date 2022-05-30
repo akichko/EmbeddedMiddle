@@ -38,9 +38,10 @@ int em_mpool_delete(em_mpool_t *mp);
 int em_mpool_print(em_mpool_t *mp);
 
 int em_mpool_alloc_block(em_mpool_t *mp,
-					void **block_data);
+					void **block_data,
+					int timeout_ms);
 
-int em_mpool_alloc_blockmng(em_mpool_t *mp,
+int _em_mpool_alloc_blockmng(em_mpool_t *mp,
 					   em_blkinfo_t **block_mng);
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp,

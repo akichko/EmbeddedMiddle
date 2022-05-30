@@ -11,14 +11,14 @@
 
 int em_sem_init(em_sem_t *sem, int value)
 {
-	sem->smf = malloc(sizeof(sem_t));
-	return sem_init((sem_t *)sem->smf, 0, value);
+	//sem->smf = malloc(sizeof(sem_t));
+	return sem_init(&sem->smf, 0, value);
 }
 
 int em_sem_destroy(em_sem_t *sem)
 {
-	sem_destroy((sem_t *)sem->smf);
-	free(sem->smf);
+	sem_destroy(&sem->smf);
+	//free(sem->smf);
 	return 0;
 }
 
@@ -26,7 +26,7 @@ int em_sem_wait(em_sem_t *sem, int timeout_ms)
 {
 	if (timeout_ms == EM_NO_TIMEOUT)
 	{
-		return sem_wait((sem_t *)sem->smf);
+		return sem_wait(&sem->smf);
 	}
 	else
 	{
@@ -35,11 +35,11 @@ int em_sem_wait(em_sem_t *sem, int timeout_ms)
 		//	printf("Error: clock_gettime\n");
 		//// ts= em_convert_time(timeout_ms);
 		//ts.tv_sec += timeout_ms / 1000;
-		return sem_timedwait((sem_t *)sem->smf, &ts);
+		return sem_timedwait(&sem->smf, &ts);
 	}
 }
 
 int em_sem_post(em_sem_t *sem)
 {
-	return sem_post((sem_t *)sem->smf);
+	return sem_post(&sem->smf);
 }

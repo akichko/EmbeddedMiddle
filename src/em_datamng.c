@@ -13,6 +13,7 @@ static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
 		dm->idcnt[i].id = -1;
 		dm->idcnt[i].count = 0;
 	}
+	em_mutex_init(&dm->mutex);
 
 	return 0;
 }
@@ -45,6 +46,7 @@ int em_datamng_delete(em_datamng_t *dm)
 {
 	em_mpool_delete(&dm->mp);
 	free(dm->idcnt);
+	em_mutex_destroy(&dm->mutex);
 
 	return 0;
 }
@@ -69,9 +71,10 @@ int em_datamng_print(em_datamng_t *dm)
 	return 0;
 }
 
-int em_datamng_get_block(em_datamng_t *dm, unsigned long id, em_blkinfo_t **block)
+// unsafe
+int _em_datamng_get_blockinfo(em_datamng_t *dm, unsigned long id, em_blkinfo_t **block)
 {
-	// em_blkinfo_t *tmp_block;
+	int ret = -1;
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
 	{
@@ -79,20 +82,21 @@ int em_datamng_get_block(em_datamng_t *dm, unsigned long id, em_blkinfo_t **bloc
 		if (dm->idcnt[data_index].id == id)
 		{
 			*block = dm->mp.block_ptr[i];
-			return 0;
+			ret = 0;
+			break;
 		}
 	}
-	return -1;
+	return ret;
 }
 
-int em_datamng_set_data(em_datamng_t *dm, unsigned long id, void *data)
+int em_datamng_add_data(em_datamng_t *dm, unsigned long id, void *data)
 {
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	em_blkinfo_t *block_tmp;
-	int ret = em_datamng_get_block(dm, id, &block_tmp);
+	int ret = _em_datamng_get_blockinfo(dm, id, &block_tmp);
 	if (ret != 0)
 	{
-		// em_idcnt_t *idcnt;
-		em_mpool_alloc_blockmng(&dm->mp, &block_tmp);
+		_em_mpool_alloc_blockmng(&dm->mp, &block_tmp);
 		memcpy(block_tmp->data_ptr, data, dm->mp.block_size);
 		dm->idcnt[block_tmp->index].id = id;
 		dm->idcnt[block_tmp->index].count = 0;
@@ -100,15 +104,16 @@ int em_datamng_set_data(em_datamng_t *dm, unsigned long id, void *data)
 
 	dm->idcnt[block_tmp->index].count++;
 
+	em_mutex_unlock(&dm->mutex);
 	return 0;
 }
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
+// unsafe
+void *_em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 {
 	em_blkinfo_t *block_tmp;
 
-	int ret = em_datamng_get_block(dm, id, &block_tmp);
-	if (ret != 0)
+	if (0 != _em_datamng_get_blockinfo(dm, id, &block_tmp))
 	{
 		return NULL;
 	}
@@ -118,35 +123,48 @@ void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 
 int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
 {
-	// em_blkinfo_t *block_tmp;
-	// int ret = em_datamng_get_block(dm, id, &block_tmp);
-	void *data_ptr = em_datamng_get_data_ptr(dm, id);
-	if (data_ptr == NULL)
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	int ret = -1;
+
+	void *data_ptr = _em_datamng_get_data_ptr(dm, id);
+	if (data_ptr != NULL)
 	{
-		return -1;
+		memcpy(data, data_ptr, dm->mp.block_size);
+		ret = 0;
 	}
 
-	memcpy(data, data_ptr, dm->mp.block_size);
-
+	em_mutex_unlock(&dm->mutex);
 	return 0;
 }
 
-int em_datamng_del_block(em_datamng_t *dm, unsigned long id)
+int em_datamng_get_data_cnt(em_datamng_t *dm, unsigned long id)
 {
-	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	int ret = -1;
+	em_blkinfo_t *block_tmp;
+	if (0 == _em_datamng_get_blockinfo(dm, id, &block_tmp))
 	{
-		data_index = dm->mp.block_ptr[i]->index;
-		if (dm->idcnt[data_index].id == id)
-		{
-			dm->idcnt[data_index].count--;
-			if (dm->idcnt[data_index].count <= 0)
-			{
-				// dm->idcnt[data_index].id = -1;
-				em_mpool_free_block_by_dataidx(&dm->mp, data_index);
-			}
-			return 0;
-		}
+		ret = dm->idcnt[block_tmp->index].count;
 	}
-	return -1;
+
+	em_mutex_unlock(&dm->mutex);
+	return ret;
+}
+
+int em_datamng_remove_data(em_datamng_t *dm, unsigned long id)
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	int ret = -1;
+	em_blkinfo_t *block_tmp;
+	if (0 == _em_datamng_get_blockinfo(dm, id, &block_tmp))
+	{
+		dm->idcnt[block_tmp->index].count--;
+		if (dm->idcnt[block_tmp->index].count <= 0)
+		{
+			em_mpool_free_block_by_dataidx(&dm->mp, block_tmp->index);
+		}
+		ret = 0;
+	}
+	em_mutex_unlock(&dm->mutex);
+	return ret;
 }
