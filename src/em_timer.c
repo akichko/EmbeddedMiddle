@@ -75,6 +75,14 @@ struct timespec em_calc_timespec(int milliseconds)
 	return ts;
 }
 
+struct timeval em_calc_timeval(int milliseconds)
+{
+	struct timeval tv;
+	tv.tv_sec = (milliseconds / 1000);
+	tv.tv_usec = (milliseconds % 1000) * 1000;
+
+	return tv;
+}
 int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int interval_ms)
 {
 	struct sigevent se;

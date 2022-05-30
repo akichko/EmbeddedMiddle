@@ -11,7 +11,7 @@ typedef struct
 int main()
 {
 	em_datamng_t dm;
-	em_blockmng_t *block;
+	em_blkinfo_t *block;
 	em_test_t test_data = {0, 0, 0};
 	int ret;
 

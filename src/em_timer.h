@@ -7,6 +7,8 @@
 
 struct timespec em_calc_timespec(int milliseconds);
 
+struct timeval em_calc_timeval(int milliseconds);
+
 struct timespec em_get_timestamp();
 
 struct timespec em_get_offset_timestamp(int milliseconds);

@@ -8,15 +8,15 @@ typedef struct
 	int index; //block index
 	int index_ptr; //search index from
 	void *data_ptr; //raw data
-} em_blockmng_t;
+} em_blkinfo_t;
 
 typedef struct
 {
 	int block_size;
 	int num_max;
 	int num_used;
-	em_blockmng_t **block_ptr;
-	em_blockmng_t *block;
+	em_blkinfo_t **block_ptr;
+	em_blkinfo_t *block;
 	void *rawdata; //実体
 	em_sem_t sem;
 	em_mutex_t mutex;
@@ -25,8 +25,8 @@ typedef struct
 int em_mpool_create_with_mem(em_mpool_t *mp,
 							  int block_size,
 							  int block_num,
-							  em_blockmng_t **block_ptr,
-							  em_blockmng_t *block,
+							  em_blkinfo_t **block_ptr,
+							  em_blkinfo_t *block,
 							  void *rawdata);
 
 int em_mpool_create(em_mpool_t *mp,
@@ -41,7 +41,7 @@ int em_mpool_alloc_block(em_mpool_t *mp,
 					void **block_data);
 
 int em_mpool_alloc_blockmng(em_mpool_t *mp,
-					   em_blockmng_t **block_mng);
+					   em_blkinfo_t **block_mng);
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
 							  int del_offset);

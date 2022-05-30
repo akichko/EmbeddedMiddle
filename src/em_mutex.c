@@ -26,11 +26,6 @@ int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)
 	{
 		struct timespec ts = em_get_offset_timestamp(timeout_ms);
 
-		// struct timespec ts;
-		// if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-		//	printf("Error: clock_gettime\n");
-		//// ts= em_convert_time(timeout_ms);
-		// ts.tv_sec += timeout_ms / 1000;
 		ret = pthread_mutex_timedlock((pthread_mutex_t *)mutex->mtx, &ts);
 		if (ret != 0)
 		{

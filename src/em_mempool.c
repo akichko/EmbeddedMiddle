@@ -6,8 +6,8 @@
 int em_mpool_create_with_mem(em_mpool_t *mp,
 							 int block_size,
 							 int block_num,
-							 em_blockmng_t **block_ptr,
-							 em_blockmng_t *block,
+							 em_blkinfo_t **block_ptr,
+							 em_blkinfo_t *block,
 							 void *rawdata)
 {
 	mp->num_max = block_num;
@@ -32,8 +32,8 @@ int em_mpool_create_with_mem(em_mpool_t *mp,
 
 int em_mpool_create(em_mpool_t *mp, int block_size, int block_num)
 {
-	em_blockmng_t **block_ptr = (em_blockmng_t **)malloc(sizeof(em_blockmng_t *) * block_num);
-	em_blockmng_t *block = (em_blockmng_t *)malloc(sizeof(em_blockmng_t) * block_num);
+	em_blkinfo_t **block_ptr = (em_blkinfo_t **)malloc(sizeof(em_blkinfo_t *) * block_num);
+	em_blkinfo_t *block = (em_blkinfo_t *)malloc(sizeof(em_blkinfo_t) * block_num);
 	void *rawdata = malloc(block_size * block_num);
 
 	return em_mpool_create_with_mem(mp, block_size, block_num,
@@ -71,7 +71,7 @@ int em_mpool_print(em_mpool_t *mp)
 }
 
 //再検討
-int em_mpool_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
+int em_mpool_alloc_blockmng(em_mpool_t *mp, em_blkinfo_t **block_mng)
 {
 	// sem wait
 	em_sem_wait(&mp->sem, EM_NO_TIMEOUT);
@@ -91,7 +91,7 @@ int em_mpool_alloc_blockmng(em_mpool_t *mp, em_blockmng_t **block_mng)
 
 int em_mpool_alloc_block(em_mpool_t *mp, void **block_data)
 {
-	em_blockmng_t *block_mng;
+	em_blkinfo_t *block_mng;
 	int ret = em_mpool_alloc_blockmng(mp, &block_mng);
 	if (ret != 0)
 	{

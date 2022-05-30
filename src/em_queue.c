@@ -63,7 +63,6 @@ void *em_enqueue_get_dataptr(em_queue_t *qu)
 		return NULL;
 
 	return qu->block_ptr[qu->head_ptr];
-
 }
 
 int em_enqueue_increment(em_queue_t *qu)
@@ -113,7 +112,6 @@ void *em_dequeue_get_dataptr(em_queue_t *qu)
 		return NULL;
 
 	return qu->block_ptr[qu->tail_ptr];
-
 }
 
 int em_dequeue_increment(em_queue_t *qu)
@@ -147,6 +145,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	ret = em_mutex_lock(&qu->mutex, timeout_ms);
 	if (ret != 0)
 	{
+		em_sem_post(&qu->sem);
 		return -1;
 	}
 
