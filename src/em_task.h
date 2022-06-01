@@ -3,7 +3,7 @@
 
 #include "em_datamng.h"
 #include "em_queue.h"
-#include "em_message.h"
+//#include "em_message.h"
 
 typedef int em_taskid_t;
 
@@ -36,6 +36,18 @@ int em_init_taskmng(em_taskmng_t *tm, int num_max_task);
 int em_create_task(em_taskmng_t *tm, em_tasksetting_t tasksetting);
 int em_delete_task(em_taskmng_t *tm, em_taskid_t task_id);
 em_taskid_t em_get_task_id(em_taskmng_t *tm);
+
+
+//msssage
+
+typedef struct
+{
+	int msg_type;
+	short taskid_to; //削除検討中
+	short taskid_from;
+	int priority; //未対応
+	int data[6];
+} em_msg_t;
 
 em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm,
 								 int taskid);
