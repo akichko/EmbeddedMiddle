@@ -3,6 +3,8 @@
 
 #include "em_mempool.h"
 
+#define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
+
 typedef struct
 {
 	unsigned long id;
@@ -46,6 +48,9 @@ int em_datamng_add_data(em_datamng_t *dm,
 void *_em_datamng_get_data_ptr(em_datamng_t *dm,
 							   unsigned long id);
 
+void *em_datamng_get_data_ptr(em_datamng_t *dm,
+							   unsigned long id);
+
 int em_datamng_get_data(em_datamng_t *dm,
 						unsigned long id,
 						void *data);
@@ -55,5 +60,13 @@ int em_datamng_get_data_cnt(em_datamng_t *dm,
 
 int em_datamng_remove_data(em_datamng_t *dm,
 						   unsigned long id);
+
+unsigned long em_datamng_get_id(em_datamng_t *dm,
+								void *searchdata);
+
+unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
+								void *searchdata,
+								char (*comparator)(void *, void *));
+
 
 #endif //__EM_DATAMNG_H__

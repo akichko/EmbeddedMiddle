@@ -10,7 +10,7 @@ static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
 	dm->idcnt = idcnt;
 	for (int i = 0; i < dm->mp.num_max; i++)
 	{
-		dm->idcnt[i].id = -1;
+		dm->idcnt[i].id = EM_DATAMNG_INVALID_ID;
 		dm->idcnt[i].count = 0;
 	}
 	em_mutex_init(&dm->mutex);
@@ -121,6 +121,15 @@ void *_em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 	return block_tmp->data_ptr;
 }
 
+void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	void *ret = _em_datamng_get_data_ptr(dm, id);
+	em_mutex_unlock(&dm->mutex);
+
+	return ret;
+}
+
 int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
@@ -134,7 +143,7 @@ int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
 	}
 
 	em_mutex_unlock(&dm->mutex);
-	return 0;
+	return ret;
 }
 
 int em_datamng_get_data_cnt(em_datamng_t *dm, unsigned long id)
@@ -165,6 +174,49 @@ int em_datamng_remove_data(em_datamng_t *dm, unsigned long id)
 		}
 		ret = 0;
 	}
+	em_mutex_unlock(&dm->mutex);
+	return ret;
+}
+
+unsigned long em_datamng_get_id(em_datamng_t *dm,
+								void *searchdata)
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	unsigned long ret = EM_DATAMNG_INVALID_ID;
+
+	int data_index;
+	for (int i = 0; i < dm->mp.num_used; i++)
+	{
+		// if (comparator(dm->mp.block_ptr[i]->data_ptr, searchdata))
+		if (0 == memcmp(dm->mp.block_ptr[i]->data_ptr, searchdata, dm->mp.block_size))
+		{
+			ret = dm->idcnt[i].id;
+			break;
+		}
+	}
+
+	em_mutex_unlock(&dm->mutex);
+	return ret;
+}
+
+unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
+										void *searchdata,
+										char (*comparator)(void *, void *))
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	unsigned long ret = EM_DATAMNG_INVALID_ID;
+
+	int data_index;
+	for (int i = 0; i < dm->mp.num_used; i++)
+	{
+		data_index = dm->mp.block_ptr[i]->index;
+		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
+		{
+			ret = dm->idcnt[data_index].id;
+			break;
+		}
+	}
+
 	em_mutex_unlock(&dm->mutex);
 	return ret;
 }

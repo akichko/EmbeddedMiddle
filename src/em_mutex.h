@@ -5,7 +5,9 @@
 #include <semaphore.h>
 
 #define EM_NO_TIMEOUT -1
+#define EM_NO_WAIT 0
 
+//mutex
 typedef struct
 {
 	pthread_mutex_t mtx;
@@ -19,6 +21,8 @@ int em_mutex_lock(em_mutex_t *mutex, int timeout_ms);
 
 int em_mutex_unlock(em_mutex_t *mutex);
 
+
+//semaphore
 typedef struct
 {
 	sem_t smf;

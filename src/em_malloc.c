@@ -67,7 +67,7 @@ int em_print_memmng(em_memmng_t *mm)
 	return 0;
 }
 
-void *em_malloc(em_memmng_t *mm, int size)
+void *em_malloc(em_memmng_t *mm, size_t size)
 {
 	//メモリ単位変換
 	int length = size / mm->mem_unit_size;
@@ -75,7 +75,7 @@ void *em_malloc(em_memmng_t *mm, int size)
 	{
 		length++;
 	}
-	printf("alloc %d (%d)\n", length, size);
+	printf("alloc %d (%ld)\n", length, size);
 
 	//空きレコード検索
 	em_meminfo_t *meminfo_free;

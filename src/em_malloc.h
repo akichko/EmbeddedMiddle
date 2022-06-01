@@ -40,7 +40,7 @@ int em_delete_memmng(em_memmng_t *mm);
 int em_print_memmng(em_memmng_t *mm);
 
 void *em_malloc(em_memmng_t *mm,
-				int size);
+				size_t size);
 
 int em_free(em_memmng_t *mm,
 			void *addr);
