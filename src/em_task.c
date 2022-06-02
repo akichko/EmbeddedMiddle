@@ -76,7 +76,7 @@ int em_delete_task(em_taskmng_t *tm, em_taskid_t task_id)
 	pthread_join(taskinfo.thread_id, &th_ret);
 
 	printf("TaskId %d (id=%ld) stopped. ret=%d \n", task_id, taskinfo.thread_id, *(int *)th_ret);
-	// printf("Thread %d stopped [%d]\n", i, *(int *)th_ret);
+
 	if (th_ret != NULL)
 	{
 		free(th_ret); // Free return value memory.

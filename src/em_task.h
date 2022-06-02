@@ -20,6 +20,7 @@ typedef struct
 typedef struct
 {
 	pthread_t thread_id;
+	char task_name[32];
 	em_queue_t mqueue;
 
 } _em_taskinfo_t;
@@ -43,7 +44,7 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm);
 typedef struct
 {
 	int msg_type;
-	short taskid_to; //削除検討中
+	short taskid_to;
 	short taskid_from;
 	int priority; //未対応
 	int data[6];
