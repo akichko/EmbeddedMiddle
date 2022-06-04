@@ -89,11 +89,8 @@ int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 	// lock
 	if (0 != em_sem_wait(&mp->sem, timeout_ms))
 		return -1;
-	if (0 != em_mutex_lock(&mp->mutex, timeout_ms))
-	{
-		em_sem_post(&mp->sem);
-		return -2;
-	}
+	
+	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
 
 	em_blkinfo_t *block_mng;
 	int ret = -1;

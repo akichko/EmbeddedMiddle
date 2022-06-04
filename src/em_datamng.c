@@ -199,15 +199,40 @@ unsigned long em_datamng_get_id(em_datamng_t *dm,
 	return ret;
 }
 
+// unsafe
+int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
+										 void *searchdata,
+										 char (*comparator)(void *, void *))
+{
+	int data_index;
+	for (int i = 0; i < dm->mp.num_used; i++)
+	{
+		data_index = dm->mp.block_ptr[i]->index;
+		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
+		{
+			return data_index;
+		}
+	}
+
+	return -1;
+}
+
 unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
 										void *searchdata,
 										char (*comparator)(void *, void *))
 {
-	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	unsigned long ret = EM_DATAMNG_INVALID_ID;
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 
-	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
+#if 1
+	int data_index = _em_datamng_get_data_index_by_func(dm, searchdata, comparator);
+	if (data_index >= 0)
+	{
+		ret = dm->idcnt[data_index].id;
+	}
+#else
+	 int data_index;
+	 for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
 		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
@@ -215,6 +240,26 @@ unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
 			ret = dm->idcnt[data_index].id;
 			break;
 		}
+	 }
+#endif
+
+	em_mutex_unlock(&dm->mutex);
+	return ret;
+}
+
+int em_datamng_get_data_by_func(em_datamng_t *dm,
+								void *searchdata,
+								char (*comparator)(void *, void *),
+								void *data)
+{
+	int ret = -1;
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+
+	int data_index = _em_datamng_get_data_index_by_func(dm, searchdata, comparator);
+	if (data_index >= 0)
+	{
+		memcpy(data, dm->mp.block[data_index].data_ptr, dm->mp.block_size);
+		ret = 0;
 	}
 
 	em_mutex_unlock(&dm->mutex);

@@ -49,7 +49,7 @@ void *_em_datamng_get_data_ptr(em_datamng_t *dm,
 							   unsigned long id);
 
 void *em_datamng_get_data_ptr(em_datamng_t *dm,
-							   unsigned long id);
+							  unsigned long id);
 
 int em_datamng_get_data(em_datamng_t *dm,
 						unsigned long id,
@@ -64,9 +64,17 @@ int em_datamng_remove_data(em_datamng_t *dm,
 unsigned long em_datamng_get_id(em_datamng_t *dm,
 								void *searchdata);
 
-unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
-								void *searchdata,
-								char (*comparator)(void *, void *));
+int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
+									   void *searchdata,
+									   char (*comparator)(void *, void *));
 
+unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
+										void *searchdata,
+										char (*comparator)(void *, void *));
+
+int em_datamng_get_data_by_func(em_datamng_t *dm,
+								void *searchdata,
+								char (*comparator)(void *, void *),
+								void *data);
 
 #endif //__EM_DATAMNG_H__

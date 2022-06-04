@@ -3,7 +3,6 @@
 
 #include "em_datamng.h"
 #include "em_queue.h"
-//#include "em_message.h"
 
 typedef int em_taskid_t;
 
@@ -14,6 +13,7 @@ typedef struct
 	int priority;	   //未対応
 	size_t stack_size; // 0: default size
 	int mqueue_size;   //未対応
+	int (*initialize_func)();
 	int (*entry_func)();
 } em_tasksetting_t;
 
@@ -21,25 +21,33 @@ typedef struct
 {
 	pthread_t thread_id;
 	char task_name[32];
-	em_queue_t mqueue;
+	em_queue_t msgqueue;
 
 } _em_taskinfo_t;
 
 typedef struct
 {
 	em_datamng_t taskinfo_mng;
-	// em_datamng_t thread_task_mng; // ThreadId -> TaskId
 } em_taskmng_t;
 
 static void *thread_starter(void *func);
 
-int em_init_taskmng(em_taskmng_t *tm, int num_max_task);
-int em_create_task(em_taskmng_t *tm, em_tasksetting_t tasksetting);
-int em_delete_task(em_taskmng_t *tm, em_taskid_t task_id);
+int em_init_taskmng(em_taskmng_t *tm,
+					int num_max_task);
+int em_task_create_msgqueue(em_taskmng_t *tm,
+								 em_tasksetting_t tasksetting);
+int em_task_initialize_task(em_taskmng_t *tm,
+							em_tasksetting_t tasksetting);
+int em_task_start_task(em_taskmng_t *tm,
+					   em_tasksetting_t tasksetting);
+
+int em_create_task(em_taskmng_t *tm,
+				   em_tasksetting_t tasksetting);
+int em_delete_task(em_taskmng_t *tm,
+				   em_taskid_t task_id);
 em_taskid_t em_get_task_id(em_taskmng_t *tm);
 
-
-//msssage
+// msssage
 
 typedef struct
 {

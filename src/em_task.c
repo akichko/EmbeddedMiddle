@@ -33,6 +33,65 @@ int em_init_taskmng(em_taskmng_t *tm, int num_max_task)
 	// em_datamng_create(&tm->thread_task_mng, sizeof(em_taskid_t), num_max_task);
 }
 
+int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
+{
+	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
+	if (task_info != NULL)
+	{
+		em_queue_create(&task_info->msgqueue, sizeof(em_msg_t), tasksetting.mqueue_size);
+	}
+	else //新規作成
+	{
+		_em_taskinfo_t newtask_info;
+		em_queue_create(&newtask_info.msgqueue, sizeof(em_msg_t), tasksetting.mqueue_size);
+		em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
+	}
+
+	return 0;
+}
+
+int em_task_initialize_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
+{
+	if (tasksetting.initialize_func != NULL)
+	{
+		return tasksetting.initialize_func();
+	}
+
+	return 0;
+}
+
+int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
+{
+	int ret;
+	pthread_attr_t tattr;
+	pthread_t thread_id;
+
+	ret = pthread_attr_init(&tattr);
+	pthread_attr_setstacksize(&tattr, 0);
+	// pthread_setschedprio(&tattr, 0);
+	ret = pthread_create(&thread_id, &tattr, thread_starter, (void *)tasksetting.entry_func);
+	if (ret)
+	{
+		printf("pthread_create[Thread %d]\n", tasksetting.task_id);
+		return -1;
+	}
+	printf("TaskId %d created. threadId=%ld\n", tasksetting.task_id, thread_id);
+
+	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
+	if (task_info != NULL)
+	{
+		task_info->thread_id = thread_id;
+	}
+	else //新規作成
+	{
+		_em_taskinfo_t newtask_info;
+		newtask_info.thread_id = thread_id;
+		em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
+	}
+
+	return 0;
+}
+
 int em_create_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
 	int ret;
@@ -47,11 +106,11 @@ int em_create_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	if (ret)
 	{
 		printf("pthread_create[Thread %d]\n", tasksetting.task_id);
-		exit(1);
+		return -1;
 	}
 	printf("TaskId %d created. threadId=%ld\n", tasksetting.task_id, newtask_info.thread_id);
 
-	em_queue_create(&newtask_info.mqueue, sizeof(em_msg_t), tasksetting.mqueue_size);
+	em_queue_create(&newtask_info.msgqueue, sizeof(em_msg_t), tasksetting.mqueue_size);
 
 	em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
 	// em_datamng_add_data(&tm->task_thread_mng, tasksetting.task_id, &thread_id);
@@ -112,7 +171,7 @@ em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm, int taskid)
 		printf("taskinfo of id %d not found\n", taskid);
 		return NULL;
 	}
-	return &taskinfo->mqueue;
+	return &taskinfo->msgqueue;
 }
 
 int em_task_msg_send(em_taskmng_t *tm, em_msg_t message, int timeout_ms)
