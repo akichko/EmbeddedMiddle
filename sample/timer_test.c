@@ -5,54 +5,94 @@
 #include <sys/timerfd.h>
 #include <time.h>
 
+#include "../src/em_time.h"
 #include "../src/em_timer.h"
 
 em_timemng_t tm;
 
-void timer_func(union sigval arg)
+void timer_func_2(void *arg)
+{
+	printf("func_2 [tid=%ld][%4d] %s\n", pthread_self(), em_get_tick_count(&tm), (char *)arg);
+}
+
+void timer_func_1(void *arg)
 {
 	static struct timespec curTime, lastTime;
 	int tick;
 
 	curTime = em_get_timestamp();
-	tick =  em_get_tick_count(&tm);
+	tick = em_get_tick_count(&tm);
 
 	if (lastTime.tv_sec == 0)
 	{
-		printf("[%6d] Current  = ", tick);
+		printf("func_1 [tid=%ld][%4d] Current  = ", pthread_self(), tick);
 		em_print_timespec(curTime);
 	}
 	else
 	{
-		printf("[%6d] Interval = ", tick);
+		printf("func_1 [tid=%ld][%4d] Interval = ", pthread_self(), tick);
 		em_print_timespec(em_timespec_sub(curTime, lastTime));
 	}
 	lastTime = curTime;
 }
 
+em_timersetting_t timersetting[] = {
+	{100, 1200, timer_func_1, NULL},
+	{200, 900, timer_func_1, NULL},
+	{300, 900, timer_func_2, "test string"}};
+
 int main()
 {
-	timer_t timer_id;
+	em_timermng_t tmrmng;
+	// timer_t timer1_id, timer2_id;
 	int ret;
 	em_tick_init(&tm);
 
-	ret = em_timer_create(&timer_id, timer_func, 1200);
-	if (ret != 0)
+	if (0 != em_timermng_init(&tmrmng, 10))
+	{
+		printf("error\n");
+	}
+
+	if (0 != em_timer_create(&tmrmng, &timersetting[0]))
 	{
 		printf("em_timer_create error!!\n");
 		exit(1);
 	}
-	printf("timer created\n");
+
+	if (0 != em_timer_create(&tmrmng, &timersetting[1]))
+	{
+		printf("em_timer_create error!!\n");
+		exit(1);
+	}
+
+	if (0 != em_timer_create(&tmrmng, &timersetting[2]))
+	{
+		printf("em_timer_create2 error!!\n");
+		exit(1);
+	}
 
 	sleep(7);
 
-	ret = em_timer_delete(timer_id);
-	if (ret != 0)
+	if (0 != em_timer_delete(&tmrmng, timersetting[0].timer_id))
 	{
 		printf("em_timer_delete error!!\n");
 		exit(1);
 	}
-	printf("timer deleted\n");
+	printf("timer1 deleted\n");
+
+	if (0 != em_timer_delete(&tmrmng, timersetting[1].timer_id))
+	{
+		printf("em_timer_delete error!!\n");
+		exit(1);
+	}
+	printf("timer2 deleted\n");
+
+	if (0 != em_timer_delete(&tmrmng, timersetting[2].timer_id))
+	{
+		printf("em_timer_delete error!!\n");
+		exit(1);
+	}
+	printf("timer3 deleted\n");
 
 	return 0;
 }

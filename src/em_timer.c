@@ -10,39 +10,6 @@
 #include "em_timer.h"
 #include "em_datamng.h"
 
-int em_timer_create(timer_t *timer_id, void (*cb_function)(__sigval_t), int interval_ms)
-{
-	// static int no = 1;
-	struct sigevent se;
-	struct itimerspec ts;
-	int ret;
-
-	// se.sigev_signo = no++;
-	se.sigev_notify = SIGEV_THREAD;
-	se.sigev_notify_function = cb_function;
-	se.sigev_value.sival_ptr = timer_id;
-	se.sigev_notify_attributes = NULL;
-
-	ts.it_value = em_calc_timespec(interval_ms);
-	ts.it_interval = em_calc_timespec(interval_ms);
-
-	ret = timer_create(CLOCK_MONOTONIC, &se, timer_id);
-	if (ret == -1)
-	{
-		printf("Fail to creat timer\n");
-		return -1;
-	}
-
-	ret = timer_settime(*timer_id, 0, &ts, 0);
-	if (ret == -1)
-	{
-		printf("Fail to set timer\n");
-		return -2;
-	}
-
-	return 0;
-}
-
 int em_timermng_init(em_timermng_t *tmrmng, int num_timer)
 {
 	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer);
@@ -55,7 +22,7 @@ void _em_timer_cbfunc(__sigval_t sigval)
 	timersetting->timer_func(timersetting->arg);
 }
 
-int em_timer_create2(em_timermng_t *tmrmng, em_timersetting_t *setting)
+int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 {
 	timer_t timer_id;
 	int ret;
@@ -93,24 +60,11 @@ int em_timer_create2(em_timermng_t *tmrmng, em_timersetting_t *setting)
 		return -2;
 	}
 
-	printf("timer created. id=%p\n", timer_id);
+	printf("timer created. id=%d\n", setting->timer_id);
 	return 0;
 }
 
-int em_timer_delete(timer_t timer_id)
-{
-	int ret;
-
-	ret = timer_delete(timer_id);
-	if (ret != 0)
-	{
-		printf("timer delete error!!\n");
-	}
-
-	return ret;
-}
-
-int em_timer_delete2(em_timermng_t *tmrmng, int timer_id)
+int em_timer_delete(em_timermng_t *tmrmng, int timer_id)
 {
 	int ret;
 	em_timerinfo_t timer_info;
