@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <signal.h>
 #include "em_mutex.h"
+#include "em_time.h"
 #include "em_timer.h"
 
 int em_sem_init(em_sem_t *sem, int value)

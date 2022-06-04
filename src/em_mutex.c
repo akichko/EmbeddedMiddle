@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "em_mutex.h"
+#include "em_time.h"
 #include "em_timer.h"
 #include "em_code.h"
 

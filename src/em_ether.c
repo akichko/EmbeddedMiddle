@@ -4,6 +4,7 @@
 #include <sys/select.h>
 #include "em_ether.h"
 #include "em_queue.h"
+#include "em_time.h"
 #include "em_timer.h"
 
 int em_udp_tx_init(em_socket_t *sk, char *dest_ip, uint16_t dest_port, int queue_size)
