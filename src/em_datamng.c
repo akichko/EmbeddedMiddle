@@ -96,16 +96,27 @@ int em_datamng_add_data(em_datamng_t *dm, unsigned long id, void *data)
 	int ret = _em_datamng_get_blockinfo(dm, id, &block_tmp);
 	if (ret != 0)
 	{
-		_em_mpool_alloc_blockmng(&dm->mp, &block_tmp);
-		memcpy(block_tmp->data_ptr, data, dm->mp.block_size);
-		dm->idcnt[block_tmp->index].id = id;
-		dm->idcnt[block_tmp->index].count = 0;
+		if (0 != _em_mpool_alloc_blockmng(&dm->mp, &block_tmp))
+		{
+			ret = -1;
+			//printf("add data error\n");
+		}
+		else
+		{
+			memcpy(block_tmp->data_ptr, data, dm->mp.block_size);
+			dm->idcnt[block_tmp->index].id = id;
+			dm->idcnt[block_tmp->index].count = 0;
+			dm->idcnt[block_tmp->index].count++;
+			ret = 0;
+		}
+	}
+	else
+	{
+		dm->idcnt[block_tmp->index].count++;
 	}
 
-	dm->idcnt[block_tmp->index].count++;
-
 	em_mutex_unlock(&dm->mutex);
-	return 0;
+	return ret;
 }
 
 // unsafe
@@ -201,8 +212,8 @@ unsigned long em_datamng_get_id(em_datamng_t *dm,
 
 // unsafe
 int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
-										 void *searchdata,
-										 char (*comparator)(void *, void *))
+									   void *searchdata,
+									   char (*comparator)(void *, void *))
 {
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
@@ -231,8 +242,8 @@ unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
 		ret = dm->idcnt[data_index].id;
 	}
 #else
-	 int data_index;
-	 for (int i = 0; i < dm->mp.num_used; i++)
+	int data_index;
+	for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
 		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
@@ -240,7 +251,7 @@ unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
 			ret = dm->idcnt[data_index].id;
 			break;
 		}
-	 }
+	}
 #endif
 
 	em_mutex_unlock(&dm->mutex);
