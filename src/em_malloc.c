@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <stdlib.h>
+#include <math.h>
 #include "em_malloc.h"
 
 int em_set_meminfo_t(em_meminfo_t *minfo,
@@ -15,16 +16,26 @@ int em_set_meminfo_t(em_meminfo_t *minfo,
 	minfo->back_meminfo = back_meminfo;
 }
 
-int em_create_memmng(em_memmng_t *mm,
+int em_memmng_create(em_memmng_t *mm,
 					 int mem_total_size,
 					 int mem_unit_size)
 {
+	// mem_unit_sizeが２の階乗
+	if (mem_unit_size <= 0 || (mem_unit_size & (mem_unit_size - 1) != 0))
+	{
+		printf("Error: mem_unit_size shoud be 2 ^ x\n");
+		return -1;
+	}
+
 	mm->mem_total_size = mem_total_size;
 	mm->mem_unit_size = mem_unit_size;
+	mm->mem_unit_bshift = log2((double)mem_unit_size);
 	mm->mem_used_bsize = 0;
 	em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), 100);
 	em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), 100);
 	mm->memory = malloc(mem_total_size);
+	mm->minfo_ptr = (em_meminfo_t **)malloc(sizeof(em_meminfo_t *) * mem_total_size / mem_unit_size);
+	em_mutex_init(&mm->mutex);
 
 	em_meminfo_t *initial_meminfo;
 	if (0 != em_mpool_alloc_block(&mm->mp_free, (void **)&initial_meminfo, 0))
@@ -37,15 +48,19 @@ int em_create_memmng(em_memmng_t *mm,
 					 &mm->last_meminfo, &mm->first_meminfo);
 }
 
-int em_delete_memmng(em_memmng_t *mm)
+int em_memmng_delete(em_memmng_t *mm)
 {
+	free(mm->memory);
+	free(mm->minfo_ptr);
+	em_mutex_destroy(&mm->mutex);
+
 	return 0;
 }
 
-int em_print_memmng(em_memmng_t *mm)
+int em_memmng_print(em_memmng_t *mm)
 {
 	int total_used = mm->mem_used_bsize;
-	int total_free = (mm->mem_total_size / mm->mem_unit_size) - mm->mem_used_bsize;
+	int total_free = (mm->mem_total_size >> mm->mem_unit_bshift) - mm->mem_used_bsize;
 	em_meminfo_t *meminfo;
 	printf("mem used: ");
 	for (int i = 0; i < mm->mp_used.num_used; i++)
@@ -69,119 +84,127 @@ int em_print_memmng(em_memmng_t *mm)
 
 void *em_malloc(em_memmng_t *mm, size_t size)
 {
+	em_mutex_lock(&mm->mutex, EM_NO_TIMEOUT);
 	//メモリ単位変換
-	int length = size / mm->mem_unit_size;
-	if (size % mm->mem_unit_size != 0)
+	int blength = size >> mm->mem_unit_bshift;
+	if ((size & (mm->mem_unit_size - 1)) != 0)
 	{
-		length++;
+		blength++;
 	}
-	printf("alloc %d (%ld)\n", length, size);
+	printf("alloc %d (%ld)\n", blength, size);
 
 	//空きレコード検索
 	em_meminfo_t *meminfo_free;
-	em_meminfo_t *meminfo_used;
+	em_meminfo_t *meminfo_new;
 	for (int i = mm->mp_free.num_used - 1; i >= 0; i--)
 	{
 		meminfo_free = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
-		if (meminfo_free->mem_length >= length)
+		if (meminfo_free->mem_length >= blength)
 		{
-			mm->mem_used_bsize += length;
-			if (0 != em_mpool_alloc_block(&mm->mp_used, (void **)&meminfo_used, 0))
+			mm->mem_used_bsize += blength;
+			if (0 != em_mpool_alloc_block(&mm->mp_used, (void **)&meminfo_new, 0))
 			{
 				printf("error!\n");
 				break;
 			}
-			meminfo_used->mem_index = meminfo_free->mem_index;
-			meminfo_used->mem_length = length;
-			meminfo_used->back_meminfo = meminfo_free->back_meminfo;
-			meminfo_used->is_used = 1;
-			meminfo_free->back_meminfo->next_meminfo = meminfo_used;
+			meminfo_new->mem_index = meminfo_free->mem_index;
+			meminfo_new->mem_length = blength;
+			meminfo_new->back_meminfo = meminfo_free->back_meminfo;
+			meminfo_new->is_used = 1;
+			meminfo_free->back_meminfo->next_meminfo = meminfo_new;
 
 			//レコード組み換え
-			if (meminfo_free->mem_length == length) // meminfo_free削除
+			if (meminfo_free->mem_length == blength) // meminfo_free削除
 			{
-				meminfo_used->next_meminfo = meminfo_free->next_meminfo;
+				meminfo_new->next_meminfo = meminfo_free->next_meminfo;
 				em_mpool_free_block(&mm->mp_free, meminfo_free);
 			}
 			else
 			{
-				meminfo_used->next_meminfo = meminfo_free;
-				meminfo_free->mem_index += length;
-				meminfo_free->mem_length -= length;
-				meminfo_free->back_meminfo = meminfo_used;
+				meminfo_new->next_meminfo = meminfo_free;
+				meminfo_free->mem_index += blength;
+				meminfo_free->mem_length -= blength;
+				meminfo_free->back_meminfo = meminfo_new;
 			}
 
-			return mm->memory + meminfo_used->mem_index * mm->mem_unit_size;
+			mm->minfo_ptr[meminfo_new->mem_index] = meminfo_new;
+
+			em_mutex_unlock(&mm->mutex);
+			return mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
 		}
 	}
 
 	printf("allocation failed\n");
+	em_mutex_unlock(&mm->mutex);
 	return NULL;
 }
 
-int em_free(em_memmng_t *mm, void *addr)
+void em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
-	int index = (addr - mm->memory) / mm->mem_unit_size;
+	int index = (addr - mm->memory) >> mm->mem_unit_bshift;
 	printf("free %d (%p)\n", index, addr);
 
 	//管理レコード検索
-	em_meminfo_t *meminfo_used;
+	// em_meminfo_t *meminfo_del;
 	em_meminfo_t *back_meminfo;
 	em_meminfo_t *next_meminfo;
 	em_meminfo_t *new_meminfo;
-	for (int i = 0; i < mm->mp_used.num_used; i++)
+
+	em_meminfo_t *meminfo_del = (em_meminfo_t *)mm->minfo_ptr[index];
+
+	// for (int i = 0; i < mm->mp_used.num_used; i++)
+	//{
+	//	meminfo_del = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
+	//	if (meminfo_del->mem_index == index)
+	//	{
+	back_meminfo = meminfo_del->back_meminfo;
+	next_meminfo = meminfo_del->next_meminfo;
+
+	if (back_meminfo->is_used)
 	{
-		meminfo_used = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
-		if (meminfo_used->mem_index == index)
+		if (next_meminfo->is_used) // free管理レコード追加
 		{
-			back_meminfo = meminfo_used->back_meminfo;
-			next_meminfo = meminfo_used->next_meminfo;
-
-			if (back_meminfo->is_used)
+			if (0 != em_mpool_alloc_block(&mm->mp_free, (void **)&new_meminfo, 0))
 			{
-				if (next_meminfo->is_used) // free管理レコード追加
-				{
-					if (0 != em_mpool_alloc_block(&mm->mp_free, (void **)&new_meminfo, 0))
-					{
-						printf("error");
-					}
-					memcpy(new_meminfo, meminfo_used, sizeof(em_meminfo_t));
-					new_meminfo->is_used = 0;
-					back_meminfo->next_meminfo = new_meminfo;
-					next_meminfo->back_meminfo = new_meminfo;
-				}
-				else // Nextのfree管理に統合
-				{
-					next_meminfo->mem_index = meminfo_used->mem_index;
-					next_meminfo->mem_length += meminfo_used->mem_length;
-					back_meminfo->next_meminfo = next_meminfo;
-					next_meminfo->back_meminfo = back_meminfo;
-				}
+				printf("error");
 			}
-			else // Backがfree
-			{
-				if (next_meminfo->is_used) // Backのfree管理に統合
-				{
-					back_meminfo->mem_length += meminfo_used->mem_length;
-					back_meminfo->next_meminfo = next_meminfo;
-					next_meminfo->back_meminfo = back_meminfo;
-				}
-				else // Nextも含めBackに統合
-				{
-					back_meminfo->mem_length += meminfo_used->mem_length;
-					back_meminfo->mem_length += next_meminfo->mem_length;
-					back_meminfo->next_meminfo = next_meminfo->next_meminfo;
-					next_meminfo->next_meminfo->back_meminfo = back_meminfo;
-					em_mpool_free_block(&mm->mp_free, next_meminfo);
-				}
-			}
-			em_mpool_free_block(&mm->mp_used, meminfo_used);
-
-			mm->mem_used_bsize -= meminfo_used->mem_length;
-			return 0;
+			memcpy(new_meminfo, meminfo_del, sizeof(em_meminfo_t));
+			new_meminfo->is_used = 0;
+			back_meminfo->next_meminfo = new_meminfo;
+			next_meminfo->back_meminfo = new_meminfo;
+		}
+		else // Nextのfree管理に統合
+		{
+			next_meminfo->mem_index = meminfo_del->mem_index;
+			next_meminfo->mem_length += meminfo_del->mem_length;
+			back_meminfo->next_meminfo = next_meminfo;
+			next_meminfo->back_meminfo = back_meminfo;
 		}
 	}
+	else // Backがfree
+	{
+		if (next_meminfo->is_used) // Backのfree管理に統合
+		{
+			back_meminfo->mem_length += meminfo_del->mem_length;
+			back_meminfo->next_meminfo = next_meminfo;
+			next_meminfo->back_meminfo = back_meminfo;
+		}
+		else // Nextも含めBackに統合
+		{
+			back_meminfo->mem_length += meminfo_del->mem_length;
+			back_meminfo->mem_length += next_meminfo->mem_length;
+			back_meminfo->next_meminfo = next_meminfo->next_meminfo;
+			next_meminfo->next_meminfo->back_meminfo = back_meminfo;
+			em_mpool_free_block(&mm->mp_free, next_meminfo);
+		}
+	}
+	em_mpool_free_block(&mm->mp_used, meminfo_del);
 
-	return -1;
+	mm->mem_used_bsize -= meminfo_del->mem_length;
+	// return 0;
+	//	}
+	// }
+
+	// return -1;
 }

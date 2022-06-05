@@ -38,9 +38,10 @@ int main()
 	int cmdnum = sizeof(testcmdset) / sizeof(em_cmdsetting_t);
 	for (int i = 0; i < cmdnum; i++)
 	{
-		if (0 != em_cmd_register(&cm, &testcmdset[i]))
+		printf("regist command '%s'\n", testcmdset[i].cmd_name);
+		if (0 != em_cmd_regist(&cm, &testcmdset[i]))
 		{
-			printf("resister error\n");
+			printf("regist error\n");
 			// exit(2);
 		}
 	}

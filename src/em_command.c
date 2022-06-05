@@ -12,8 +12,8 @@ int em_cmd_init(em_cmdmng_t *cm, int num_cmd)
 	return 0;
 }
 
-int em_cmd_register(em_cmdmng_t *cm,
-					em_cmdsetting_t *cmdsetting)
+int em_cmd_regist(em_cmdmng_t *cm,
+				  em_cmdsetting_t *cmdsetting)
 {
 	if (0 != em_datamng_add_data(&cm->cmdmng, cmdsetting->cmd_id, cmdsetting))
 	{
@@ -40,6 +40,21 @@ static void *_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname)
 		return NULL;
 	}
 	return cmdsetting.cmd_func;
+}
+
+static int _em_read_until_line_end()
+{
+	char c;
+
+	while (1) // 1単語
+	{
+		c = getchar();
+
+		if (c == '\n')
+		{
+			return 0;
+		}
+	}
 }
 
 static int _em_read_word(char *dst, int max_size)
@@ -82,19 +97,65 @@ static int _em_read_word(char *dst, int max_size)
 	}
 }
 
-static int _em_read_until_line_end()
+static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_word_length)
 {
-	char c;
+	int pos_word = 0;
+	int ret_word;
+	int ret = -1;
 
 	while (1) // 1単語
 	{
-		c = getchar();
+		ret_word = _em_read_word(dst[pos_word], EM_CMD_WORD_LENGTH_MAX);
 
-		if (c == '\n')
+		if (ret_word < 0)
 		{
-			return 0;
+			printf("word length over %d\n", EM_CMD_WORD_LENGTH_MAX);
+			_em_read_until_line_end();
+			break;
+		}
+		else if (ret_word == 0)
+		{
+			if (pos_word >= EM_CMD_WORD_NUM_MAX)
+			{
+				printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
+				_em_read_until_line_end();
+				break;
+			}
+			pos_word++;
+			continue;
+		}
+		else if (ret_word == 1) //最終単語＋改行
+		{
+			if (pos_word >= EM_CMD_WORD_NUM_MAX)
+			{
+				printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
+				if (pos_word > EM_CMD_WORD_NUM_MAX)
+				{
+					_em_read_until_line_end();
+				}
+				break;
+			}
+			pos_word++;
+			ret = 0;
+			break;
+		}
+		else if (ret_word == 2) //空単語＋改行
+		{
+			if (pos_word > 0)
+			{
+				ret = 0;
+			}
+			break;
+		}
+		else
+		{
+			printf("_em_read_line unknown error\n");
+			break;
 		}
 	}
+	*word_num = pos_word;
+
+	return ret;
 }
 
 int em_cmd_start(em_cmdmng_t *cm)
@@ -106,72 +167,13 @@ int em_cmd_start(em_cmdmng_t *cm)
 		cmdstr_ptr[i] = cmdstr[i];
 	}
 
-	char c;
-	while (1) // 1行
+	while (1)
 	{
 		memset(cmdstr, 0, sizeof(cmdstr));
 		int pos_word = 0;
-		int pos_letter = 0;
 		printf("cmd > ");
-		int ret;
-		int exec;
 
-		while (1) // 1単語
-		{
-			exec = 1;
-			ret = _em_read_word(cmdstr[pos_word], EM_CMD_WORD_LENGTH_MAX);
-
-			if (ret < 0)
-			{
-				printf("word length over %d\n", EM_CMD_WORD_LENGTH_MAX);
-				_em_read_until_line_end();
-				exec = 0;
-
-				break;
-			}
-			else if (ret == 0)
-			{
-				if (pos_word >= EM_CMD_WORD_NUM_MAX)
-				{
-					printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
-					_em_read_until_line_end();
-					exec = 0;
-					break;
-				}
-				pos_word++;
-				continue;
-			}
-			else if (ret == 1) //最終単語
-			{
-				if (pos_word >= EM_CMD_WORD_NUM_MAX)
-				{
-					printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
-					if (pos_word > EM_CMD_WORD_NUM_MAX)
-					{
-						_em_read_until_line_end();
-					}
-					exec = 0;
-					break;
-				}
-				pos_word++;
-				break;
-			}
-			else if (ret == 2) //スペース＋改行
-			{
-				if (pos_word == 0)
-				{
-					exec = 0;
-				}
-				break;
-			}
-			else
-			{
-				printf("em_cmd_start unknown error\n");
-				return -1;
-			}
-		}
-
-		if (exec)
+		if (0 == _em_read_line((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
 		{
 			em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
@@ -180,22 +182,13 @@ int em_cmd_start(em_cmdmng_t *cm)
 
 int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 {
-#if 0
-	printf("[%d] ", argc);
-	for (int i = 0; i < argc; i++)
-	{
-		printf("%s ", argv[i]);
-	}
-	printf("\n");
-#endif
-	void (*cmd_func)(int, char **);
-	cmd_func = _em_cmd_get_func_by_cmdname(cm, argv[0]);
+	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
 	if (NULL == cmd_func)
 	{
 		printf("command '%s' not found\n", argv[0]);
+		return -1;
 	}
-	else
-	{
-		cmd_func(argc, argv);
-	}
+
+	cmd_func(argc, argv);
+	return 0;
 }

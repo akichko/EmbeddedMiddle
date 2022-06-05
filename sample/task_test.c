@@ -16,9 +16,9 @@ int thread2(); // Thread Entry function 2
 #define TASK_ID_APP3 300
 
 em_tasksetting_t tasklist[] = {
-	{"App1", TASK_ID_APP1, 1, 0, 5, thread1},
-	{"App2", TASK_ID_APP2, 2, 0, 5, thread2},
-	{"App3", TASK_ID_APP3, 3, 0, 5, thread1}};
+	{"App1", TASK_ID_APP1, 1, 0, 5, NULL, thread1},
+	{"App2", TASK_ID_APP2, 2, 0, 5, NULL, thread2},
+	{"App3", TASK_ID_APP3, 3, 0, 5, NULL, thread1}};
 
 em_taskmng_t tm;
 

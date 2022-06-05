@@ -14,8 +14,8 @@ int send_func();
 int receive_func();
 
 em_tasksetting_t tasklist[] = {
-	{"Receiver", TASK_ID_RECV, 2, 0, 5, receive_func},
-	{"Sender", TASK_ID_SEND, 1, 0, 5, send_func}};
+	{"Receiver", TASK_ID_RECV, 2, 0, 5, NULL, receive_func},
+	{"Sender", TASK_ID_SEND, 1, 0, 5, NULL, send_func}};
 
 em_taskmng_t tm;
 
