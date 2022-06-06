@@ -89,7 +89,7 @@ int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 	// lock
 	if (0 != em_sem_wait(&mp->sem, timeout_ms))
 		return -1;
-	
+
 	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
 
 	em_blkinfo_t *block_mng;
@@ -103,6 +103,13 @@ int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 
 	em_mutex_unlock(&mp->mutex);
 	return ret;
+}
+
+int em_mpool_get_dataidx(em_mpool_t *mp, void *block_data)
+{
+	int data_offset = (block_data - mp->rawdata) / mp->block_size;
+
+	return data_offset;
 }
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)

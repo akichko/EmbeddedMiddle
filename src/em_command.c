@@ -67,7 +67,7 @@ static int _em_read_word(char *dst, int max_size)
 	{
 		c = getchar();
 
-		if (c == ' ')
+		if (c == ' ' || c == '\t')
 		{
 			if (pos_letter > 0)
 			{

@@ -3,6 +3,10 @@
 
 #include "em_mempool.h"
 
+#define EM_DMNG_MODE_ERROR 1
+#define EM_DMNG_MODE_UPDATE 2
+#define EM_DMNG_MODE_COUNTUP 3
+
 #define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
 
 typedef struct
