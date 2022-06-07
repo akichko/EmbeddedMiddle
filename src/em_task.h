@@ -22,51 +22,46 @@ typedef struct
 	pthread_t thread_id;
 	char task_name[32];
 	em_queue_t msgqueue;
+	em_mpool_t msgmpool;
 
 } _em_taskinfo_t;
 
 typedef struct
 {
+	int msgdata_size;
 	em_datamng_t taskinfo_mng;
 } em_taskmng_t;
 
 static void *thread_starter(void *func);
 
 int em_init_taskmng(em_taskmng_t *tm,
-					int num_max_task);
+					int num_max_task,
+					int msgdata_size);
 int em_task_create_msgqueue(em_taskmng_t *tm,
-								 em_tasksetting_t tasksetting);
+							em_tasksetting_t tasksetting);
 int em_task_initialize_task(em_taskmng_t *tm,
 							em_tasksetting_t tasksetting);
 int em_task_start_task(em_taskmng_t *tm,
 					   em_tasksetting_t tasksetting);
 
-int em_create_task(em_taskmng_t *tm,
+int em_task_create(em_taskmng_t *tm,
 				   em_tasksetting_t tasksetting);
-int em_delete_task(em_taskmng_t *tm,
+int em_task_delete(em_taskmng_t *tm,
 				   em_taskid_t task_id);
 em_taskid_t em_get_task_id(em_taskmng_t *tm);
 
 // msssage
 
-typedef struct
-{
-	int msg_type;
-	short taskid_to;
-	short taskid_from;
-	int priority; //未対応
-	int data[6];
-} em_msg_t;
-
 em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm,
 								 int taskid);
 
-int em_task_msg_send(em_taskmng_t *tm,
-					 em_msg_t message,
+int em_msg_send(em_taskmng_t *tm,
+					 int taskid,
+					 void *msgdata,
 					 int timeout_ms);
 
-int em_task_msg_resv(em_taskmng_t *tm,
-					 em_msg_t *message,
+int em_msg_resv(em_taskmng_t *tm,
+					 void *msgdata,
 					 int timeout_ms);
 
 #endif //__EM_TASK_H__

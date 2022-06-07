@@ -2,12 +2,8 @@
 #include <stdlib.h>
 #include "em_mempool.h"
 #include "em_mutex.h"
+#include "em_mtxmng.h"
 
-typedef struct
-{
-	char *islock;
-	em_mpool_t mp_mutex;
-} em_mtxmng_t;
 
 int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num)
 {
@@ -44,7 +40,7 @@ int em_mtxmng_lock(em_mtxmng_t *mtxm, int mutex_id, int timeout_ms)
 {
 	em_mutex_t *mutex = (em_mutex_t *)mtxm->mp_mutex.block[mutex_id].data_ptr;
 
-	if (mtxm->islock[mutex_id] || 0 != em_mutex_lock(mutex, timeout_ms))
+	if (0 != em_mutex_lock(mutex, timeout_ms))
 	{
 		return -1;
 	}

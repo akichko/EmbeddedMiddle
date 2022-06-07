@@ -142,7 +142,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	ret = em_sem_wait(&qu->sem, timeout_ms);
 	if (ret != 0)
 	{
-		printf("em_dequeue timeout\n");
+		//printf("em_dequeue timeout\n");
 		return -1;
 	}
 	// lock
