@@ -77,15 +77,14 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	{
 		printf("error: pthread_attr_setschedpolicy\n");
 	}
-#if 0 //should be execed by root
-	if (0 != pthread_attr_setinheritsched(&tattr, PTHREAD_EXPLICIT_SCHED))
+	// should be execed by root
+	if (tasksetting.priority > 0 && 0 != pthread_attr_setinheritsched(&tattr, PTHREAD_EXPLICIT_SCHED))
 	{
 		printf("error: pthread_attr_setinheritsched\n");
 	}
-#endif
 	// pthread_setschedprio(&tattr, 0);
 	scheprm.sched_priority = tasksetting.priority;
-	if (0 != pthread_attr_setschedparam(&tattr, &scheprm))
+	if (tasksetting.priority > 0 && 0 != pthread_attr_setschedparam(&tattr, &scheprm))
 	{
 		printf("error: pthread_attr_setschedparam\n");
 	}

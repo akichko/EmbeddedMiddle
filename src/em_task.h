@@ -10,9 +10,9 @@ typedef struct
 {
 	char *task_name;
 	em_taskid_t task_id;
-	int priority;	   //未対応
+	int priority;	   // 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size
-	int mqueue_size;   //未対応
+	int mqueue_size;
 	int (*initialize_func)();
 	int (*entry_func)();
 } em_tasksetting_t;

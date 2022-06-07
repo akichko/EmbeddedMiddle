@@ -14,8 +14,8 @@ int threadfunc_send();
 int threadfunc_recv();
 
 em_tasksetting_t tasklist[] = {
-	{"Receiver", TASK_ID_RECV, 2, 0, 5, NULL, threadfunc_recv},
-	{"Sender", TASK_ID_SEND, 1, 0, 5, NULL, threadfunc_send}};
+	{"Receiver", TASK_ID_RECV, 0, 0, 5, NULL, threadfunc_recv},
+	{"Sender", TASK_ID_SEND, 0, 0, 5, NULL, threadfunc_send}};
 
 typedef struct
 {
