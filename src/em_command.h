@@ -20,6 +20,7 @@ typedef struct
 
 typedef struct
 {
+	char is_running;
 	em_datamng_t cmdmng;
 } em_cmdmng_t;
 
@@ -27,6 +28,8 @@ int em_cmd_init(em_cmdmng_t *cm,
 				int num_cmd);
 
 int em_cmd_start(em_cmdmng_t *cm);
+
+int em_cmd_stop(em_cmdmng_t *cm);
 
 int em_cmd_regist(em_cmdmng_t *cm,
 				  em_cmdsetting_t *cmdsetting);

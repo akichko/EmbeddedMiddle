@@ -99,7 +99,7 @@ int threadfunc_recv()
 
 	while (1)
 	{
-		if (0 == (ret = em_msg_resv(&tm, &msg, 1100)))
+		if (0 == (ret = em_msg_recv(&tm, &msg, 1100)))
 			printf("[Recv] dequeue -> ret:%d id=%d->%d mtype=%d val=%d\n",
 				   ret, msg.taskid_from, msg.taskid_to, msg.msg_type, msg.data[0]);
 		else

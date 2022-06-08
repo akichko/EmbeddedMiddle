@@ -167,7 +167,8 @@ int em_cmd_start(em_cmdmng_t *cm)
 		cmdstr_ptr[i] = cmdstr[i];
 	}
 
-	while (1)
+	cm->is_running = 1;
+	while (cm->is_running)
 	{
 		memset(cmdstr, 0, sizeof(cmdstr));
 		int pos_word = 0;
@@ -178,6 +179,11 @@ int em_cmd_start(em_cmdmng_t *cm)
 			em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
 	}
+}
+
+int em_cmd_stop(em_cmdmng_t *cm)
+{
+	cm->is_running = 0;
 }
 
 int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)

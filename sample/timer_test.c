@@ -58,13 +58,13 @@ int main()
 		printf("em_timer_create error!!\n");
 		exit(1);
 	}
-
+#if 0
 	if (0 != em_timer_create(&tmrmng, &timersetting[1]))
 	{
 		printf("em_timer_create error!!\n");
 		exit(1);
 	}
-
+#endif
 	if (0 != em_timer_create(&tmrmng, &timersetting[2]))
 	{
 		printf("em_timer_create2 error!!\n");
@@ -79,14 +79,14 @@ int main()
 		exit(1);
 	}
 	printf("timer1 deleted\n");
-
+#if 0
 	if (0 != em_timer_delete(&tmrmng, timersetting[1].timer_id))
 	{
 		printf("em_timer_delete error!!\n");
 		exit(1);
 	}
 	printf("timer2 deleted\n");
-
+#endif
 	if (0 != em_timer_delete(&tmrmng, timersetting[2].timer_id))
 	{
 		printf("em_timer_delete error!!\n");

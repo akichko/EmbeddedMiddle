@@ -34,6 +34,11 @@ int em_init_taskmng(em_taskmng_t *tm, int num_max_task, int msgdata_size)
 
 int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
+	if(tm->msgdata_size <= 0)
+	{
+		//message not available
+		return 0;
+	}
 	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
 	if (task_info != NULL) //タスク登録済み
 	{
@@ -93,16 +98,19 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		printf("pthread_create error [TaskId=%d]\n", tasksetting.task_id);
 		return -1;
 	}
-	printf("TaskId %d created. threadId=%ld\n", tasksetting.task_id, thread_id);
+	printf("TaskId %d (%s) created. threadId=%ld\n", tasksetting.task_id, tasksetting.task_name, thread_id);
 
 	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
 	if (task_info != NULL)
 	{
+		//int taskname_len = strlen(tasksetting.task_name);
+		memcpy(task_info->task_name, tasksetting.task_name, strlen(tasksetting.task_name));
 		task_info->thread_id = thread_id;
 	}
 	else //新規作成
 	{
 		_em_taskinfo_t newtask_info;
+		memcpy(newtask_info.task_name, tasksetting.task_name, strlen(tasksetting.task_name));
 		newtask_info.thread_id = thread_id;
 		em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
 	}
@@ -149,7 +157,7 @@ int em_task_delete(em_taskmng_t *tm, em_taskid_t task_id)
 
 	pthread_join(taskinfo.thread_id, &th_ret);
 
-	printf("TaskId %d (id=%ld) stopped. ret=%d \n", task_id, taskinfo.thread_id, *(int *)th_ret);
+	printf("TaskId %d (%s tid=%ld) stopped. ret=%d \n", task_id, taskinfo.task_name, taskinfo.thread_id, *(int *)th_ret);
 
 	if (th_ret != NULL)
 	{
@@ -201,7 +209,7 @@ int em_msg_send(em_taskmng_t *tm, int taskid, void *msgdata, int timeout_ms)
 	return em_enqueue(mqueue, msgdata, timeout_ms);
 }
 
-int em_msg_resv(em_taskmng_t *tm, void *msgdata, int timeout_ms)
+int em_msg_recv(em_taskmng_t *tm, void *msgdata, int timeout_ms)
 {
 	int taskid = em_get_task_id(tm);
 

@@ -8,7 +8,7 @@ typedef int em_taskid_t;
 
 typedef struct
 {
-	char *task_name;
+	char *task_name; // NULL禁止
 	em_taskid_t task_id;
 	int priority;	   // 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size
@@ -60,7 +60,7 @@ int em_msg_send(em_taskmng_t *tm,
 					 void *msgdata,
 					 int timeout_ms);
 
-int em_msg_resv(em_taskmng_t *tm,
+int em_msg_recv(em_taskmng_t *tm,
 					 void *msgdata,
 					 int timeout_ms);
 
