@@ -37,15 +37,19 @@ static void *thread_starter(void *func);
 int em_init_taskmng(em_taskmng_t *tm,
 					int num_max_task,
 					int msgdata_size);
+
 int em_task_create_msgqueue(em_taskmng_t *tm,
 							em_tasksetting_t tasksetting);
+
 int em_task_initialize_task(em_taskmng_t *tm,
 							em_tasksetting_t tasksetting);
+
 int em_task_start_task(em_taskmng_t *tm,
 					   em_tasksetting_t tasksetting);
 
 int em_task_create(em_taskmng_t *tm,
 				   em_tasksetting_t tasksetting);
+				   
 int em_task_delete(em_taskmng_t *tm,
 				   em_taskid_t task_id);
 em_taskid_t em_get_task_id(em_taskmng_t *tm);

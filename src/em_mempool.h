@@ -47,6 +47,9 @@ int _em_mpool_alloc_blockmng(em_mpool_t *mp,
 int em_mpool_get_dataidx(em_mpool_t *mp,
 						 void *block_data);
 
+void *em_mpool_get_dataptr(em_mpool_t *mp,
+						 int data_idx);
+
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
 								   int del_offset);
 

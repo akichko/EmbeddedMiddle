@@ -112,6 +112,11 @@ int em_mpool_get_dataidx(em_mpool_t *mp, void *block_data)
 	return data_offset;
 }
 
+void *em_mpool_get_dataptr(em_mpool_t *mp, int data_idx)
+{
+	return mp->block[data_idx].data_ptr;
+}
+
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 {
 	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
