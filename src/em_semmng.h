@@ -8,9 +8,12 @@ typedef void *em_semp_t;
 typedef struct
 {
 	em_mpool_t mp_semaphore;
+	void(*free_func)(void *);
 } em_semmng_t;
 
-int em_semmng_init(em_semmng_t *smm, int max_sem_num);
+int em_semmng_init(em_semmng_t *smm, int max_sem_num,
+					void *(*allc_func)(size_t),
+					void(*free_func)(void *));
 
 em_semp_t em_semmng_factory(em_semmng_t *smm, int value);
 

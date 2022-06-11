@@ -7,7 +7,7 @@ int main()
 	em_mpool_t mp;
 	
 	int *idata[10];
-	em_mpool_create(&mp, sizeof(int), 10);
+	em_mpool_create(&mp, sizeof(int), 10, &malloc, &free);
 	em_mpool_print(&mp);
 
 	printf("alloc\n");

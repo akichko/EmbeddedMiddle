@@ -6,6 +6,7 @@
 #include "em_queue.h"
 #include "em_time.h"
 #include "em_timer.h"
+#include "em_print.h"
 
 int em_udp_tx_init(em_socket_t *sk, char *dest_ip, uint16_t dest_port, int queue_size)
 {
@@ -38,7 +39,7 @@ int em_udp_send(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 int em_udp_send_enqueue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
 	if (0 != em_enqueue(&sk->queue, packet, timeout_ms))
-		printf("error em_udp_send_enqueue\n");
+		em_printf(EM_LOG_ERROR, "error em_udp_send_enqueue\n");
 
 	return 0;
 }
@@ -48,7 +49,7 @@ int em_udp_send_dequeue(em_socket_t *sk, int timeout_ms)
 	em_ethpacket_t packet;
 	if (0 != em_dequeue(&sk->queue, &packet, timeout_ms))
 	{
-		printf("error em_udp_send_dequeue\n");
+		em_printf(EM_LOG_ERROR, "error em_udp_send_dequeue\n");
 		return -1;
 	}
 	sendto(sk->sock, packet.data, packet.length, 0,
@@ -68,7 +69,7 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 
 		if (0 == select(sk->sock + 1, &fds, NULL, NULL, &tv))
 		{
-			printf("em_udp_recv timeout [%ds]\n", timeout_ms);
+			em_printf(EM_LOG_ERROR, "em_udp_recv timeout [%ds]\n", timeout_ms);
 		}
 	}
 
@@ -81,12 +82,12 @@ int em_udp_recv_enqueue(em_socket_t *sk, int timeout_ms)
 {
 	em_ethpacket_t packet;
 	if(0 != em_udp_recv(sk, &packet, timeout_ms)){
-		printf("error em_udp_recv_enqueue\n");
+		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
 		return -1;
 	}
 
 	if (0 != em_enqueue(&sk->queue, &packet, EM_NO_WAIT))
-		printf("error em_udp_recv_enqueue\n");
+		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
 
 	return 0;
 }
@@ -95,7 +96,7 @@ int em_udp_recv_dequeue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
 	if (0 != em_dequeue(&sk->queue, packet, timeout_ms))
 	{
-		printf("error em_udp_recv_dequeue\n");
+		em_printf(EM_LOG_ERROR, "error em_udp_recv_dequeue\n");
 		return -1;
 	}
 	return 0;

@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "em_command.h"
+#include "em_print.h"
 
 int em_cmd_init(em_cmdmng_t *cm, int num_cmd)
 {
-	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd))
+	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, &malloc, &free))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
 	return 0;
@@ -17,7 +19,7 @@ int em_cmd_regist(em_cmdmng_t *cm,
 {
 	if (0 != em_datamng_add_data(&cm->cmdmng, cmdsetting->cmd_id, cmdsetting))
 	{
-		// printf("register error\n");
+		// em_printf(EM_LOG_ERROR, "register error\n");
 		return -1;
 	}
 	return 0;
@@ -109,7 +111,7 @@ static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_wo
 
 		if (ret_word < 0)
 		{
-			printf("word length over %d\n", EM_CMD_WORD_LENGTH_MAX);
+			em_printf(EM_LOG_ERROR, "word length over %d\n", EM_CMD_WORD_LENGTH_MAX);
 			_em_read_until_line_end();
 			break;
 		}
@@ -117,7 +119,7 @@ static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_wo
 		{
 			if (pos_word >= EM_CMD_WORD_NUM_MAX)
 			{
-				printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
+				em_printf(EM_LOG_ERROR, "word num over %d\n", EM_CMD_WORD_NUM_MAX);
 				_em_read_until_line_end();
 				break;
 			}
@@ -128,7 +130,7 @@ static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_wo
 		{
 			if (pos_word >= EM_CMD_WORD_NUM_MAX)
 			{
-				printf("word num over %d\n", EM_CMD_WORD_NUM_MAX);
+				em_printf(EM_LOG_ERROR, "word num over %d\n", EM_CMD_WORD_NUM_MAX);
 				if (pos_word > EM_CMD_WORD_NUM_MAX)
 				{
 					_em_read_until_line_end();
@@ -149,7 +151,7 @@ static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_wo
 		}
 		else
 		{
-			printf("_em_read_line unknown error\n");
+			em_printf(EM_LOG_ERROR, "_em_read_line unknown error\n");
 			break;
 		}
 	}
@@ -172,7 +174,7 @@ int em_cmd_start(em_cmdmng_t *cm)
 	{
 		memset(cmdstr, 0, sizeof(cmdstr));
 		int pos_word = 0;
-		printf("cmd > ");
+		em_printf(EM_LOG_ERROR, "cmd > ");
 
 		if (0 == _em_read_line((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
 		{
@@ -191,7 +193,7 @@ int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
 	if (NULL == cmd_func)
 	{
-		printf("command '%s' not found\n", argv[0]);
+		em_printf(EM_LOG_ERROR, "command '%s' not found\n", argv[0]);
 		return -1;
 	}
 

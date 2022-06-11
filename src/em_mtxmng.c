@@ -3,17 +3,20 @@
 #include "em_mempool.h"
 #include "em_mutex.h"
 #include "em_mtxmng.h"
+#include "em_print.h"
 
-
-int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num)
+int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
+				   void *(*allc_func)(size_t),
+				   void (*free_func)(void *))
 {
+	mtxm->free_func = free_func;
 	mtxm->islock = (char *)malloc(sizeof(char) * max_mutex_num);
-	em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num);
+	em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num, allc_func, free_func);
 }
 
 int em_mtxmng_destroy(em_mtxmng_t *mtxm)
 {
-	free(mtxm->islock);
+	mtxm->free_func(mtxm->islock);
 	em_mpool_delete(&mtxm->mp_mutex);
 }
 
@@ -22,7 +25,7 @@ int em_mtxmng_create_mutex(em_mtxmng_t *mtxm)
 	em_mutex_t *mutex;
 	if (0 != em_mpool_alloc_block(&mtxm->mp_mutex, (void **)&mutex, EM_NO_WAIT))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
 	em_mutex_init(mutex);

@@ -10,7 +10,7 @@ typedef struct
 {
 	char *task_name; // NULL禁止
 	em_taskid_t task_id;
-	int priority;	   // 1以上にするとroot権限必要
+	int priority;	   // 0-99. 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size
 	int mqueue_size;
 	int (*initialize_func)();
@@ -30,13 +30,16 @@ typedef struct
 {
 	int msgdata_size;
 	em_datamng_t taskinfo_mng;
+	void(*free_func)(void *);
 } em_taskmng_t;
 
 static void *thread_starter(void *func);
 
 int em_init_taskmng(em_taskmng_t *tm,
 					int num_max_task,
-					int msgdata_size);
+					int msgdata_size,
+					void *(*allc_func)(size_t),
+					void(*free_func)(void *));
 
 int em_task_create_msgqueue(em_taskmng_t *tm,
 							em_tasksetting_t tasksetting);

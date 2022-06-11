@@ -5,9 +5,9 @@
 int main()
 {
 	char *msg = "bbb";
-	EM_PRINTF(1,"aaa\n");
-	EM_PRINTF(2,"aaa %s\n", msg);
-	EM_PRINTF(3,"aaa %s %d\n", msg, 5);
+	em_printf(1,"aaa\n");
+	em_printf(2,"aaa %s\n", msg);
+	em_printf(3,"aaa %s %d\n", msg, 5);
 
 	printf("file: %s:%d\n", __FILE__, __LINE__);
 	printf("func: %s\n", __FUNCTION__);

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "../src/em_datamng.h"
 
 typedef struct
@@ -27,7 +28,7 @@ int main()
 	int ret;
 	long lret;
 
-	em_datamng_create(&dm, sizeof(em_test_t), 10);
+	em_datamng_create(&dm, sizeof(em_test_t), 10, &malloc, &free);
 	em_datamng_print(&dm);
 
 	// printf("add id=1,2,3\n");

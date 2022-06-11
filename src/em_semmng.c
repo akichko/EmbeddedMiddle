@@ -10,10 +10,14 @@
 #include "em_semmng.h"
 #include "em_mempool.h"
 #include "em_code.h"
+#include "em_print.h"
 
-int em_semmng_init(em_semmng_t *smm, int max_sem_num)
+int em_semmng_init(em_semmng_t *smm, int max_sem_num,
+					void *(*allc_func)(size_t),
+					void(*free_func)(void *))
 {
-	em_mpool_create(&smm->mp_semaphore, sizeof(sem_t), max_sem_num);
+	smm->free_func = free_func;
+	em_mpool_create(&smm->mp_semaphore, sizeof(sem_t), max_sem_num, allc_func, free_func);
 }
 
 em_semp_t em_semmng_factory(em_semmng_t *smm, int value)
@@ -21,7 +25,7 @@ em_semp_t em_semmng_factory(em_semmng_t *smm, int value)
 	sem_t *sem;
 	if (0 != em_mpool_alloc_block(&smm->mp_semaphore, (void **)&sem, EM_NO_WAIT))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_ERROR, "error\n");
 		return NULL;
 	}
 	sem_init(sem, 0, value);
@@ -32,7 +36,7 @@ int em_semmng_dispose(em_semmng_t *smm, em_semp_t sem_p)
 {
 	if (0 != sem_destroy((sem_t *)sem_p))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
 	return em_mpool_free_block(&smm->mp_semaphore, sem_p);

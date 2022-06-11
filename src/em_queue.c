@@ -3,6 +3,7 @@
 #include <memory.h>
 #include "em_queue.h"
 #include "em_mutex.h"
+#include "em_print.h"
 
 int em_queue_create_with_mem(em_queue_t *qu,
 							 int block_size,
@@ -50,7 +51,7 @@ int em_queue_delete(em_queue_t *qu)
 
 int em_queue_print(em_queue_t *qu)
 {
-	printf("print: usage=%d/%d bsize=%d head=%d tail=%d\n",
+	em_printf(EM_LOG_ERROR, "print: usage=%d/%d bsize=%d head=%d tail=%d\n",
 		   qu->num_used, qu->num_max,
 		   qu->block_size, qu->head_ptr, qu->tail_ptr);
 

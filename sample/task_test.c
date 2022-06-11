@@ -16,9 +16,9 @@ int thread2(); // Thread Entry function 2
 #define TASK_ID_APP3 300
 
 em_tasksetting_t tasklist[] = {
-	{"App1", TASK_ID_APP1, 1, 0, 5, NULL, thread1},
-	{"App2", TASK_ID_APP2, 2, 0, 5, NULL, thread2},
-	{"App3", TASK_ID_APP3, 3, 0, 5, NULL, thread1}};
+	{"App1", TASK_ID_APP1, 0, 0, 5, NULL, thread1},
+	{"App2", TASK_ID_APP2, 0, 0, 5, NULL, thread2},
+	{"App3", TASK_ID_APP3, 0, 0, 5, NULL, thread1}};
 
 em_taskmng_t tm;
 
@@ -31,11 +31,11 @@ int main(int argc, char **argv)
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	ret = em_init_taskmng(&tm, task_num);
+	ret = em_init_taskmng(&tm, task_num, sizeof(int), &malloc, &free);
 
 	for (int i = 0; i < task_num; i++)
 	{
-		ret = em_create_task(&tm, tasklist[i]);
+		ret = em_task_create(&tm, tasklist[i]);
 		if (ret)
 		{
 			printf("pthread_create[Thread %d]\n", i);
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
 	for (int i = 0; i < task_num; i++)
 	{
-		ret = em_delete_task(&tm, tasklist[i].task_id);
+		ret = em_task_delete(&tm, tasklist[i].task_id);
 		if (ret != 0)
 		{
 			printf("em_delete_task Error\n");

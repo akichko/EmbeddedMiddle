@@ -4,6 +4,7 @@
 #include "em_mutex.h"
 #include "em_time.h"
 #include "em_timer.h"
+#include "em_print.h"
 //#include "em_code.h"
 
 int em_mutex_init(em_mutex_t *mutex)
@@ -28,7 +29,7 @@ int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)
 	{
 		if (0 != pthread_mutex_lock(&mutex->mtx))
 		{
-			printf("Fatal Error\n");
+			em_printf(EM_LOG_ERROR, "Fatal Error\n");
 			return -2;
 		}
 	}

@@ -20,6 +20,7 @@ typedef struct
 	em_mpool_t mp;
 	em_idcnt_t *idcnt;
 	em_mutex_t mutex;
+	void (*free_func)(void *);
 } em_datamng_t;
 
 static int _em_datamng_init(em_datamng_t *dm,
@@ -35,7 +36,9 @@ int em_datamng_create_with_mem(em_datamng_t *dm,
 
 int em_datamng_create(em_datamng_t *dm,
 					  int data_size,
-					  int data_num);
+					  int data_num,
+					  void *(*allc_func)(size_t),
+					  void (*free_func)(void *));
 
 int em_datamng_delete(em_datamng_t *dm);
 

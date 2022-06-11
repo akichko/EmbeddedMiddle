@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "em_malloc.h"
+#include "em_print.h"
 
 int em_set_meminfo_t(em_meminfo_t *minfo,
 					 int mem_index, int mem_length, char is_used,
@@ -23,7 +24,7 @@ int em_memmng_create(em_memmng_t *mm,
 	// mem_unit_sizeが２の階乗
 	if (mem_unit_size <= 0 || (mem_unit_size & (mem_unit_size - 1) != 0))
 	{
-		printf("Error: mem_unit_size shoud be 2 ^ x\n");
+		em_printf(EM_LOG_ERROR, "Error: mem_unit_size shoud be 2 ^ x\n");
 		return -1;
 	}
 
@@ -31,8 +32,8 @@ int em_memmng_create(em_memmng_t *mm,
 	mm->mem_unit_size = mem_unit_size;
 	mm->mem_unit_bshift = log2((double)mem_unit_size);
 	mm->mem_used_bsize = 0;
-	em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), 100);
-	em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), 100);
+	em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), 1000, &malloc, &free);
+	em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), 1000, &malloc, &free);
 	mm->memory = malloc(mem_total_size);
 	mm->minfo_ptr = (em_meminfo_t **)malloc(sizeof(em_meminfo_t *) * mem_total_size / mem_unit_size);
 	em_mutex_init(&mm->mutex);
@@ -40,7 +41,7 @@ int em_memmng_create(em_memmng_t *mm,
 	em_meminfo_t *initial_meminfo;
 	if (0 != em_mpool_alloc_block(&mm->mp_free, (void **)&initial_meminfo, 0))
 	{
-		printf("Error: em_create_memmng");
+		em_printf(EM_LOG_ERROR, "Error: em_create_memmng");
 	}
 	em_set_meminfo_t(&mm->first_meminfo, -1, 0, 1, initial_meminfo, NULL);
 	em_set_meminfo_t(&mm->last_meminfo, -2, 0, 1, NULL, initial_meminfo);
@@ -91,7 +92,7 @@ void *em_malloc(em_memmng_t *mm, size_t size)
 	{
 		blength++;
 	}
-	printf("alloc %d (%ld)\n", blength, size);
+	em_printf(EM_LOG_DEBUG, "alloc %d (%ld)\n", blength, size);
 
 	//空きレコード検索
 	em_meminfo_t *meminfo_free;
@@ -104,7 +105,7 @@ void *em_malloc(em_memmng_t *mm, size_t size)
 			mm->mem_used_bsize += blength;
 			if (0 != em_mpool_alloc_block(&mm->mp_used, (void **)&meminfo_new, 0))
 			{
-				printf("error!\n");
+				em_printf(EM_LOG_ERROR, "error!\n");
 				break;
 			}
 			meminfo_new->mem_index = meminfo_free->mem_index;
@@ -134,7 +135,7 @@ void *em_malloc(em_memmng_t *mm, size_t size)
 		}
 	}
 
-	printf("allocation failed\n");
+	em_printf(EM_LOG_ERROR, "allocation failed\n");
 	em_mutex_unlock(&mm->mutex);
 	return NULL;
 }
@@ -143,7 +144,7 @@ void em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
 	int index = (addr - mm->memory) >> mm->mem_unit_bshift;
-	printf("free %d (%p)\n", index, addr);
+	em_printf(EM_LOG_DEBUG, "free %d (%p)\n", index, addr);
 
 	//管理レコード検索
 	// em_meminfo_t *meminfo_del;
@@ -153,11 +154,6 @@ void em_free(em_memmng_t *mm, void *addr)
 
 	em_meminfo_t *meminfo_del = (em_meminfo_t *)mm->minfo_ptr[index];
 
-	// for (int i = 0; i < mm->mp_used.num_used; i++)
-	//{
-	//	meminfo_del = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
-	//	if (meminfo_del->mem_index == index)
-	//	{
 	back_meminfo = meminfo_del->back_meminfo;
 	next_meminfo = meminfo_del->next_meminfo;
 
@@ -167,7 +163,7 @@ void em_free(em_memmng_t *mm, void *addr)
 		{
 			if (0 != em_mpool_alloc_block(&mm->mp_free, (void **)&new_meminfo, 0))
 			{
-				printf("error");
+				em_printf(EM_LOG_ERROR, "error");
 			}
 			memcpy(new_meminfo, meminfo_del, sizeof(em_meminfo_t));
 			new_meminfo->is_used = 0;
@@ -202,9 +198,4 @@ void em_free(em_memmng_t *mm, void *addr)
 	em_mpool_free_block(&mm->mp_used, meminfo_del);
 
 	mm->mem_used_bsize -= meminfo_del->mem_length;
-	// return 0;
-	//	}
-	// }
-
-	// return -1;
 }

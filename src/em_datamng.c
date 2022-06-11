@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "em_datamng.h"
+#include "em_print.h"
 
 static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
 {
@@ -32,11 +33,14 @@ int em_datamng_create_with_mem(em_datamng_t *dm,
 	return _em_datamng_init(dm, idcnt);
 }
 
-int em_datamng_create(em_datamng_t *dm, int data_size, int data_num)
+int em_datamng_create(em_datamng_t *dm, int data_size, int data_num,
+					  void *(*allc_func)(size_t),
+					  void (*free_func)(void *))
 {
-	em_idcnt_t *idcnt = (em_idcnt_t *)malloc(sizeof(em_idcnt_t) * data_num);
+	dm->free_func = free_func;
+	em_idcnt_t *idcnt = (em_idcnt_t *)allc_func(sizeof(em_idcnt_t) * data_num);
 
-	em_mpool_create(&dm->mp, data_size, data_num);
+	em_mpool_create(&dm->mp, data_size, data_num, allc_func, free_func);
 	// dm->idcnt = (em_idcnt_t *)malloc(sizeof(em_idcnt_t) * data_size);
 
 	return _em_datamng_init(dm, idcnt);
@@ -45,7 +49,7 @@ int em_datamng_create(em_datamng_t *dm, int data_size, int data_num)
 int em_datamng_delete(em_datamng_t *dm)
 {
 	em_mpool_delete(&dm->mp);
-	free(dm->idcnt);
+	dm->free_func(dm->idcnt);
 	em_mutex_destroy(&dm->mutex);
 
 	return 0;
@@ -53,20 +57,20 @@ int em_datamng_delete(em_datamng_t *dm)
 
 int em_datamng_print(em_datamng_t *dm)
 {
-	printf("print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
+	em_printf(EM_LOG_ERROR, "print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
 
 	for (int i = 0; i < dm->mp.num_max; i++)
 	{
 		if (i == dm->mp.num_used)
 		{
-			printf("   ");
+			em_printf(EM_LOG_ERROR, "   ");
 		}
-		printf("[%ld:%d:%d] ",
+		em_printf(EM_LOG_ERROR, "[%ld:%d:%d] ",
 			   dm->idcnt[dm->mp.block_ptr[i]->index].id,
 			   dm->idcnt[dm->mp.block_ptr[i]->index].count,
 			   *(int *)(dm->mp.block_ptr[i]->data_ptr));
 	}
-	printf("\n");
+	em_printf(EM_LOG_ERROR, "\n");
 
 	return 0;
 }
@@ -99,7 +103,7 @@ int em_datamng_add_data(em_datamng_t *dm, unsigned long id, void *data)
 		if (0 != _em_mpool_alloc_blockmng(&dm->mp, &block_tmp))
 		{
 			ret = -1;
-			//printf("add data error\n");
+			// em_printf(EM_LOG_ERROR, "add data error\n");
 		}
 		else
 		{

@@ -1,9 +1,7 @@
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include "../src/em_mtxmng.h"
@@ -36,7 +34,7 @@ int main(void)
     pthread_t p1;
     int mutex1, mutex2, mutex3, mutex4;
 
-    em_mtxmng_init(&mtxmng, 5);
+    em_mtxmng_init(&mtxmng, 5, &malloc, &free);
 
     mutex1 = em_mtxmng_create_mutex(&mtxmng);
     printf("mutex1_id = %d\n", mutex1);

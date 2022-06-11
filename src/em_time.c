@@ -8,12 +8,13 @@
 #include <time.h>
 #include "em_time.h"
 #include "em_datamng.h"
+#include "em_print.h"
 
 struct timespec em_get_timestamp()
 {
 	struct timespec ts;
 	if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-		printf("Error: clock_gettime\n");
+		em_printf(EM_LOG_ERROR, "Error: clock_gettime\n");
 	return ts;
 }
 
@@ -49,7 +50,7 @@ struct timespec em_timespec_sub(struct timespec a, struct timespec b)
 
 void em_print_timespec(struct timespec ts)
 {
-	printf("%10ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
+	em_printf(EM_LOG_ERROR, "%10ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
 }
 
 struct timespec em_get_offset_timestamp(int milliseconds)
@@ -92,7 +93,7 @@ int em_tick_init(em_timemng_t *tm)
 
 	if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 	{
-		printf("Error: em_tick_init\n");
+		em_printf(EM_LOG_ERROR, "Error: em_tick_init\n");
 		return -1;
 	}
 	tm->init_time = ts;

@@ -9,10 +9,11 @@
 #include "em_time.h"
 #include "em_timer.h"
 #include "em_datamng.h"
+#include "em_print.h"
 
 int em_timermng_init(em_timermng_t *tmrmng, int num_timer)
 {
-	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer);
+	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, &malloc, &free);
 }
 
 void _em_timer_cbfunc(__sigval_t sigval)
@@ -40,7 +41,7 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 	ret = timer_create(CLOCK_MONOTONIC, &se, &timer_id);
 	if (ret == -1)
 	{
-		printf("Fail to creat timer\n");
+		em_printf(EM_LOG_ERROR, "Fail to creat timer\n");
 		return -1;
 	}
 
@@ -49,18 +50,18 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 	ret = em_datamng_add_data(&tmrmng->timerinfo_mng, setting->timer_id, &timerinfo);
 	if (ret == -1)
 	{
-		printf("Error: em_datamng_add_data\n");
+		em_printf(EM_LOG_ERROR, "Error: em_datamng_add_data\n");
 		return -2;
 	}
 
 	ret = timer_settime(timer_id, 0, &ts, 0);
 	if (ret == -1)
 	{
-		printf("Fail to set timer\n");
+		em_printf(EM_LOG_ERROR, "Fail to set timer\n");
 		return -2;
 	}
 
-	printf("timer created. id=%d\n", setting->timer_id);
+	em_printf(EM_LOG_ERROR, "timer created. id=%d\n", setting->timer_id);
 	return 0;
 }
 
@@ -71,13 +72,13 @@ int em_timer_delete(em_timermng_t *tmrmng, int timer_id)
 
 	if (0 != em_datamng_get_data(&tmrmng->timerinfo_mng, timer_id, (void *)&timer_info))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
 	ret = timer_delete(timer_info.linux_timer_id);
 	if (ret != 0)
 	{
-		printf("timer delete error!!\n");
+		em_printf(EM_LOG_ERROR, "timer delete error!!\n");
 	}
 
 	return ret;
