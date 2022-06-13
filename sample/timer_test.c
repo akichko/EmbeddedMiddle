@@ -45,7 +45,7 @@ int main()
 {
 	em_timermng_t tmrmng;
 	// timer_t timer1_id, timer2_id;
-	int ret;
+	//int ret;
 	em_tick_init(&tm);
 
 	if (0 != em_timermng_init(&tmrmng, 10))

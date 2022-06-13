@@ -68,6 +68,11 @@ struct timespec em_get_offset_timestamp(int milliseconds)
 	return ts;
 }
 
+int em_calc_timespec2ms(struct timespec ts)
+{
+	return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
 struct timespec em_calc_timespec(int milliseconds)
 {
 	struct timespec ts;

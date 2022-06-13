@@ -23,8 +23,8 @@ typedef struct
 	void (*free_func)(void *);
 } em_datamng_t;
 
-static int _em_datamng_init(em_datamng_t *dm,
-							em_idcnt_t *idcnt);
+//static int _em_datamng_init(em_datamng_t *dm,
+//							em_idcnt_t *idcnt);
 
 int em_datamng_create_with_mem(em_datamng_t *dm,
 							   int data_size,

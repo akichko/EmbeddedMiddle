@@ -32,11 +32,11 @@ em_taskmng_t tm;
 //
 int main(int argc, char **argv)
 {
-	int ret;
+	//int ret;
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	if (0 != em_init_taskmng(&tm, task_num, sizeof(testmsg_t)))
+	if (0 != em_init_taskmng(&tm, task_num, sizeof(testmsg_t), &malloc, &free))
 	{
 		printf("em_init_taskmng error\n");
 		exit(1);

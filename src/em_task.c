@@ -8,7 +8,7 @@
 #include "em_task.h"
 #include "em_print.h"
 
-static void *thread_starter(void *func)
+static void *_em_thread_starter(void *func)
 {
 	int *ret = (int *)malloc(sizeof(int)); // Allocate a return value area.
 
@@ -97,7 +97,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedparam\n");
 	}
-	if (0 != pthread_create(&thread_id, &tattr, thread_starter, (void *)tasksetting.entry_func))
+	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)tasksetting.entry_func))
 	{
 		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]\n", tasksetting.task_id);
 		return -1;

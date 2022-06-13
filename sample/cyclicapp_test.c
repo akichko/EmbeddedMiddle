@@ -76,7 +76,7 @@ void timer_func(void *arg)
 
 int main()
 {
-	int ret;
+	//int ret;
 	
 	if (0 != em_tick_init(&timemng))
 	{
@@ -100,7 +100,7 @@ int main()
 		printf("error\n");
 	}
 
-	if (0 != em_init_taskmng(&tskmng, 1, sizeof(testmsg_t)))
+	if (0 != em_init_taskmng(&tskmng, 1, sizeof(testmsg_t), &malloc, &free))
 	{
 		printf("error\n");
 		exit(1);

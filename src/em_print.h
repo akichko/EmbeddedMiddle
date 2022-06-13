@@ -8,7 +8,7 @@
 #define EM_LOG_INFO 3
 #define EM_LOG_DEBUG 2
 #define EM_LOG_TRACE 1
-#define EM_LOG_DEFAULT EM_LOG_DEBUG
+#define EM_LOG_DEFAULT EM_LOG_INFO
 
 #define em_printf(type, fmt, ...) _em_printf(__FILE__, __FUNCTION__, __LINE__, type, fmt, ##__VA_ARGS__)
 

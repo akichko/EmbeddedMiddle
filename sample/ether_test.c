@@ -17,6 +17,7 @@ em_socket_t sock_rx2;
 int callback(em_ethpacket_t *packet)
 {
     printf("[Rx] Receive: %s [length:%d]\n", packet->data, packet->length);
+    return 0;
 }
 
 void *routineTx(void *p)
@@ -37,8 +38,8 @@ void *routineTx(void *p)
             printf("[Tx] Send Q success\n");
         }
 #if 1
-        sprintf(packet.data, "Hello %d", cnt++);
-        packet.length = strlen(packet.data);
+        sprintf((char *)packet.data, "Hello %d", cnt++);
+        packet.length = strlen((char*)packet.data);
         printf("[Tx] Send: %s [length:%d]\n", packet.data, packet.length);
 
         if (0 != em_udp_send(&sock_tx, &packet, 300))
@@ -54,7 +55,7 @@ void *routineTx(void *p)
 void *routineRx(void *p)
 {
     em_ethpacket_t packet;
-    int data_size;
+    //int data_size;
 
     int (*callback_func)(em_ethpacket_t *) = callback;
     while (1)
@@ -71,8 +72,8 @@ void *routineRx(void *p)
 
 void *routineRx2(void *p)
 {
-    em_ethpacket_t packet;
-    int (*callback_func)(em_ethpacket_t *) = callback;
+   // em_ethpacket_t packet;
+   // int (*callback_func)(em_ethpacket_t *) = callback;
     while (1)
     {
         if (0 != em_udp_recv_enqueue(&sock_rx2, EM_NO_TIMEOUT))
@@ -102,8 +103,8 @@ int main(void)
     em_ethpacket_t packet;
     while (1)
     {
-        sprintf(packet.data, "Hello Q %d", cnt++);
-        packet.length = strlen(packet.data);
+        sprintf((char*)packet.data, "Hello Q %d", cnt++);
+        packet.length = strlen((char*)packet.data);
         printf("[Main] Send: %s [length:%d]\n", packet.data, packet.length);
 
         if (0 != em_udp_send_enqueue(&sock_tx2, &packet, EM_NO_WAIT))

@@ -56,20 +56,20 @@ int em_mpool_delete(em_mpool_t *mp)
 
 int em_mpool_print(em_mpool_t *mp)
 {
-	em_printf(EM_LOG_ERROR, "print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
+	em_printf(EM_LOG_TOP, "print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
 
 	for (int i = 0; i < mp->num_max; i++)
 	{
 		if (i == mp->num_used)
 		{
-			em_printf(EM_LOG_ERROR, "   ");
+			em_printf(EM_LOG_TOP, "   ");
 		}
-		em_printf(EM_LOG_ERROR, "[%ld:%d:%d] ",
+		em_printf(EM_LOG_TOP, "[%ld:%d:%d] ",
 			   (mp->block_ptr[i]->data_ptr - mp->rawdata) / mp->block_size,
 			   mp->block[i].index_ptr,
 			   *(int *)(mp->block_ptr[i]->data_ptr));
 	}
-	em_printf(EM_LOG_ERROR, "\n");
+	em_printf(EM_LOG_TOP, "\n");
 
 	return 0;
 }
@@ -150,7 +150,7 @@ int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 {
 	int data_offset = (block_data - mp->rawdata) / mp->block_size;
 
-	em_printf(EM_LOG_DEBUG, "free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
+	em_printf(EM_LOG_TRACE, "free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 
 	return em_mpool_free_block_by_dataidx(mp, data_offset); // with lock
 }

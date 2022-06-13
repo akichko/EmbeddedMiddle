@@ -27,7 +27,7 @@ em_cmdsetting_t testcmdset[] = {
 int main()
 {
 	em_cmdmng_t cm;
-	int ret;
+	//int ret;
 
 	if (0 != em_cmd_init(&cm, 5))
 	{

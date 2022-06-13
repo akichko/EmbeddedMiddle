@@ -33,7 +33,7 @@ typedef struct
 	void(*free_func)(void *);
 } em_taskmng_t;
 
-static void *thread_starter(void *func);
+//static void *thread_starter(void *func);
 
 int em_init_taskmng(em_taskmng_t *tm,
 					int num_max_task,

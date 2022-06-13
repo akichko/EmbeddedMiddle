@@ -25,6 +25,8 @@ int em_get_tick_count(em_timemng_t *tm);
 
 struct timespec em_get_offset_timestamp(int milliseconds);
 
+int em_calc_timespec2ms(struct timespec ts);
+
 struct timespec em_timespec_add(struct timespec a,
 								struct timespec b);
 
