@@ -144,14 +144,10 @@ int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 
 			mm->minfo_ptr[meminfo_new->mem_index] = meminfo_new;
 
-			em_mutex_unlock(&mm->mutex);
 			*mem = mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
 			return 0;
 		}
 	}
-
-	em_mutex_unlock(&mm->mutex);
-
 	// em_printf(EM_LOG_DEBUG, "allocation failed\n");
 	*mem = NULL;
 	return -1;
