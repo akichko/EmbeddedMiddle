@@ -4,8 +4,7 @@
 #include "em_mutex.h"
 #include "em_time.h"
 #include "em_timer.h"
-#include "em_print.h"
-//#include "em_code.h"
+#include "em_cmndefs.h"
 
 int em_mutex_init(em_mutex_t *mutex)
 {

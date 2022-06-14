@@ -3,9 +3,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
-
-#define EM_NO_TIMEOUT -1
-#define EM_NO_WAIT 0
+#include "em_cmndefs.h"
 
 //mutex
 typedef struct

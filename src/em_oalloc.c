@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "em_oalloc.h"
-#include "em_print.h"
+#include "em_cmndefs.h"
 
 int em_omemmng_create(em_omemmng_t *mm,
 					   int mem_total_size,

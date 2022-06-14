@@ -2,7 +2,7 @@
 #define __EM_MTXMNG_H__
 
 #include "em_mempool.h"
-#include "em_mutex.h"
+#include "em_cmndefs.h"
 
 typedef struct
 {

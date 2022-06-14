@@ -119,8 +119,9 @@ int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 			mm->mem_used_bsize += blength;
 			if (0 != em_mpool_alloc_block(&mm->mp_used, (void **)&meminfo_new, 0))
 			{
-				em_printf(EM_LOG_ERROR, "Fatal error!\n");
-				break;
+				em_printf(EM_LOG_ERROR, "Fatal error! alloc num max\n");
+				*mem = NULL;
+				return -1;
 			}
 			meminfo_new->mem_index = meminfo_free->mem_index;
 			meminfo_new->mem_length = blength;

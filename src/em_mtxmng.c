@@ -3,7 +3,7 @@
 #include "em_mempool.h"
 #include "em_mutex.h"
 #include "em_mtxmng.h"
-#include "em_print.h"
+#include "em_cmndefs.h"
 
 int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
 				   void *(*allc_func)(size_t),
@@ -34,14 +34,14 @@ int em_mtxmng_create_mutex(em_mtxmng_t *mtxm)
 
 int em_mtxmng_delete_mutex(em_mtxmng_t *mtxm, int mutex_id)
 {
-	em_mutex_t *mutex = mtxm->mp_mutex.block[mutex_id].data_ptr;
+	em_mutex_t *mutex = em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
 	em_mutex_destroy(mutex);
 	return em_mpool_free_block_by_dataidx(&mtxm->mp_mutex, mutex_id);
 }
 
 int em_mtxmng_lock(em_mtxmng_t *mtxm, int mutex_id, int timeout_ms)
 {
-	em_mutex_t *mutex = (em_mutex_t *)mtxm->mp_mutex.block[mutex_id].data_ptr;
+	em_mutex_t *mutex = em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
 
 	if (0 != em_mutex_lock(mutex, timeout_ms))
 	{

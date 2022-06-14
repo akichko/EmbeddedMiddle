@@ -9,8 +9,7 @@
 #include "em_time.h"
 #include "em_semmng.h"
 #include "em_mempool.h"
-#include "em_code.h"
-#include "em_print.h"
+#include "em_cmndefs.h"
 
 int em_semmng_init(em_semmng_t *smm, int max_sem_num,
 					void *(*allc_func)(size_t),
