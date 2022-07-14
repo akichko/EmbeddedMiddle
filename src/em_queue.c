@@ -52,13 +52,13 @@ int em_queue_delete(em_queue_t *qu)
 int em_queue_print(em_queue_t *qu)
 {
 	em_printf(EM_LOG_ERROR, "print: usage=%d/%d bsize=%d head=%d tail=%d\n",
-		   qu->num_used, qu->num_max,
-		   qu->block_size, qu->head_ptr, qu->tail_ptr);
+			  qu->num_used, qu->num_max,
+			  qu->block_size, qu->head_ptr, qu->tail_ptr);
 
 	return 0;
 }
 
-//unsafe
+// unsafe
 void *em_enqueue_get_dataptr(em_queue_t *qu)
 {
 	if (qu->num_used >= qu->num_max)
@@ -67,7 +67,7 @@ void *em_enqueue_get_dataptr(em_queue_t *qu)
 	return qu->block_ptr[qu->head_ptr];
 }
 
-//unsafe
+// unsafe
 int em_enqueue_increment(em_queue_t *qu)
 {
 	if (qu->num_used >= qu->num_max)
@@ -95,6 +95,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 	tmp = em_enqueue_get_dataptr(qu);
 	if (tmp == NULL)
 	{
+		em_printf(EM_LOG_ERROR, "get_dataptr failed\n");
 		em_mutex_unlock(&qu->mutex);
 		return -1;
 	}
@@ -102,6 +103,10 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 	memcpy(tmp, block_data, qu->block_size);
 
 	ret = em_enqueue_increment(qu);
+	if (ret != 0)
+	{
+		em_printf(EM_LOG_ERROR, "increment failed\n");
+	}
 	// unlock
 	em_mutex_unlock(&qu->mutex);
 	em_sem_post(&qu->sem);
@@ -109,7 +114,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 	return 0;
 }
 
-//unsafe
+// unsafe
 void *em_dequeue_get_dataptr(em_queue_t *qu)
 {
 	if (qu->num_used <= 0)
@@ -118,7 +123,7 @@ void *em_dequeue_get_dataptr(em_queue_t *qu)
 	return qu->block_ptr[qu->tail_ptr];
 }
 
-//unsafe
+// unsafe
 int em_dequeue_increment(em_queue_t *qu)
 {
 	if (qu->num_used <= 0)
@@ -143,7 +148,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	ret = em_sem_wait(&qu->sem, timeout_ms);
 	if (ret != 0)
 	{
-		//printf("em_dequeue timeout\n");
+		// printf("em_dequeue timeout\n");
 		return -1;
 	}
 	// lock

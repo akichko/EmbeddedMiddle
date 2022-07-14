@@ -12,17 +12,21 @@ typedef struct
 } em_mtxmng_t;
 
 int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
-					  void *(*allc_func)(size_t),
-					  void (*free_func)(void *));
+				   void *(*allc_func)(size_t),
+				   void (*free_func)(void *));
 
 int em_mtxmng_destroy(em_mtxmng_t *mtxm);
 
 int em_mtxmng_create_mutex(em_mtxmng_t *mtxm);
 
-int em_mtxmng_delete_mutex(em_mtxmng_t *mtxm, int mutex_id);
+int em_mtxmng_delete_mutex(em_mtxmng_t *mtxm,
+						   int mutex_id);
 
-int em_mtxmng_lock(em_mtxmng_t *mtxm, int mutex_id, int timeout_ms);
+int em_mtxmng_lock(em_mtxmng_t *mtxm,
+				   int mutex_id,
+				   int timeout_ms);
 
-int em_mtxmng_unlock(em_mtxmng_t *mtxm, int mutex_id);
+int em_mtxmng_unlock(em_mtxmng_t *mtxm,
+					 int mutex_id);
 
 #endif //__EM_MTXMNG_H__

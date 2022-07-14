@@ -31,7 +31,7 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 	struct sigevent se;
 	se.sigev_notify = SIGEV_THREAD;
 	se.sigev_notify_function = _em_timer_cbfunc;
-	se.sigev_value.sival_ptr = setting;
+	se.sigev_value.sival_ptr = setting; //heap or static
 	se.sigev_notify_attributes = NULL;
 
 	struct itimerspec ts;
@@ -61,7 +61,7 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 		return -2;
 	}
 
-	em_printf(EM_LOG_ERROR, "timer created. id=%d\n", setting->timer_id);
+	em_printf(EM_LOG_INFO, "timer created. id=%d\n", setting->timer_id);
 	return 0;
 }
 

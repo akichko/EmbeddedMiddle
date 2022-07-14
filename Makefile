@@ -21,7 +21,7 @@ $(PROGRAM):     $(OBJS)
 
 $(OBJDIR)/%.o:	$(SRCDIR)/%.c
 				@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-				$(CC) -o $@ -c $<
+				$(CC) $(CFLAGS) -o $@ -c $<
 
 sample:			$(PROGRAM) $(SAMPLESRCS:%.c=$(BUILDDIR)/%)
 				

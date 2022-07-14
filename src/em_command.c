@@ -174,7 +174,7 @@ int em_cmd_start(em_cmdmng_t *cm)
 	{
 		memset(cmdstr, 0, sizeof(cmdstr));
 		int pos_word = 0;
-		em_printf(EM_LOG_ERROR, "cmd > ");
+		printf("cmd > ");
 
 		if (0 == _em_read_line((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
 		{
@@ -193,7 +193,7 @@ int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
 	if (NULL == cmd_func)
 	{
-		em_printf(EM_LOG_ERROR, "command '%s' not found\n", argv[0]);
+		printf("command '%s' not found\n", argv[0]);
 		return -1;
 	}
 
