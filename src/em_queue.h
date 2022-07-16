@@ -12,7 +12,8 @@ typedef struct
 	int tail_ptr;
 	void **block_ptr;
 	void *rawdata; //実体
-	em_sem_t sem;
+	em_sem_t sem_in;
+	em_sem_t sem_out;
 	em_mutex_t mutex;
 } em_queue_t;
 
@@ -34,12 +35,19 @@ void *em_enqueue_get_dataptr(em_queue_t *qu);
 
 int em_enqueue_increment(em_queue_t *qu);
 
-int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms);
+int em_enqueue(em_queue_t *qu,
+			   void *block_data,
+			   int timeout_ms);
 
 void *em_dequeue_get_dataptr(em_queue_t *qu);
 
 int em_dequeue_increment(em_queue_t *qu);
 
-int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms);
+int em_dequeue(em_queue_t *qu,
+			   void *block_data,
+			   int timeout_ms);
+
+int em_queue_getnum(em_queue_t *qu,
+					int timeout_ms);
 
 #endif //__EM_QUEUE_H__

@@ -16,7 +16,7 @@ int em_timermng_init(em_timermng_t *tmrmng, int num_timer)
 	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, &malloc, &free);
 }
 
-void _em_timer_cbfunc(__sigval_t sigval)
+static void _em_timer_cbfunc(__sigval_t sigval)
 {
 	em_timersetting_t *timersetting = (em_timersetting_t *)sigval.sival_ptr;
 

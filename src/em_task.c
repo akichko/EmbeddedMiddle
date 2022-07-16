@@ -8,11 +8,19 @@
 #include "em_task.h"
 #include "em_print.h"
 
-static void *_em_thread_starter(void *func)
+static void *_em_thread_starter(void *thrdarg)
 {
 	int *ret = (int *)malloc(sizeof(int)); // Allocate a return value area.
 
-	int (*funcptr)() = func;
+	em_thrdarg_t *arg = (em_thrdarg_t *)thrdarg;
+
+	int (*funcptr)() = arg->entry_func;
+
+	//開始同期制御
+	//em_printf(EM_LOG_INFO, "event wait start\n");
+	em_sem_wait(arg->sem_ptr, EM_WAIT);
+	//em_printf(EM_LOG_INFO, "event wait end\n");
+
 	*ret = (*funcptr)();
 
 	pthread_exit(ret);
@@ -33,6 +41,10 @@ int em_init_taskmng(em_taskmng_t *tm, int num_max_task, int msgdata_size,
 {
 	tm->free_func = free_func;
 	tm->msgdata_size = msgdata_size;
+	if (0 != em_sem_init(&tm->sem, 0))
+	{
+		return -1;
+	}
 	return em_datamng_create(&tm->taskinfo_mng, sizeof(_em_taskinfo_t), num_max_task, allc_func, free_func);
 }
 
@@ -73,6 +85,10 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
+	em_thrdarg_t thrdarg;
+
+	thrdarg.sem_ptr = &tm->sem;
+	thrdarg.entry_func = tasksetting.entry_func;
 
 	if (0 != pthread_attr_init(&tattr))
 	{
@@ -97,7 +113,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedparam\n");
 	}
-	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)tasksetting.entry_func))
+	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)&thrdarg))
 	{
 		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]\n", tasksetting.task_id);
 		return -1;
@@ -119,6 +135,11 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
 	}
 
+	if (0 != em_sem_post(&tm->sem))
+	{
+		em_printf(EM_LOG_ERROR, "em sync error\n");
+	}
+
 	return 0;
 }
 
@@ -131,6 +152,7 @@ int em_task_create(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_printf(EM_LOG_ERROR, "create msgqueue error\n");
 		return -1;
 	}
+	
 	if (0 != em_task_initialize_task(tm, tasksetting))
 	{
 		em_printf(EM_LOG_ERROR, "task initialize error\n");

@@ -3,6 +3,8 @@
 
 #include "em_datamng.h"
 #include "em_queue.h"
+#include "em_mutex.h"
+//#include "em_eventflag.h"
 
 typedef int em_taskid_t;
 
@@ -31,7 +33,14 @@ typedef struct
 	int msgdata_size;
 	em_datamng_t taskinfo_mng;
 	void(*free_func)(void *);
+	em_sem_t sem;
 } em_taskmng_t;
+
+typedef struct
+{
+	int (*entry_func)();
+	em_sem_t *sem_ptr;
+} em_thrdarg_t;
 
 //static void *thread_starter(void *func);
 
