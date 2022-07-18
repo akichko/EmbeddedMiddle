@@ -25,26 +25,26 @@ int main()
 	em_test_t test_data = {0, 0, 0};
 	em_test_t test_data2 = {11, 0, 0};
 	em_test_t test_data3 = {11, 1, 2};
+	em_test_t read_data;
 	int ret;
 	long lret;
 
-	em_datamng_create(&dm, sizeof(em_test_t), 10, &malloc, &free);
+	em_datamng_create(&dm, sizeof(em_test_t), 10, EM_DMNG_DPLCT_COUNTUP, &malloc, &free);
 	em_datamng_print(&dm);
 
 	// printf("add id=1,2,3\n");
 	for (int i = 0; i < 3; i++)
 	{
 		test_data.attr1 = i + 10;
-		printf("add id=%d\n", i + 1);
+		printf("add id=%d %d\n", i + 1, test_data.attr1);
 		em_datamng_add_data(&dm, i + 1, &test_data);
 	}
 	em_datamng_print(&dm);
 
-	ret = _em_datamng_get_blockinfo(&dm, 2, &block);
-	printf("get_block id=2 -> ret:%d val=%d\n", ret,
-		   ((em_test_t *)block->data_ptr)->attr1);
+	ret = em_datamng_get_data(&dm, 2, &read_data);
+	printf("get_block id=2 -> ret:%d val=%d\n", ret, read_data.attr1);
 
-	ret = _em_datamng_get_blockinfo(&dm, 5, &block);
+	ret = em_datamng_get_data(&dm, 5, &read_data);
 	printf("get_block id=5 -> ret:%d\n", ret);
 
 	lret = em_datamng_get_id(&dm, &test_data2);

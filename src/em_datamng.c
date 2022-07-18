@@ -22,21 +22,24 @@ static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
 int em_datamng_create_with_mem(em_datamng_t *dm,
 							   int data_size,
 							   int data_num,
+							   int duplicate_mode,
 							   em_blkinfo_t **block_ptr,
 							   em_blkinfo_t *block,
 							   void *rawdata,
 							   em_idcnt_t *idcnt)
 {
+	dm->duplicate_mode = duplicate_mode;
 	em_mpool_create_with_mem(&dm->mp, data_size, data_num,
 							 block_ptr, block, rawdata);
 
 	return _em_datamng_init(dm, idcnt);
 }
 
-int em_datamng_create(em_datamng_t *dm, int data_size, int data_num,
+int em_datamng_create(em_datamng_t *dm, int data_size, int data_num, int duplicate_mode,
 					  void *(*allc_func)(size_t),
 					  void (*free_func)(void *))
 {
+	dm->duplicate_mode = duplicate_mode;
 	dm->free_func = free_func;
 	em_idcnt_t *idcnt = (em_idcnt_t *)allc_func(sizeof(em_idcnt_t) * data_num);
 
@@ -57,26 +60,43 @@ int em_datamng_delete(em_datamng_t *dm)
 
 int em_datamng_print(em_datamng_t *dm)
 {
-	em_printf(EM_LOG_ERROR, "print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
+	printf("print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
 
 	for (int i = 0; i < dm->mp.num_max; i++)
 	{
 		if (i == dm->mp.num_used)
 		{
-			em_printf(EM_LOG_ERROR, "   ");
+			printf("   ");
 		}
-		em_printf(EM_LOG_ERROR, "[%ld:%d:%d] ",
+		printf("[%ld:%d:%d] ",
 			   dm->idcnt[dm->mp.block_ptr[i]->index].id,
 			   dm->idcnt[dm->mp.block_ptr[i]->index].count,
 			   *(int *)(dm->mp.block_ptr[i]->data_ptr));
 	}
-	em_printf(EM_LOG_ERROR, "\n");
+	printf("\n");
 
 	return 0;
 }
 
 // unsafe
-int _em_datamng_get_blockinfo(em_datamng_t *dm, unsigned long id, em_blkinfo_t **block)
+static int _em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
+{
+	int ret = -1;
+	int data_index;
+	for (int i = 0; i < dm->mp.num_used; i++)
+	{
+		data_index = dm->mp.block_ptr[i]->index;
+		if (dm->idcnt[data_index].id == id)
+		{
+			ret = data_index;
+			break;
+		}
+	}
+	return ret;
+}
+
+// unsafe
+static int _em_datamng_get_blockinfo(em_datamng_t *dm, ulong id, em_blkinfo_t **block)
 {
 	int ret = -1;
 	int data_index;
@@ -93,30 +113,49 @@ int _em_datamng_get_blockinfo(em_datamng_t *dm, unsigned long id, em_blkinfo_t *
 	return ret;
 }
 
-int em_datamng_add_data(em_datamng_t *dm, unsigned long id, void *data)
+int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 {
+	int ret = -1;
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
-	em_blkinfo_t *block_tmp;
-	int ret = _em_datamng_get_blockinfo(dm, id, &block_tmp);
-	if (ret != 0)
+
+	int exist_dataidx = _em_datamng_get_dataidx(dm, id);
+	if (exist_dataidx < 0) // no data
 	{
-		if (0 != _em_mpool_alloc_blockmng(&dm->mp, &block_tmp))
+		void *new_data_ptr;
+		if (0 != em_mpool_alloc_block(&dm->mp, &new_data_ptr, EM_NO_TIMEOUT))
 		{
-			ret = -1;
-			// em_printf(EM_LOG_ERROR, "add data error\n");
+			em_printf(EM_LOG_DEBUG, "add data error\n");
 		}
 		else
 		{
-			memcpy(block_tmp->data_ptr, data, dm->mp.block_size);
-			dm->idcnt[block_tmp->index].id = id;
-			dm->idcnt[block_tmp->index].count = 0;
-			dm->idcnt[block_tmp->index].count++;
+			int dataidx = em_mpool_get_dataidx(&dm->mp, new_data_ptr);
+			memcpy(new_data_ptr, data, dm->mp.block_size);
+			dm->idcnt[dataidx].id = id;
+			dm->idcnt[dataidx].count = 1;
 			ret = 0;
 		}
 	}
-	else
+	else // data exists
 	{
-		dm->idcnt[block_tmp->index].count++;
+		if (dm->duplicate_mode == EM_DMNG_DPLCT_ERROR)
+		{
+			em_printf(EM_LOG_DEBUG, "id %ld already exists\n", id);
+		}
+		else if (dm->duplicate_mode == EM_DMNG_DPLCT_UPDATE)
+		{
+			void *dst = em_mpool_get_dataptr(&dm->mp, exist_dataidx);
+			memcpy(dst, data, dm->mp.block_size);
+			ret = 0;
+		}
+		else if (dm->duplicate_mode == EM_DMNG_DPLCT_COUNTUP)
+		{
+			dm->idcnt[exist_dataidx].count++;
+			ret = 0;
+		}
+		else
+		{
+			em_printf(EM_LOG_ERROR, "unknown duplicatemode: %d\n", dm->duplicate_mode);
+		}
 	}
 
 	em_mutex_unlock(&dm->mutex);
@@ -124,7 +163,7 @@ int em_datamng_add_data(em_datamng_t *dm, unsigned long id, void *data)
 }
 
 // unsafe
-void *_em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
+static void *_em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
 {
 	em_blkinfo_t *block_tmp;
 
@@ -136,7 +175,7 @@ void *_em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 	return block_tmp->data_ptr;
 }
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
+void *em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	void *ret = _em_datamng_get_data_ptr(dm, id);
@@ -145,7 +184,25 @@ void *em_datamng_get_data_ptr(em_datamng_t *dm, unsigned long id)
 	return ret;
 }
 
-int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
+int em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	int ret = _em_datamng_get_dataidx(dm, id);
+	em_mutex_unlock(&dm->mutex);
+
+	return ret;
+}
+
+void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
+{
+	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
+	void *ret = em_mpool_get_dataptr(&dm->mp, data_idx);
+	em_mutex_unlock(&dm->mutex);
+
+	return ret;
+}
+
+int em_datamng_get_data(em_datamng_t *dm, ulong id, void *data)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
@@ -161,7 +218,7 @@ int em_datamng_get_data(em_datamng_t *dm, unsigned long id, void *data)
 	return ret;
 }
 
-int em_datamng_get_data_cnt(em_datamng_t *dm, unsigned long id)
+int em_datamng_get_data_cnt(em_datamng_t *dm, ulong id)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
@@ -175,7 +232,7 @@ int em_datamng_get_data_cnt(em_datamng_t *dm, unsigned long id)
 	return ret;
 }
 
-int em_datamng_remove_data(em_datamng_t *dm, unsigned long id)
+int em_datamng_remove_data(em_datamng_t *dm, ulong id)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
@@ -193,11 +250,11 @@ int em_datamng_remove_data(em_datamng_t *dm, unsigned long id)
 	return ret;
 }
 
-unsigned long em_datamng_get_id(em_datamng_t *dm,
+ulong em_datamng_get_id(em_datamng_t *dm,
 								void *searchdata)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
-	unsigned long ret = EM_DATAMNG_INVALID_ID;
+	ulong ret = EM_DATAMNG_INVALID_ID;
 
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
@@ -215,9 +272,9 @@ unsigned long em_datamng_get_id(em_datamng_t *dm,
 }
 
 // unsafe
-int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
-									   void *searchdata,
-									   char (*comparator)(void *, void *))
+static int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
+											  void *searchdata,
+											  char (*comparator)(void *, void *))
 {
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
@@ -232,31 +289,18 @@ int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
 	return -1;
 }
 
-unsigned long em_datamng_get_id_by_func(em_datamng_t *dm,
+ulong em_datamng_get_id_by_func(em_datamng_t *dm,
 										void *searchdata,
 										char (*comparator)(void *, void *))
 {
-	unsigned long ret = EM_DATAMNG_INVALID_ID;
+	ulong ret = EM_DATAMNG_INVALID_ID;
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 
-#if 1
 	int data_index = _em_datamng_get_data_index_by_func(dm, searchdata, comparator);
 	if (data_index >= 0)
 	{
 		ret = dm->idcnt[data_index].id;
 	}
-#else
-	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
-	{
-		data_index = dm->mp.block_ptr[i]->index;
-		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
-		{
-			ret = dm->idcnt[data_index].id;
-			break;
-		}
-	}
-#endif
 
 	em_mutex_unlock(&dm->mutex);
 	return ret;

@@ -28,7 +28,7 @@ static void *_em_thread_starter(void *thrdarg)
 
 static char _em_threadid_comparator(void *dm_data, void *thread_id)
 {
-	if (*(unsigned long *)thread_id == ((_em_taskinfo_t *)dm_data)->thread_id)
+	if (*(ulong *)thread_id == ((_em_taskinfo_t *)dm_data)->thread_id)
 	{
 		return 1;
 	}
@@ -45,7 +45,7 @@ int em_init_taskmng(em_taskmng_t *tm, int num_max_task, int msgdata_size,
 	{
 		return -1;
 	}
-	return em_datamng_create(&tm->taskinfo_mng, sizeof(_em_taskinfo_t), num_max_task, allc_func, free_func);
+	return em_datamng_create(&tm->taskinfo_mng, sizeof(_em_taskinfo_t), num_max_task, EM_DMNG_DPLCT_ERROR, allc_func, free_func);
 }
 
 int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)

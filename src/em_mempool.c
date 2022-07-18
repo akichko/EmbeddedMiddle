@@ -116,8 +116,11 @@ int em_mpool_get_dataidx(em_mpool_t *mp, void *block_data)
 	return data_offset;
 }
 
-void *em_mpool_get_dataptr(em_mpool_t *mp, int data_idx)
+void *em_mpool_get_dataptr(em_mpool_t *mp, uint data_idx)
 {
+	if(mp->block[data_idx].index_ptr >= mp->num_used)
+		return NULL;
+
 	return mp->block[data_idx].data_ptr;
 }
 

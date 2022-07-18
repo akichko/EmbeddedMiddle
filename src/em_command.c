@@ -6,7 +6,7 @@
 
 int em_cmd_init(em_cmdmng_t *cm, int num_cmd)
 {
-	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, &malloc, &free))
+	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, EM_DMNG_DPLCT_ERROR, &malloc, &free))
 	{
 		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;

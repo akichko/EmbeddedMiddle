@@ -13,7 +13,7 @@
 
 int em_timermng_init(em_timermng_t *tmrmng, int num_timer)
 {
-	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, &malloc, &free);
+	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, EM_DMNG_DPLCT_ERROR, &malloc, &free);
 }
 
 static void _em_timer_cbfunc(__sigval_t sigval)

@@ -15,7 +15,7 @@ typedef struct
 	int block_size;
 	int num_max;
 	int num_used;
-	em_blkinfo_t **block_ptr; // dearch index
+	em_blkinfo_t **block_ptr; // search index
 	em_blkinfo_t *block;
 	void *rawdata; //実体
 	em_sem_t sem;
@@ -44,14 +44,11 @@ int em_mpool_alloc_block(em_mpool_t *mp,
 						 void **block_data,
 						 int timeout_ms);
 
-int _em_mpool_alloc_blockmng(em_mpool_t *mp,
-							 em_blkinfo_t **block_mng);
-
 int em_mpool_get_dataidx(em_mpool_t *mp,
 						 void *block_data);
 
 void *em_mpool_get_dataptr(em_mpool_t *mp,
-						   int data_idx);
+						   uint data_idx);
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
 								   int del_offset);
