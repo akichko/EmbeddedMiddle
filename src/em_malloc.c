@@ -40,6 +40,7 @@ int em_set_meminfo_t(em_meminfo_t *minfo,
 	minfo->is_used = is_used;
 	minfo->next_meminfo = next_meminfo;
 	minfo->back_meminfo = back_meminfo;
+	return 0;
 }
 
 int em_memmng_create(em_memmng_t *mm,
@@ -48,7 +49,7 @@ int em_memmng_create(em_memmng_t *mm,
 					 int alloc_max_num)
 {
 	// mem_unit_sizeが２の階乗
-	if (mem_unit_size <= 0 || (mem_unit_size & (mem_unit_size - 1) != 0))
+	if (mem_unit_size <= 0 || ((mem_unit_size & (mem_unit_size - 1)) != 0))
 	{
 		em_printf(EM_LOG_ERROR, "Error: mem_unit_size shoud be 2 ^ x\n");
 		return -1;
@@ -77,6 +78,7 @@ int em_memmng_create(em_memmng_t *mm,
 	em_set_meminfo_t(&mm->last_meminfo, -2, 0, 1, NULL, initial_meminfo);
 	em_set_meminfo_t(initial_meminfo, 0, mm->mem_total_bnum, 0,
 					 &mm->last_meminfo, &mm->first_meminfo);
+	return 0;
 }
 
 int em_memmng_delete(em_memmng_t *mm)
@@ -116,7 +118,7 @@ int em_memmng_print(em_memmng_t *mm)
 	return 0;
 }
 
-int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
+static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 {
 	if (size <= 0)
 	{
@@ -168,11 +170,11 @@ int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 
 			mm->minfo_ptr[meminfo_new->mem_index] = meminfo_new;
 
-			*mem = mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
+			*mem = (char*)mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
 			return 0;
 		}
 	}
-	// em_printf(EM_LOG_DEBUG, "allocation failed\n");
+	em_printf(EM_LOG_TRACE, "allocation failed\n");
 	*mem = NULL;
 	return -1;
 }
@@ -240,7 +242,7 @@ void *em_trymalloc(em_memmng_t *mm, size_t size, int timeout_ms)
 void em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
-	int index = (addr - mm->memory) >> mm->mem_unit_bshift;
+	int index = ((char*)addr - (char*)mm->memory) >> mm->mem_unit_bshift;
 	em_printf(EM_LOG_TRACE, "free %d (%p)\n", index, addr);
 
 	em_mutex_lock(&mm->mutex, EM_NO_TIMEOUT);

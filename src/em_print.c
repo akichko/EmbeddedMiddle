@@ -36,10 +36,13 @@ static int s_is_timeprint = 0;
 int em_print_set_loglevel(int newlevel)
 {
 	s_loglevel = newlevel;
+	return 0;
 }
+
 int em_print_is_timeprint(int is_timeprint)
 {
 	s_is_timeprint = is_timeprint;
+	return 0;
 }
 
 void _em_printf(const char *file, const char *function, int line, int type, const char *fmt, ...)
@@ -59,7 +62,7 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 	}
 
 	const char *filename = file;
-	char *tmppos;
+	const char *tmppos;
 	while (NULL != (tmppos = strstr(filename, "/")))
 	{
 		filename = tmppos + 1;

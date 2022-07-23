@@ -31,7 +31,7 @@ SOFTWARE.
 #include "em_timer.h"
 #include "em_print.h"
 
-int em_udp_tx_init(em_socket_t *sk, char *dest_ip, uint16_t dest_port, int queue_size)
+int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, int queue_size)
 {
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sk->addr.sin_family = AF_INET;
@@ -41,7 +41,7 @@ int em_udp_tx_init(em_socket_t *sk, char *dest_ip, uint16_t dest_port, int queue
 	return 0;
 }
 
-int em_udp_rx_init(em_socket_t *sk, char *ip_from, uint16_t local_port, int queue_size)
+int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, int queue_size)
 {
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sk->addr.sin_family = AF_INET;

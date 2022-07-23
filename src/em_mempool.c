@@ -48,7 +48,7 @@ int em_mpool_create_with_mem(em_mpool_t *mp,
 		mp->block_ptr[i] = &mp->block[i];
 		mp->block[i].index = i;
 		mp->block[i].index_ptr = i;
-		mp->block[i].data_ptr = mp->rawdata + block_size * i;
+		mp->block[i].data_ptr = (char*)mp->rawdata + block_size * i;
 	}
 
 	return 0;
@@ -88,7 +88,7 @@ int em_mpool_print(em_mpool_t *mp)
 			em_printf(EM_LOG_TOP, "   ");
 		}
 		em_printf(EM_LOG_TOP, "[%ld:%d:%d] ",
-			   (mp->block_ptr[i]->data_ptr - mp->rawdata) / mp->block_size,
+			   ((char*)mp->block_ptr[i]->data_ptr - (char*)mp->rawdata) / mp->block_size,
 			   mp->block[i].index_ptr,
 			   *(int *)(mp->block_ptr[i]->data_ptr));
 	}
@@ -134,7 +134,7 @@ int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 
 int em_mpool_get_dataidx(em_mpool_t *mp, void *block_data)
 {
-	int data_offset = (block_data - mp->rawdata) / mp->block_size;
+	int data_offset = ((char*)block_data - (char*)mp->rawdata) / mp->block_size;
 
 	return data_offset;
 }
@@ -174,7 +174,7 @@ int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 
 int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 {
-	int data_offset = (block_data - mp->rawdata) / mp->block_size;
+	int data_offset = ((char*)block_data - (char*)mp->rawdata) / mp->block_size;
 
 	em_printf(EM_LOG_TRACE, "free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 

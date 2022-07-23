@@ -36,7 +36,7 @@ typedef struct
 int em_omemmng_create(em_omemmng_t *mm,
 					   int mem_total_size,
 					   int mem_unit_size,
-					   void *memory);
+					   void *memory); //NULLで自動malloc
 
 int em_omemmng_delete(em_omemmng_t *mm);
 

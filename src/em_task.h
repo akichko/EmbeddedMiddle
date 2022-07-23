@@ -33,7 +33,7 @@ typedef int em_taskid_t;
 
 typedef struct
 {
-	char *task_name; // NULL禁止
+	const char *task_name; // NULL禁止
 	em_taskid_t task_id;
 	int priority;	   // 0-99. 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size

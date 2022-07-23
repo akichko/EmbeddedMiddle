@@ -42,13 +42,13 @@ typedef struct
 } em_socket_t;
 
 int em_udp_tx_init(em_socket_t *sk,
-				   char *dest_ip,
-				   uint16_t dest_port,
+				   const char *dest_ip,
+				   const uint16_t dest_port,
 				   int queue_size);
 
 int em_udp_rx_init(em_socket_t *sk,
-				   char *ip_from, //送信元フィルタ
-				   uint16_t local_port,
+				   const char *ip_from, //送信元フィルタ
+				   const uint16_t local_port,
 				   int queue_size);
 
 int em_udp_send(em_socket_t *sk,

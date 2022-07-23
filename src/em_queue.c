@@ -47,7 +47,7 @@ int em_queue_create_with_mem(em_queue_t *qu,
 
 	for (int i = 0; i < qu->num_max; i++)
 	{
-		qu->block_ptr[i] = qu->rawdata + block_size * i;
+		qu->block_ptr[i] = (char*)qu->rawdata + block_size * i;
 	}
 
 	return 0;
@@ -84,7 +84,7 @@ int em_queue_print(em_queue_t *qu)
 }
 
 // unsafe
-void *em_enqueue_get_dataptr(em_queue_t *qu)
+static void *_em_enqueue_get_dataptr(em_queue_t *qu)
 {
 	if (qu->num_used >= qu->num_max)
 		return NULL;
@@ -93,7 +93,7 @@ void *em_enqueue_get_dataptr(em_queue_t *qu)
 }
 
 // unsafe
-int em_enqueue_increment(em_queue_t *qu)
+static int _em_enqueue_increment(em_queue_t *qu)
 {
 	if (qu->num_used >= qu->num_max)
 		return -1;
@@ -123,7 +123,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 		return -1;
 	}
 
-	tmp = em_enqueue_get_dataptr(qu);
+	tmp = _em_enqueue_get_dataptr(qu);
 	if (tmp == NULL)
 	{
 		em_printf(EM_LOG_ERROR, "Fatal Error: get_dataptr failed\n");
@@ -134,7 +134,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 
 	memcpy(tmp, block_data, qu->block_size);
 
-	ret = em_enqueue_increment(qu);
+	ret = _em_enqueue_increment(qu);
 	if (ret != 0)
 	{
 		em_printf(EM_LOG_ERROR, "Fatal Error: increment failed\n");
@@ -147,7 +147,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 }
 
 // unsafe
-void *em_dequeue_get_dataptr(em_queue_t *qu)
+static void *_em_dequeue_get_dataptr(em_queue_t *qu)
 {
 	if (qu->num_used <= 0)
 		return NULL;
@@ -156,7 +156,7 @@ void *em_dequeue_get_dataptr(em_queue_t *qu)
 }
 
 // unsafe
-int em_dequeue_increment(em_queue_t *qu)
+static int _em_dequeue_increment(em_queue_t *qu)
 {
 	if (qu->num_used <= 0)
 		return -1;
@@ -191,7 +191,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 		return -1;
 	}
 
-	tmp = em_dequeue_get_dataptr(qu);
+	tmp = _em_dequeue_get_dataptr(qu);
 
 	if (tmp == NULL)
 	{
@@ -202,7 +202,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 
 	memcpy(block_data, tmp, qu->block_size);
 
-	ret = em_dequeue_increment(qu);
+	ret = _em_dequeue_increment(qu);
 	// unlock
 	em_mutex_unlock(&qu->mutex);
 	em_sem_post(&qu->sem_in);

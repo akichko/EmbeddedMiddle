@@ -21,7 +21,7 @@ char test_comparator(void *a, void *b)
 int main()
 {
 	em_datamng_t dm;
-	em_blkinfo_t *block;
+	//em_blkinfo_t *block;
 	em_test_t test_data = {0, 0, 0};
 	em_test_t test_data2 = {11, 0, 0};
 	em_test_t test_data3 = {11, 1, 2};

@@ -32,14 +32,28 @@ SOFTWARE.
 
 int em_event_init(em_event_t *event)
 {
-	pthread_cond_init(&event->cond, NULL);
-	pthread_mutex_init(&event->mtx, NULL);
+	if(0 != pthread_cond_init(&event->cond, NULL)){
+		em_printf(EM_LOG_ERROR, "cond init error\n");
+		return -1;
+	}
+	if(0 != pthread_mutex_init(&event->mtx, NULL)){
+		em_printf(EM_LOG_ERROR, "mutex init error\n");
+		return -1;
+	}
+	return 0;
 }
 
 int em_event_destroy(em_event_t *event)
 {
-	pthread_cond_destroy(&event->cond);
-	pthread_mutex_destroy(&event->mtx);
+	if(0 != pthread_cond_destroy(&event->cond)){
+		em_printf(EM_LOG_ERROR, "cond init error\n");
+		return -1;
+	}
+	if(0 != pthread_mutex_destroy(&event->mtx)){
+		em_printf(EM_LOG_ERROR, "mutex init error\n");
+		return -1;
+	}
+	return 0;
 }
 
 int em_event_wait(em_event_t *event, int timeout_ms)

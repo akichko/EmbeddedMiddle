@@ -39,7 +39,7 @@ int em_semmng_init(em_semmng_t *smm, int max_sem_num,
 					void(*free_func)(void *))
 {
 	smm->free_func = free_func;
-	em_mpool_create(&smm->mp_semaphore, sizeof(sem_t), max_sem_num, allc_func, free_func);
+	return em_mpool_create(&smm->mp_semaphore, sizeof(sem_t), max_sem_num, allc_func, free_func);
 }
 
 em_semp_t em_semmng_factory(em_semmng_t *smm, int value)

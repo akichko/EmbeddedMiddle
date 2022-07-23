@@ -32,12 +32,12 @@ SOFTWARE.
 int em_mutex_init(em_mutex_t *mutex)
 {
 	// mutex->mtx = malloc(sizeof(pthread_mutex_t));
-	pthread_mutex_init(&mutex->mtx, NULL);
+	return pthread_mutex_init(&mutex->mtx, NULL);
 }
 
 int em_mutex_destroy(em_mutex_t *mutex)
 {
-	pthread_mutex_destroy(&mutex->mtx);
+	return pthread_mutex_destroy(&mutex->mtx);
 }
 
 int em_mutex_lock(em_mutex_t *mutex, int timeout_ms)

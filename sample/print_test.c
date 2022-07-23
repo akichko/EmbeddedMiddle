@@ -4,7 +4,7 @@
 
 int main()
 {
-	char *msg = "bbb";
+	const char *msg = "bbb";
 	em_printf(EM_LOG_TRACE,"EM_LOG_TRACE\n");
 	em_printf(EM_LOG_DEBUG,"EM_LOG_DEBUG %s\n", msg);
 	em_printf(EM_LOG_INFO,"EM_LOG_INFO %s %d\n", msg, 5);

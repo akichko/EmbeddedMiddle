@@ -50,14 +50,14 @@ int em_cmd_regist(em_cmdmng_t *cm,
 
 static char _em_cmdname_comparator(void *dm_data, void *cmd_name)
 {
-	if (0 == strcmp(cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
+	if (0 == strcmp((char*)cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
 	{
 		return 1;
 	}
 	return 0;
 }
 
-static void *_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname)
+static void (*_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname))(int, char **)
 {
 	em_cmdsetting_t cmdsetting;
 	if (0 != em_datamng_get_data_by_func(&cm->cmdmng, cmdname, _em_cmdname_comparator, &cmdsetting))
@@ -84,7 +84,6 @@ static int _em_read_until_line_end()
 
 static int _em_read_word(char *dst, int max_size)
 {
-	int ret = -1;
 	char c;
 	int pos_letter = 0;
 
@@ -204,11 +203,13 @@ int em_cmd_start(em_cmdmng_t *cm)
 			em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
 	}
+	return 0;
 }
 
 int em_cmd_stop(em_cmdmng_t *cm)
 {
 	cm->is_running = 0;
+	return 0;
 }
 
 int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)

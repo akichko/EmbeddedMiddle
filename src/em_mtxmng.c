@@ -34,13 +34,13 @@ int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
 {
 	mtxm->free_func = free_func;
 	mtxm->islock = (char *)malloc(sizeof(char) * max_mutex_num);
-	em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num, allc_func, free_func);
+	return em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num, allc_func, free_func);
 }
 
 int em_mtxmng_destroy(em_mtxmng_t *mtxm)
 {
 	mtxm->free_func(mtxm->islock);
-	em_mpool_delete(&mtxm->mp_mutex);
+	return em_mpool_delete(&mtxm->mp_mutex);
 }
 
 int em_mtxmng_create_mutex(em_mtxmng_t *mtxm)
@@ -57,14 +57,14 @@ int em_mtxmng_create_mutex(em_mtxmng_t *mtxm)
 
 int em_mtxmng_delete_mutex(em_mtxmng_t *mtxm, int mutex_id)
 {
-	em_mutex_t *mutex = em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
+	em_mutex_t *mutex = (em_mutex_t *)em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
 	em_mutex_destroy(mutex);
 	return em_mpool_free_block_by_dataidx(&mtxm->mp_mutex, mutex_id);
 }
 
 int em_mtxmng_lock(em_mtxmng_t *mtxm, int mutex_id, int timeout_ms)
 {
-	em_mutex_t *mutex = em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
+	em_mutex_t *mutex = (em_mutex_t *)em_mpool_get_dataptr(&mtxm->mp_mutex, mutex_id);
 
 	if (0 != em_mutex_lock(mutex, timeout_ms))
 	{

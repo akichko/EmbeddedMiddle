@@ -44,6 +44,7 @@ int em_omemmng_create(em_omemmng_t *mm,
 		mm->is_malloc = 1;
 		mm->memory = malloc(mem_total_size);
 	}
+	return 0;
 }
 
 int em_omemmng_delete(em_omemmng_t *mm)
@@ -80,7 +81,7 @@ void *em_oalloc(em_omemmng_t *mm, int size)
 
 	if (blength < mm->mem_total_bnum - mm->next_alloc_index)
 	{
-		ret = mm->memory + mm->next_alloc_index * mm->mem_unit_size;
+		ret = (char*)mm->memory + mm->next_alloc_index * mm->mem_unit_size;
 		mm->next_alloc_index += blength;
 		return ret;
 	}

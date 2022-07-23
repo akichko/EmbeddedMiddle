@@ -35,6 +35,7 @@ int main(void)
 	}
 
 	printf("[Main] Main End\n");
+	return 0;
 }
 
 void *thread1(void *arg)
@@ -44,4 +45,5 @@ void *thread1(void *arg)
 
 	printf("[Sub] set event\n");
 	em_event_set(&event);
+	return NULL;
 }

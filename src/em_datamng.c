@@ -279,7 +279,6 @@ ulong em_datamng_get_id(em_datamng_t *dm,
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	ulong ret = EM_DATAMNG_INVALID_ID;
 
-	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		// if (comparator(dm->mp.block_ptr[i]->data_ptr, searchdata))

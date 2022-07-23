@@ -36,10 +36,12 @@ void timer_func_1(void *arg)
 	lastTime = curTime;
 }
 
+char teststr[] = "test string";
+
 em_timersetting_t timersetting[] = {
 	{100, 1200, timer_func_1, NULL},
 	{200, 900, timer_func_1, NULL},
-	{300, 900, timer_func_2, "test string"}};
+	{300, 900, timer_func_2, teststr}};
 
 int main()
 {

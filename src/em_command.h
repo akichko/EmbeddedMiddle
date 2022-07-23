@@ -37,7 +37,7 @@ SOFTWARE.
 typedef struct
 {
 	int cmd_id;
-	char *cmd_name;
+	const char *cmd_name;
 	void (*cmd_func)(int, char **);
 } em_cmdsetting_t;
 

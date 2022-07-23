@@ -40,9 +40,9 @@ static void *_em_thread_starter(void *thrdarg)
 	int (*funcptr)() = arg->entry_func;
 
 	//開始同期制御
-	//em_printf(EM_LOG_INFO, "event wait start\n");
+	// em_printf(EM_LOG_INFO, "event wait start\n");
 	em_sem_wait(arg->sem_ptr, EM_WAIT);
-	//em_printf(EM_LOG_INFO, "event wait end\n");
+	// em_printf(EM_LOG_INFO, "event wait end\n");
 
 	*ret = (*funcptr)();
 
@@ -104,7 +104,6 @@ int em_task_initialize_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 
 int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
-	int ret;
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
@@ -113,28 +112,39 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	thrdarg.sem_ptr = &tm->sem;
 	thrdarg.entry_func = tasksetting.entry_func;
 
+	if (tm->taskinfo_mng.mp.num_used == tm->taskinfo_mng.mp.num_max)
+	{
+		em_printf(EM_LOG_ERROR, "error: task max\n");
+		return -1;
+	}
+
 	if (0 != pthread_attr_init(&tattr))
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_init\n");
+		return -1;
 	}
 	if (tasksetting.stack_size > 0 && 0 != pthread_attr_setstacksize(&tattr, tasksetting.stack_size))
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setstacksize\n");
+		return -1;
 	}
 	if (0 != pthread_attr_setschedpolicy(&tattr, SCHED_FIFO))
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedpolicy\n");
+		return -1;
 	}
 	// should be execed by root
 	if (tasksetting.priority > 0 && 0 != pthread_attr_setinheritsched(&tattr, PTHREAD_EXPLICIT_SCHED))
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setinheritsched\n");
+		return -1;
 	}
 	// pthread_setschedprio(&tattr, 0);
 	scheprm.sched_priority = tasksetting.priority;
 	if (tasksetting.priority > 0 && 0 != pthread_attr_setschedparam(&tattr, &scheprm))
 	{
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedparam\n");
+		return -1;
 	}
 	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)&thrdarg))
 	{
@@ -168,14 +178,12 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 
 int em_task_create(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
-	int ret;
-
 	if (0 != em_task_create_msgqueue(tm, tasksetting))
 	{
 		em_printf(EM_LOG_ERROR, "create msgqueue error\n");
 		return -1;
 	}
-	
+
 	if (0 != em_task_initialize_task(tm, tasksetting))
 	{
 		em_printf(EM_LOG_ERROR, "task initialize error\n");
@@ -220,7 +228,6 @@ int em_task_delete(em_taskmng_t *tm, em_taskid_t task_id)
 
 em_taskid_t em_get_task_id(em_taskmng_t *tm)
 {
-	int ret;
 	pthread_t thread_id = pthread_self();
 	em_taskid_t task_id;
 	// ret = em_datamng_get_data(&tm->thread_task_mng, thread_id, &task_id);
@@ -237,7 +244,7 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm)
 
 em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm, int taskid)
 {
-	_em_taskinfo_t *taskinfo = em_datamng_get_data_ptr(&tm->taskinfo_mng, taskid);
+	_em_taskinfo_t *taskinfo = (_em_taskinfo_t*)em_datamng_get_data_ptr(&tm->taskinfo_mng, taskid);
 	if (taskinfo == NULL)
 	{
 		em_printf(EM_LOG_ERROR, "taskinfo of id %d not found\n", taskid);
@@ -255,7 +262,11 @@ int em_msg_send(em_taskmng_t *tm, int taskid, void *msgdata, int timeout_ms)
 		return -1;
 	}
 
-	return em_enqueue(mqueue, msgdata, timeout_ms);
+	if (0 != em_enqueue(mqueue, msgdata, timeout_ms))
+	{
+		em_printf(EM_LOG_ERROR, "msg send failed\n");
+	}
+	return 0;
 }
 
 int em_msg_recv(em_taskmng_t *tm, void *msgdata, int timeout_ms)

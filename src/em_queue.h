@@ -54,17 +54,17 @@ int em_queue_delete(em_queue_t *qu);
 
 int em_queue_print(em_queue_t *qu);
 
-void *em_enqueue_get_dataptr(em_queue_t *qu);
+//void *em_enqueue_get_dataptr(em_queue_t *qu);
 
-int em_enqueue_increment(em_queue_t *qu);
+//int em_enqueue_increment(em_queue_t *qu);
 
 int em_enqueue(em_queue_t *qu,
 			   void *block_data,
 			   int timeout_ms);
 
-void *em_dequeue_get_dataptr(em_queue_t *qu);
+//void *em_dequeue_get_dataptr(em_queue_t *qu);
 
-int em_dequeue_increment(em_queue_t *qu);
+//int em_dequeue_increment(em_queue_t *qu);
 
 int em_dequeue(em_queue_t *qu,
 			   void *block_data,
