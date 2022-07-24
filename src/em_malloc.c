@@ -92,29 +92,41 @@ int em_memmng_delete(em_memmng_t *mm)
 	return 0;
 }
 
-int em_memmng_print(em_memmng_t *mm)
+int em_memmng_print(em_memmng_t *mm, int detail)
 {
 	int total_used = mm->mem_used_bsize;
 	// int total_free = (mm->mem_total_size >> mm->mem_unit_bshift) - mm->mem_used_bsize;
 	int total = mm->mem_total_bnum;
 	em_meminfo_t *meminfo;
 	printf("mem used: ");
-	for (int i = 0; i < mm->mp_used.num_used; i++)
+	if (detail)
 	{
-		meminfo = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
-		// total_used += meminfo->mem_length;
-		printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
+
+		for (int i = 0; i < mm->mp_used.num_used; i++)
+		{
+			meminfo = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
+			// total_used += meminfo->mem_length;
+			printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
+		}
+		printf("\n    free: ");
+		for (int i = 0; i < mm->mp_free.num_used; i++)
+		{
+			meminfo = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
+			// total_free += meminfo->mem_length;
+			printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
+		}
+		printf("\n    usage: %.1f%% (%d/%d) (%d/%d) [used %d, free %d]\n",
+			   total_used * 100.0 / total,
+			   total_used, total, total_used * mm->mem_unit_size, total * mm->mem_unit_size,
+			   mm->mp_used.num_used, mm->mp_free.num_used);
 	}
-	printf("\n    free: ");
-	for (int i = 0; i < mm->mp_free.num_used; i++)
+	else
 	{
-		meminfo = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
-		// total_free += meminfo->mem_length;
-		printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
+		printf("%.1f%% (%d/%d) (%d/%d) [used %d, free %d]\n",
+			   total_used * 100.0 / total, total_used, total, 
+			   total_used * mm->mem_unit_size, total * mm->mem_unit_size,
+			   mm->mp_used.num_used, mm->mp_free.num_used);
 	}
-	printf("\n    usage: %.1f%% (%d/%d) \n",
-		   total_used * 100.0 / total,
-		   total_used, total);
 	return 0;
 }
 
@@ -170,7 +182,7 @@ static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 
 			mm->minfo_ptr[meminfo_new->mem_index] = meminfo_new;
 
-			*mem = (char*)mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
+			*mem = (char *)mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
 			return 0;
 		}
 	}
@@ -242,7 +254,7 @@ void *em_trymalloc(em_memmng_t *mm, size_t size, int timeout_ms)
 void em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
-	int index = ((char*)addr - (char*)mm->memory) >> mm->mem_unit_bshift;
+	int index = ((char *)addr - (char *)mm->memory) >> mm->mem_unit_bshift;
 	em_printf(EM_LOG_TRACE, "free %d (%p)\n", index, addr);
 
 	em_mutex_lock(&mm->mutex, EM_NO_TIMEOUT);

@@ -34,11 +34,15 @@ SOFTWARE.
 #include "em_datamng.h"
 #include "em_print.h"
 
-int em_timermng_init(em_timermng_t *tmrmng, int num_timer)
+int em_timermng_init(em_timermng_t *tmrmng, int num_timer, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, EM_DMNG_DPLCT_ERROR, &malloc, &free);
+	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, EM_DMNG_DPLCT_ERROR, alloc_func, free_func);
 }
 
+int em_timermng_destroy(em_timermng_t *tmrmng)
+{
+	return em_datamng_delete(&tmrmng->timerinfo_mng);
+}
 static void _em_timer_cbfunc(__sigval_t sigval)
 {
 	em_timersetting_t *timersetting = (em_timersetting_t *)sigval.sival_ptr;
@@ -54,7 +58,7 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
 	struct sigevent se;
 	se.sigev_notify = SIGEV_THREAD;
 	se.sigev_notify_function = _em_timer_cbfunc;
-	se.sigev_value.sival_ptr = setting; //heap or static
+	se.sigev_value.sival_ptr = setting; // heap or static
 	se.sigev_notify_attributes = NULL;
 
 	struct itimerspec ts;

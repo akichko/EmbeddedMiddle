@@ -59,15 +59,15 @@ int em_datamng_create_with_mem(em_datamng_t *dm,
 }
 
 int em_datamng_create(em_datamng_t *dm, int data_size, int data_num, int duplicate_mode,
-					  void *(*allc_func)(size_t),
+					  void *(*alloc_func)(size_t),
 					  void (*free_func)(void *))
 {
 	dm->duplicate_mode = duplicate_mode;
 	dm->free_func = free_func;
-	em_idcnt_t *idcnt = (em_idcnt_t *)allc_func(sizeof(em_idcnt_t) * data_num);
+	em_idcnt_t *idcnt = (em_idcnt_t *)alloc_func(sizeof(em_idcnt_t) * data_num);
 
-	em_mpool_create(&dm->mp, data_size, data_num, allc_func, free_func);
-	// dm->idcnt = (em_idcnt_t *)malloc(sizeof(em_idcnt_t) * data_size);
+	em_mpool_create(&dm->mp, data_size, data_num, alloc_func, free_func);
+	// dm->idcnt = (em_idcnt_t *)alloc_func(sizeof(em_idcnt_t) * data_size);
 
 	return _em_datamng_init(dm, idcnt);
 }

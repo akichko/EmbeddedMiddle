@@ -25,6 +25,7 @@ SOFTWARE.
 #define __EM_EVENTFLAG_H__
 
 #include <pthread.h>
+#include "em_cmndefs.h"
 
 #define EM_NO_TIMEOUT -1
 #define EM_NO_WAIT 0

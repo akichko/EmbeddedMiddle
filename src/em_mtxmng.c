@@ -29,12 +29,12 @@ SOFTWARE.
 #include "em_cmndefs.h"
 
 int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
-				   void *(*allc_func)(size_t),
+				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *))
 {
 	mtxm->free_func = free_func;
-	mtxm->islock = (char *)malloc(sizeof(char) * max_mutex_num);
-	return em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num, allc_func, free_func);
+	mtxm->islock = (char *)alloc_func(sizeof(char) * max_mutex_num);
+	return em_mpool_create(&mtxm->mp_mutex, sizeof(em_mutex_t), max_mutex_num, alloc_func, free_func);
 }
 
 int em_mtxmng_destroy(em_mtxmng_t *mtxm)

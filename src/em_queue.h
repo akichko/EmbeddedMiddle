@@ -25,6 +25,7 @@ SOFTWARE.
 #define __EM_QUEUE_H__
 
 #include "em_mutex.h"
+#include "em_semaphore.h"
 
 typedef struct
 {
@@ -38,6 +39,7 @@ typedef struct
 	em_sem_t sem_in;
 	em_sem_t sem_out;
 	em_mutex_t mutex;
+	void (*free_func)(void *);
 } em_queue_t;
 
 int em_queue_create_with_mem(em_queue_t *qu,
@@ -48,23 +50,25 @@ int em_queue_create_with_mem(em_queue_t *qu,
 
 int em_queue_create(em_queue_t *qu,
 					int block_size,
-					int block_num);
+					int block_num,
+					void *(*alloc_func)(size_t),
+					void (*free_func)(void *));
 
 int em_queue_delete(em_queue_t *qu);
 
 int em_queue_print(em_queue_t *qu);
 
-//void *em_enqueue_get_dataptr(em_queue_t *qu);
+// void *em_enqueue_get_dataptr(em_queue_t *qu);
 
-//int em_enqueue_increment(em_queue_t *qu);
+// int em_enqueue_increment(em_queue_t *qu);
 
 int em_enqueue(em_queue_t *qu,
 			   void *block_data,
 			   int timeout_ms);
 
-//void *em_dequeue_get_dataptr(em_queue_t *qu);
+// void *em_dequeue_get_dataptr(em_queue_t *qu);
 
-//int em_dequeue_increment(em_queue_t *qu);
+// int em_dequeue_increment(em_queue_t *qu);
 
 int em_dequeue(em_queue_t *qu,
 			   void *block_data,

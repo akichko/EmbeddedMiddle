@@ -16,9 +16,9 @@ int thread2(); // Thread Entry function 2
 #define TASK_ID_APP3 300
 
 em_tasksetting_t tasklist[] = {
-	{"App1", TASK_ID_APP1, 0, 0, 5, NULL, thread1},
-	{"App2", TASK_ID_APP2, 0, 0, 5, NULL, thread2},
-	{"App3", TASK_ID_APP3, 0, 0, 5, NULL, thread1}};
+	{"App1", TASK_ID_APP1, 0, 0, 5, thread1},
+	{"App2", TASK_ID_APP2, 0, 0, 5, thread2},
+	{"App3", TASK_ID_APP3, 0, 0, 5, thread1}};
 
 em_taskmng_t tm;
 
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	ret = em_init_taskmng(&tm, task_num, sizeof(int), &malloc, &free);
+	ret = em_taskmng_init(&tm, task_num, sizeof(int), &malloc, &free);
 
 	for (int i = 0; i < task_num; i++)
 	{

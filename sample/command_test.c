@@ -29,7 +29,7 @@ int main()
 	em_cmdmng_t cm;
 	//int ret;
 
-	if (0 != em_cmd_init(&cm, 5))
+	if (0 != em_cmd_init(&cm, 5, &malloc, &free))
 	{
 		printf("em_command_init error!!\n");
 		exit(1);

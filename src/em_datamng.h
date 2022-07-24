@@ -60,7 +60,7 @@ int em_datamng_create(em_datamng_t *dm,
 					  int data_size,
 					  int data_num,
 					  int duplicate_mode,
-					  void *(*allc_func)(size_t),
+					  void *(*alloc_func)(size_t),
 					  void (*free_func)(void *));
 
 int em_datamng_delete(em_datamng_t *dm);

@@ -83,7 +83,8 @@ int em_memmng_create(em_memmng_t *mm,
 
 int em_memmng_delete(em_memmng_t *mm);
 
-int em_memmng_print(em_memmng_t *mm);
+int em_memmng_print(em_memmng_t *mm,
+					int detail);
 
 void *em_malloc(em_memmng_t *mm,
 				size_t size);

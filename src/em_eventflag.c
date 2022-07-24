@@ -32,11 +32,13 @@ SOFTWARE.
 
 int em_event_init(em_event_t *event)
 {
-	if(0 != pthread_cond_init(&event->cond, NULL)){
+	if (0 != pthread_cond_init(&event->cond, NULL))
+	{
 		em_printf(EM_LOG_ERROR, "cond init error\n");
 		return -1;
 	}
-	if(0 != pthread_mutex_init(&event->mtx, NULL)){
+	if (0 != pthread_mutex_init(&event->mtx, NULL))
+	{
 		em_printf(EM_LOG_ERROR, "mutex init error\n");
 		return -1;
 	}
@@ -45,11 +47,13 @@ int em_event_init(em_event_t *event)
 
 int em_event_destroy(em_event_t *event)
 {
-	if(0 != pthread_cond_destroy(&event->cond)){
+	if (0 != pthread_cond_destroy(&event->cond))
+	{
 		em_printf(EM_LOG_ERROR, "cond init error\n");
 		return -1;
 	}
-	if(0 != pthread_mutex_destroy(&event->mtx)){
+	if (0 != pthread_mutex_destroy(&event->mtx))
+	{
 		em_printf(EM_LOG_ERROR, "mutex init error\n");
 		return -1;
 	}
@@ -64,6 +68,11 @@ int em_event_wait(em_event_t *event, int timeout_ms)
 		pthread_mutex_lock(&event->mtx);
 		ret = pthread_cond_wait(&event->cond, &event->mtx);
 		pthread_mutex_unlock(&event->mtx);
+		if (ret != 0)
+		{
+			em_printf(EM_LOG_ERROR, "wait error\n");
+			return EM_ERROR;
+		}
 	}
 	else
 	{
@@ -71,12 +80,13 @@ int em_event_wait(em_event_t *event, int timeout_ms)
 		pthread_mutex_lock(&event->mtx);
 		ret = pthread_cond_timedwait(&event->cond, &event->mtx, &timeout_ts);
 		pthread_mutex_unlock(&event->mtx);
+		if (ret != 0)
+		{
+			em_printf(EM_LOG_DEBUG, "wait timeout\n");
+			return EM_E_TIMEOUT;
+		}
 	}
-	if (ret != 0)
-	{
-		em_printf(EM_LOG_ERROR, "wait error\n");
-	}
-	return ret;
+	return EM_ERROR;
 }
 
 int em_event_broadcast(em_event_t *event)

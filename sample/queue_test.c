@@ -17,7 +17,7 @@ int main()
 	em_test_t test_buf;
 	int ret;
 
-	em_queue_create(&qu, sizeof(em_test_t), 4);
+	em_queue_create(&qu, sizeof(em_test_t), 4, &malloc, &free);
 	em_queue_print(&qu);
 
 	if (0 != em_dequeue(&qu, &test_buf, 1000))

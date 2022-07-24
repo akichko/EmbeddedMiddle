@@ -55,13 +55,13 @@ int em_mpool_create_with_mem(em_mpool_t *mp,
 }
 
 int em_mpool_create(em_mpool_t *mp, int block_size, int block_num,
-					void *(*allc_func)(size_t),
+					void *(*alloc_func)(size_t),
 					void (*free_func)(void *))
 {
 	mp->free_func = free_func;
-	em_blkinfo_t **block_ptr = (em_blkinfo_t **)allc_func(sizeof(em_blkinfo_t *) * block_num);
-	em_blkinfo_t *block = (em_blkinfo_t *)allc_func(sizeof(em_blkinfo_t) * block_num);
-	void *rawdata = allc_func(block_size * block_num);
+	em_blkinfo_t **block_ptr = (em_blkinfo_t **)alloc_func(sizeof(em_blkinfo_t *) * block_num);
+	em_blkinfo_t *block = (em_blkinfo_t *)alloc_func(sizeof(em_blkinfo_t) * block_num);
+	void *rawdata = alloc_func(block_size * block_num);
 
 	return em_mpool_create_with_mem(mp, block_size, block_num,
 									block_ptr, block, rawdata);

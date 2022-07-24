@@ -35,8 +35,9 @@ typedef unsigned long int	ulong;
 #define FALSE 0
 
 #define EM_SUCCESS 0
-#define EM_E_PARAM -1
+#define EM_ERROR -1
 #define EM_E_TIMEOUT -2
+#define EM_E_PARAM -11
 #define EM_E_OTHER -99
 
 

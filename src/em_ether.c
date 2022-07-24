@@ -31,23 +31,29 @@ SOFTWARE.
 #include "em_timer.h"
 #include "em_print.h"
 
-int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, int queue_size)
+int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, int queue_size,
+				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
+	sk->alloc_func = alloc_func;
+	sk->free_func = free_func;
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sk->addr.sin_family = AF_INET;
 	sk->addr.sin_port = htons(dest_port);
 	sk->addr.sin_addr.s_addr = inet_addr(dest_ip);
-	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size);
+	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
 	return 0;
 }
 
-int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, int queue_size)
+int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, int queue_size,
+				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
+	sk->alloc_func = alloc_func;
+	sk->free_func = free_func;
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sk->addr.sin_family = AF_INET;
 	sk->addr.sin_port = htons(local_port);
 	sk->addr.sin_addr.s_addr = inet_addr(ip_from);
-	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size);
+	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
 	bind(sk->sock, (struct sockaddr *)&sk->addr, sizeof(sk->addr));
 	return 0;
 }
@@ -104,7 +110,8 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 int em_udp_recv_enqueue(em_socket_t *sk, int timeout_ms)
 {
 	em_ethpacket_t packet;
-	if(0 != em_udp_recv(sk, &packet, timeout_ms)){
+	if (0 != em_udp_recv(sk, &packet, timeout_ms))
+	{
 		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
 		return -1;
 	}

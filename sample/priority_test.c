@@ -19,8 +19,8 @@ int threadfunc_low();
 int threadfunc_high();
 
 em_tasksetting_t tasklist[] = {
-    {"LowPriority", TASK_ID_LOW, 3, 0, 5, NULL, threadfunc_low},
-    {"HighPriority", TASK_ID_HIGH, 5, 0, 5, NULL, threadfunc_high}};
+    {"LowPriority", TASK_ID_LOW, 3, 0, 5, threadfunc_low},
+    {"HighPriority", TASK_ID_HIGH, 5, 0, 5, threadfunc_high}};
 
 em_taskmng_t tm;
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
     printf("task num %d\n", task_num);
 
-    if (0 != em_init_taskmng(&tm, task_num, sizeof(int), &malloc, &free))
+    if (0 != em_taskmng_init(&tm, task_num, sizeof(int), &malloc, &free))
     {
         printf("em_init_taskmng error\n");
         exit(1);

@@ -18,7 +18,7 @@ void timer_func(void *arg);
 void shutdown(int argc, char **argv);
 
 em_tasksetting_t tasksetting =
-	{"App1", TASK_ID_APP1, 0, 0, 5, NULL, app1_main};
+	{"App1", TASK_ID_APP1, 0, 0, 5, app1_main};
 
 int b_shutdown = 0;
 
@@ -83,12 +83,12 @@ int main()
 		printf("error\n");
 	}
 
-	if (0 != em_timermng_init(&tmrmng, 10))
+	if (0 != em_timermng_init(&tmrmng, 10, &malloc, &free))
 	{
 		printf("error\n");
 	}
 
-	if (0 != em_cmd_init(&cmdmng, 10))
+	if (0 != em_cmd_init(&cmdmng, 10, &malloc, &free))
 	{
 		printf("error\n");
 	}
@@ -100,7 +100,7 @@ int main()
 		printf("error\n");
 	}
 
-	if (0 != em_init_taskmng(&tskmng, 1, sizeof(testmsg_t), &malloc, &free))
+	if (0 != em_taskmng_init(&tskmng, 1, sizeof(testmsg_t), &malloc, &free))
 	{
 		printf("error\n");
 		exit(1);

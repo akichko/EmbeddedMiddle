@@ -50,7 +50,7 @@ int main()
 	//int ret;
 	em_tick_init(&tm);
 
-	if (0 != em_timermng_init(&tmrmng, 10))
+	if (0 != em_timermng_init(&tmrmng, 10, &malloc, &free))
 	{
 		printf("error\n");
 	}

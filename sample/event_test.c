@@ -5,7 +5,6 @@
 #include <pthread.h>
 #include "../src/em_eventflag.h"
 
-
 static void *thread1(void *);
 
 em_event_t event;
@@ -14,6 +13,7 @@ int main(void)
 {
 	pthread_t thread_id = 0;
 
+	em_print_set_loglevel(EM_LOG_DEBUG);
 
 	em_event_init(&event);
 
@@ -24,7 +24,7 @@ int main(void)
 	}
 	printf("[Main] Thread created, wait event set\n");
 
-	em_event_wait(&event, EM_NO_TIMEOUT);
+	em_event_wait(&event, 500);
 
 	printf("[Main] Main is working\n");
 
@@ -44,6 +44,7 @@ void *thread1(void *arg)
 	sleep(2);
 
 	printf("[Sub] set event\n");
-	em_event_set(&event);
+	// em_event_set(&event);
+	em_event_broadcast(&event);
 	return NULL;
 }

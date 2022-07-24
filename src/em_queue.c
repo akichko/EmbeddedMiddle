@@ -47,7 +47,7 @@ int em_queue_create_with_mem(em_queue_t *qu,
 
 	for (int i = 0; i < qu->num_max; i++)
 	{
-		qu->block_ptr[i] = (char*)qu->rawdata + block_size * i;
+		qu->block_ptr[i] = (char *)qu->rawdata + block_size * i;
 	}
 
 	return 0;
@@ -55,18 +55,21 @@ int em_queue_create_with_mem(em_queue_t *qu,
 
 int em_queue_create(em_queue_t *qu,
 					int block_size,
-					int block_num)
+					int block_num,
+					void *(*alloc_func)(size_t),
+					void (*free_func)(void *))
 {
-	void *rawdata = malloc(block_size * block_num);
-	void **block_ptr = (void **)malloc(sizeof(void *) * block_num);
+	qu->free_func = free_func;
+	void *rawdata = alloc_func(block_size * block_num);
+	void **block_ptr = (void **)alloc_func(sizeof(void *) * block_num);
 
 	return em_queue_create_with_mem(qu, block_size, block_num, block_ptr, rawdata);
 }
 
 int em_queue_delete(em_queue_t *qu)
 {
-	free(qu->block_ptr);
-	free(qu->rawdata);
+	qu->free_func(qu->block_ptr);
+	qu->free_func(qu->rawdata);
 	em_sem_destroy(&qu->sem_out);
 	em_sem_destroy(&qu->sem_in);
 	em_mutex_destroy(&qu->mutex);

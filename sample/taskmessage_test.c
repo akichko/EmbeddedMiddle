@@ -14,8 +14,8 @@ int threadfunc_send();
 int threadfunc_recv();
 
 em_tasksetting_t tasklist[] = {
-	{"Receiver", TASK_ID_RECV, 0, 0, 5, NULL, threadfunc_recv},
-	{"Sender", TASK_ID_SEND, 0, 0, 5, NULL, threadfunc_send}};
+	{"Receiver", TASK_ID_RECV, 0, 0, 5, threadfunc_recv},
+	{"Sender", TASK_ID_SEND, 0, 0, 5, threadfunc_send}};
 
 typedef struct
 {
@@ -36,9 +36,9 @@ int main(int argc, char **argv)
 	int task_num = sizeof(tasklist) / sizeof(em_tasksetting_t);
 	printf("task num %d\n", task_num);
 
-	if (0 != em_init_taskmng(&tm, task_num, sizeof(testmsg_t), &malloc, &free))
+	if (0 != em_taskmng_init(&tm, task_num, sizeof(testmsg_t), &malloc, &free))
 	{
-		printf("em_init_taskmng error\n");
+		printf("em_taskmng_init error\n");
 		exit(1);
 	}
 

@@ -48,7 +48,11 @@ typedef struct
 } em_cmdmng_t;
 
 int em_cmd_init(em_cmdmng_t *cm,
-				int num_cmd);
+				int num_cmd,
+				void *(*alloc_func)(size_t),
+				void (*free_func)(void *));
+
+int em_cmd_destroy(em_cmdmng_t *cm);
 
 int em_cmd_start(em_cmdmng_t *cm);
 

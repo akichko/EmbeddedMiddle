@@ -27,14 +27,18 @@ SOFTWARE.
 #include "em_command.h"
 #include "em_print.h"
 
-int em_cmd_init(em_cmdmng_t *cm, int num_cmd)
+int em_cmd_init(em_cmdmng_t *cm, int num_cmd, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, EM_DMNG_DPLCT_ERROR, &malloc, &free))
+	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, EM_DMNG_DPLCT_ERROR, alloc_func, free_func))
 	{
 		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
 	return 0;
+}
+
+int em_cmd_destroy(em_cmdmng_t *cm){
+	return em_datamng_delete(&cm->cmdmng);
 }
 
 int em_cmd_regist(em_cmdmng_t *cm,
@@ -50,7 +54,7 @@ int em_cmd_regist(em_cmdmng_t *cm,
 
 static char _em_cmdname_comparator(void *dm_data, void *cmd_name)
 {
-	if (0 == strcmp((char*)cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
+	if (0 == strcmp((char *)cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
 	{
 		return 1;
 	}

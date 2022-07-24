@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -91,10 +92,10 @@ int main(void)
     static int cnt = 0;
     pthread_t p1, p2, p3;
 
-    em_udp_tx_init(&sock_tx, "127.0.0.1", 23456, 10);
-    em_udp_rx_init(&sock_rx, "0.0.0.0", 23456, 10);
-    em_udp_tx_init(&sock_tx2, "127.0.0.1", 34567, 10);
-    em_udp_rx_init(&sock_rx2, "0.0.0.0", 34567, 10);
+    em_udp_tx_init(&sock_tx, "127.0.0.1", 23456, 10, &malloc, &free);
+    em_udp_rx_init(&sock_rx, "0.0.0.0", 23456, 10, &malloc, &free);
+    em_udp_tx_init(&sock_tx2, "127.0.0.1", 34567, 10, &malloc, &free);
+    em_udp_rx_init(&sock_rx2, "0.0.0.0", 34567, 10, &malloc, &free);
 
     pthread_create(&p1, NULL, &routineRx, NULL);
     pthread_create(&p2, NULL, &routineTx, NULL);

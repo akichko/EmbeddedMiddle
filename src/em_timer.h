@@ -48,10 +48,14 @@ typedef struct
 } em_timermng_t;
 
 int em_timermng_init(em_timermng_t *tmrmng,
-					 int num_timer);
+					 int num_timer,
+					 void *(*alloc_func)(size_t),
+					 void (*free_func)(void *));
+
+int em_timermng_destroy(em_timermng_t *tmrmng);
 
 int em_timer_create(em_timermng_t *tmrmng,
-					 em_timersetting_t *setting);
+					em_timersetting_t *setting);
 
 int em_timer_delete(em_timermng_t *tmrmng,
 					int timer_id);
