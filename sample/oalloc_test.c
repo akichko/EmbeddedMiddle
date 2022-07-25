@@ -9,7 +9,7 @@ int main()
 	int blockSize = 16;
 
 	printf("block size = %d\n", blockSize);
-	em_omemmng_create(&mm, 800, blockSize, &malloc, &free, NULL);
+	em_omemmng_create(&mm, 800, blockSize, NULL, &malloc, &free);
 	em_omemmng_print(&mm);
 	
 	pt[0] = em_oalloc(&mm, 16);

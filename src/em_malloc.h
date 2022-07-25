@@ -44,30 +44,30 @@ typedef struct
 
 typedef struct _em_meminfo_t em_meminfo_t;
 
-struct _em_meminfo_t
+struct _em_meminfo_t //メモリ管理情報
 {
-	int mem_index;
-	short mem_length;
-	char is_used;
-	em_meminfo_t *next_meminfo;
-	em_meminfo_t *back_meminfo;
+	int mem_index; //物理ブロック位置
+	short mem_length; //物理ブロック長
+	char is_used; //メモリ割り当て済み
+	em_meminfo_t *next_meminfo; //１つ先のアドレスのメモリ管理情報
+	em_meminfo_t *back_meminfo; //１つ前のアドレスのメモリ管理情報
 };
 
 typedef struct
 {
 	int mem_total_size;
 	int mem_unit_size;
-	int mem_unit_bshift;
+	int mem_unit_bshift; //高速化のためブロックサイズは2乗数にしてビットシフト計算
 	int mem_total_bnum;
 	int mem_used_bsize;
-	em_mpool_t mp_used;
-	em_mpool_t mp_free;
+	em_mpool_t mp_used; //割り当て済みメモリ管理情報
+	em_mpool_t mp_free; //未割当メモリ管理情報
 	void *memory;
-	em_meminfo_t **minfo_ptr;
-	em_meminfo_t first_meminfo;
-	em_meminfo_t last_meminfo;
+	em_meminfo_t **minfo_ptr; // free時のブロックidx⇒ブロック管理
+	em_meminfo_t first_meminfo; //先頭メモリ管理の前に置くダミー管理
+	em_meminfo_t last_meminfo; //最終メモリ管理の後ろに置くダミー管理
 	em_mutex_t mutex;
-	pthread_cond_t cond;
+	pthread_cond_t cond; //空領域なし時、タイムアウトまでfreeトリガに再チェック
 	em_mutex_t cond_mutex;
 } em_memmng_t;
 

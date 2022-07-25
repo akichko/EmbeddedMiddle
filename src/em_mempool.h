@@ -36,9 +36,9 @@ typedef struct
 
 typedef struct
 {
-	int block_size;
-	int num_max;
-	int num_used;
+	uint block_size;
+	uint num_max;
+	uint num_used;
 	em_blkinfo_t **block_ptr; // search index
 	em_blkinfo_t *block;
 	void *rawdata; //実体
@@ -48,15 +48,15 @@ typedef struct
 } em_mpool_t;
 
 int em_mpool_create_with_mem(em_mpool_t *mp,
-							 int block_size,
-							 int block_num,
+							 uint block_size,
+							 uint block_num,
 							 em_blkinfo_t **block_ptr,
 							 em_blkinfo_t *block,
 							 void *rawdata);
 
 int em_mpool_create(em_mpool_t *mp,
-					int block_size,
-					int block_num,
+					uint block_size,
+					uint block_num,
 					void *(*alloc_func)(size_t),
 					void(*free_func)(void *));
 
@@ -75,7 +75,7 @@ void *em_mpool_get_dataptr(em_mpool_t *mp,
 						   uint data_idx);
 
 int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
-								   int del_offset);
+								   uint data_idx);
 
 int em_mpool_free_block(em_mpool_t *mp,
 						void *block_data);

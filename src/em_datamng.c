@@ -43,8 +43,8 @@ static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
 }
 
 int em_datamng_create_with_mem(em_datamng_t *dm,
-							   int data_size,
-							   int data_num,
+							   uint data_size,
+							   uint data_num,
 							   int duplicate_mode,
 							   em_blkinfo_t **block_ptr,
 							   em_blkinfo_t *block,
@@ -58,7 +58,7 @@ int em_datamng_create_with_mem(em_datamng_t *dm,
 	return _em_datamng_init(dm, idcnt);
 }
 
-int em_datamng_create(em_datamng_t *dm, int data_size, int data_num, int duplicate_mode,
+int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
 					  void *(*alloc_func)(size_t),
 					  void (*free_func)(void *))
 {

@@ -236,7 +236,7 @@ void *em_trymalloc(em_memmng_t *mm, size_t size, int timeout_ms)
 
 		pthread_mutex_lock(&mm->cond_mutex.mtx);
 		em_mutex_unlock(&mm->mutex); // free検知不可区間をつくらないため
-		pthread_cond_timedwait(&mm->cond, &mm->cond_mutex.mtx, &timeout_ts);
+		pthread_cond_timedwait(&mm->cond, &mm->cond_mutex.mtx, &timeout_ts); //freeトリガで空き再チェック
 		pthread_mutex_unlock(&mm->cond_mutex.mtx);
 
 		passed_ts = em_timespec_sub(em_get_timestamp(), start_ts);

@@ -28,8 +28,8 @@ SOFTWARE.
 #include "em_print.h"
 
 int em_mpool_create_with_mem(em_mpool_t *mp,
-							 int block_size,
-							 int block_num,
+							 uint block_size,
+							 uint block_num,
 							 em_blkinfo_t **block_ptr,
 							 em_blkinfo_t *block,
 							 void *rawdata)
@@ -48,13 +48,13 @@ int em_mpool_create_with_mem(em_mpool_t *mp,
 		mp->block_ptr[i] = &mp->block[i];
 		mp->block[i].index = i;
 		mp->block[i].index_ptr = i;
-		mp->block[i].data_ptr = (char*)mp->rawdata + block_size * i;
+		mp->block[i].data_ptr = (char *)mp->rawdata + block_size * i;
 	}
 
 	return 0;
 }
 
-int em_mpool_create(em_mpool_t *mp, int block_size, int block_num,
+int em_mpool_create(em_mpool_t *mp, uint block_size, uint block_num,
 					void *(*alloc_func)(size_t),
 					void (*free_func)(void *))
 {
@@ -79,20 +79,20 @@ int em_mpool_delete(em_mpool_t *mp)
 
 int em_mpool_print(em_mpool_t *mp)
 {
-	em_printf(EM_LOG_TOP, "print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
+	printf("print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
 
 	for (int i = 0; i < mp->num_max; i++)
 	{
 		if (i == mp->num_used)
 		{
-			em_printf(EM_LOG_TOP, "   ");
+			printf("   ");
 		}
-		em_printf(EM_LOG_TOP, "[%ld:%d:%d] ",
-			   ((char*)mp->block_ptr[i]->data_ptr - (char*)mp->rawdata) / mp->block_size,
-			   mp->block[i].index_ptr,
-			   *(int *)(mp->block_ptr[i]->data_ptr));
+		printf("[%ld:%d:%d] ",
+				  ((char *)mp->block_ptr[i]->data_ptr - (char *)mp->rawdata) / mp->block_size,
+				  mp->block[i].index_ptr,
+				  *(int *)(mp->block_ptr[i]->data_ptr));
 	}
-	em_printf(EM_LOG_TOP, "\n");
+	printf("\n");
 
 	return 0;
 }
@@ -134,38 +134,42 @@ int em_mpool_alloc_block(em_mpool_t *mp, void **block_data, int timeout_ms)
 
 int em_mpool_get_dataidx(em_mpool_t *mp, void *block_data)
 {
-	int data_offset = ((char*)block_data - (char*)mp->rawdata) / mp->block_size;
+	int data_offset = ((char *)block_data - (char *)mp->rawdata) / mp->block_size;
 
 	return data_offset;
 }
 
 void *em_mpool_get_dataptr(em_mpool_t *mp, uint data_idx)
 {
-	if(mp->block[data_idx].index_ptr >= mp->num_used)
+	if (data_idx >= mp->num_max || mp->block[data_idx].index_ptr >= mp->num_used)
+	{
+		em_printf(EM_LOG_ERROR, "invalid index %d / %d\n", data_idx, mp->num_max);
 		return NULL;
+	}
 
 	return mp->block[data_idx].data_ptr;
 }
 
-int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
+int em_mpool_free_block_by_dataidx(em_mpool_t *mp, uint data_idx)
 {
 	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
 
-	int del_index = mp->block[del_offset].index_ptr;
-	if (mp->num_used <= 0 || del_index >= mp->num_used)
+	if (mp->num_used == 0 || data_idx >= mp->num_max || mp->block[data_idx].index_ptr >= mp->num_used)
 	{
-		// unlock
-		em_printf(EM_LOG_ERROR, "em_free_block index error\n");
+		em_printf(EM_LOG_ERROR, "invalid index %d / %d\n", data_idx, mp->num_max);
+		em_mutex_unlock(&mp->mutex);
 		return -1;
 	}
+
+	int del_search_index = mp->block[data_idx].index_ptr;
 
 	mp->num_used--;
 	int swap_offset = mp->block_ptr[mp->num_used]->index;
 
-	mp->block[swap_offset].index_ptr = del_index;
-	mp->block[del_offset].index_ptr = mp->num_used;
-	mp->block_ptr[del_index] = &mp->block[swap_offset];
-	mp->block_ptr[mp->num_used] = &mp->block[del_offset];
+	mp->block[swap_offset].index_ptr = del_search_index;
+	mp->block[data_idx].index_ptr = mp->num_used;
+	mp->block_ptr[del_search_index] = &mp->block[swap_offset];
+	mp->block_ptr[mp->num_used] = &mp->block[data_idx];
 
 	em_mutex_unlock(&mp->mutex);
 	em_sem_post(&mp->sem);
@@ -174,7 +178,7 @@ int em_mpool_free_block_by_dataidx(em_mpool_t *mp, int del_offset)
 
 int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 {
-	int data_offset = ((char*)block_data - (char*)mp->rawdata) / mp->block_size;
+	int data_offset = ((char *)block_data - (char *)mp->rawdata) / mp->block_size;
 
 	em_printf(EM_LOG_TRACE, "free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 

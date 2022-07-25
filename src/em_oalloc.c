@@ -29,9 +29,9 @@ SOFTWARE.
 int em_omemmng_create(em_omemmng_t *mm,
 					  int mem_total_size,
 					  int mem_unit_size,
+					  void *memory,
 					  void *(*alloc_func)(size_t),
-					  void (*free_func)(void *),
-					  void *memory)
+					  void (*free_func)(void *))
 {
 	mm->free_func = free_func;
 	mm->mem_unit_size = mem_unit_size;
@@ -39,12 +39,12 @@ int em_omemmng_create(em_omemmng_t *mm,
 	mm->next_alloc_index = 0;
 	if (memory != NULL)
 	{
-		mm->is_malloc = 0;
+		mm->is_malloc = FALSE;
 		mm->memory = memory;
 	}
 	else
 	{
-		mm->is_malloc = 1;
+		mm->is_malloc = TRUE;
 		mm->memory = alloc_func(mem_total_size);
 	}
 	return 0;
@@ -71,7 +71,7 @@ int em_omemmng_print(em_omemmng_t *mm)
 	return 0;
 }
 
-void *em_oalloc(em_omemmng_t *mm, int size)
+void *em_oalloc(em_omemmng_t *mm, size_t size)
 {
 	void *ret;
 	//メモリ単位変換
