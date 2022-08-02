@@ -83,27 +83,27 @@ void cmd_shutdown(int argc, char **argv)
 
 int app1_init(void *arg)
 {
-	printf("app1 init\n");
+	em_printf(EM_LOG_INFO, "app1 init\n");
 	return 0;
 }
 
 int app2_init(void *arg)
 {
-	printf("app2 init\n");
+	em_printf(EM_LOG_INFO, "app2 init\n");
 	return 0;
 }
 
 int app1_signal(int arg)
 {
 	b_shutdown1 = 1;
-	printf("app1 signal\n");
+	em_printf(EM_LOG_INFO, "app1 signal\n");
 	return 0;
 }
 
 int app2_signal(int arg)
 {
 	b_shutdown2 = 1;
-	printf("app2 signal\n");
+	em_printf(EM_LOG_INFO, "app2 signal\n");
 	return 0;
 }
 
@@ -118,13 +118,13 @@ int app1_main()
 		printf("em_timer_create error!!\n");
 		exit(1);
 	}
-	printf("[App1] timer created\n");
+	em_printf(EM_LOG_INFO, "[App1] timer created\n");
 
 	while (!b_shutdown1)
 	{
 		em_msg_recv(&sysmng.tskmng, &msg, EM_NO_TIMEOUT);
 
-		printf("[App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
+		em_printf(EM_LOG_INFO, "[App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
 	}
 
 	if (0 != em_timer_delete(&sysmng.tmrmng, timersetting.timer_id))
@@ -132,7 +132,7 @@ int app1_main()
 		printf("em_timer_delete error!!\n");
 		exit(1);
 	}
-	printf("[App1] timer deleted\n");
+	em_printf(EM_LOG_INFO, "[App1] timer deleted\n");
 
 	return 0;
 }
@@ -148,12 +148,12 @@ int app2_main()
 		printf("em_timer_create error!!\n");
 		exit(1);
 	}
-	printf("[App2] timer created\n");
+	em_printf(EM_LOG_INFO, "[App2] timer created\n");
 
 	while (!b_shutdown2)
 	{
 		em_msg_recv(&sysmng.tskmng, &msg, EM_NO_TIMEOUT);
-		printf("[App2] msgType=%d, data=%d\n", msg.msg_type, msg.data);
+		em_printf(EM_LOG_INFO, "[App2] msgType=%d, data=%d\n", msg.msg_type, msg.data);
 
 		memset(&msg, 0, sizeof(testmsg_t));
 		msg.msg_type = 21;
@@ -166,7 +166,7 @@ int app2_main()
 		printf("em_timer_delete error!!\n");
 		exit(1);
 	}
-	printf("[App2] timer deleted\n");
+	em_printf(EM_LOG_INFO, "[App2] timer deleted\n");
 
 	return 1;
 }
@@ -176,7 +176,7 @@ int cmd_main()
 	// shutdown command
 	if (0 != em_cmd_regist(&sysmng.cmdmng, &shutdowncmd_setting))
 	{
-		printf("error\n");
+		em_printf(EM_LOG_INFO, "error\n");
 	}
 
 	em_cmd_start(&sysmng.cmdmng);
@@ -187,7 +187,7 @@ int cmd_main()
 void timer_func(void *arg)
 {
 	timer_arg_t *timer_arg = (timer_arg_t *)arg;
-	printf("timer_func \n");
+	em_printf(EM_LOG_INFO, "timer_func \n");
 	testmsg_t msg;
 	msg.msg_type = timer_arg->data;
 	msg.data = em_get_tick_count(&sysmng.timemng);
@@ -275,7 +275,7 @@ int main()
 	{
 		if (0 != em_task_create(&sysmng.tskmng, systaskstg[i].task_stg))
 		{
-			printf("create task error\n");
+			em_printf(EM_LOG_ERROR, "create task error\n");
 			exit(1);
 		}
 	}
@@ -301,6 +301,6 @@ int main()
 		return -1;
 	}
 
-	printf("[Main] system halted\n");
+	em_printf(EM_LOG_TOP, "[Main] system halted\n");
 	return 0;
 }

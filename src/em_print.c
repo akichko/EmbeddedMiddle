@@ -32,6 +32,7 @@ SOFTWARE.
 
 static int s_loglevel = EM_LOG_DEFAULT;
 static int s_is_timeprint = 0;
+static char s_loglevel_char[] = {' ', '-', 'D', 'I', 'W', 'E', 'T'};
 
 int em_print_set_loglevel(int newlevel)
 {
@@ -47,6 +48,10 @@ int em_print_is_timeprint(int is_timeprint)
 
 void _em_printf(const char *file, const char *function, int line, int type, const char *fmt, ...)
 {
+	char buf[512];
+	int length;
+	int total_length = 0;
+
 	if (type < s_loglevel)
 	{
 		return;
@@ -58,7 +63,8 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 		time(&timer);
 		char *t = ctime(&timer);
 		t[strlen(t) - 1] = '\0';
-		fprintf(stdout, "[%s] ", t);
+		length = snprintf(buf + total_length, 64, "[%s] ", t);
+		total_length += length;
 	}
 
 	const char *filename = file;
@@ -67,10 +73,15 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 	{
 		filename = tmppos + 1;
 	}
-	fprintf(stdout, "[%d][%s:%d %s] ", type, filename, line, function);
+	length = snprintf(buf + total_length, 64, "[%c][%s:%d %s] ", s_loglevel_char[type], filename, line, function);
+	total_length += length;
 
 	va_list ap;
 	va_start(ap, fmt);
-	vfprintf(stdout, fmt, ap);
+	length = vsnprintf(buf + total_length, 256, fmt, ap);
+	total_length += length;
 	va_end(ap);
+
+	buf[511] = '\0';
+	fprintf(stdout, "%s", buf);
 }
