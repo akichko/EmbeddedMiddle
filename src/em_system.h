@@ -11,13 +11,6 @@
 
 typedef struct
 {
-	em_tasksetting_t task_stg;
-	int (*initialize_func)(void *);
-	int (*system_cbfunc)(int);
-} em_systaskinfo_t;
-
-typedef struct
-{
 	em_timemng_t timemng;
 	em_timermng_t tmrmng;
 	em_mtxmng_t mtxmng;

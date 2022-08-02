@@ -82,7 +82,7 @@ void *em_oalloc(em_omemmng_t *mm, size_t size)
 	}
 	em_printf(EM_LOG_DEBUG, "alloc %d (%ld)\n", blength, size);
 
-	if (blength < mm->mem_total_bnum - mm->next_alloc_index)
+	if (blength <= mm->mem_total_bnum - mm->next_alloc_index)
 	{
 		ret = (char *)mm->memory + mm->next_alloc_index * mm->mem_unit_size;
 		mm->next_alloc_index += blength;

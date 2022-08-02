@@ -46,6 +46,8 @@ static void *_em_thread_starter(void *thrdarg)
 
 	*ret = (*funcptr)();
 
+	arg->free_func(thrdarg);
+
 	pthread_exit(ret);
 }
 
@@ -119,12 +121,12 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
-	em_thrdarg_t thrdarg;
+	em_thrdarg_t *thrdarg = tm->alloc_func(sizeof(em_thrdarg_t));
 
-	thrdarg.sem_ptr = &tm->sem;
-	thrdarg.entry_func = tasksetting.entry_func;
-	thrdarg.alloc_func = tm->alloc_func;
-	thrdarg.free_func = tm->free_func;
+	thrdarg->sem_ptr = &tm->sem;
+	thrdarg->entry_func = tasksetting.entry_func;
+	thrdarg->alloc_func = tm->alloc_func;
+	thrdarg->free_func = tm->free_func;
 
 	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
 
@@ -162,7 +164,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedparam\n");
 		return -1;
 	}
-	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)&thrdarg))
+	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)thrdarg))
 	{
 		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]\n", tasksetting.task_id);
 		return -1;
@@ -193,6 +195,11 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 
 int em_task_create(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
+	if (tm->taskinfo_mng.mp.num_used == tm->taskinfo_mng.mp.num_max)
+	{
+		em_printf(EM_LOG_ERROR, "task num max\n");
+		return -1;
+	}
 	if (0 != em_task_create_msgqueue(tm, tasksetting))
 	{
 		em_printf(EM_LOG_ERROR, "create msgqueue error\n");

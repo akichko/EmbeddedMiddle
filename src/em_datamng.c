@@ -145,7 +145,7 @@ int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 	if (exist_dataidx < 0) // no data
 	{
 		void *new_data_ptr;
-		if (0 != em_mpool_alloc_block(&dm->mp, &new_data_ptr, EM_NO_TIMEOUT))
+		if (0 != em_mpool_alloc_block(&dm->mp, &new_data_ptr, EM_NO_WAIT))
 		{
 			em_printf(EM_LOG_DEBUG, "add data error\n");
 		}

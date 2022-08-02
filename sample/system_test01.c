@@ -5,6 +5,7 @@
 
 #define TASK_ID_APP1 100
 #define TASK_ID_APP2 200
+#define TASK_ID_CMD 300
 
 typedef struct
 {
@@ -18,12 +19,20 @@ typedef struct
 	int data;
 } timer_arg_t;
 
+typedef struct
+{
+	em_tasksetting_t task_stg;
+	int (*initialize_func)(void *);
+	int (*system_cbfunc)(int);
+} em_systaskinfo_t;
+
 int app1_init(void *arg);
 int app2_init(void *arg);
 int app1_signal(int arg);
 int app2_signal(int arg);
 int app1_main();
 int app2_main();
+int cmd_main();
 void timer_func(void *arg);
 void cmd_shutdown(int argc, char **argv);
 
@@ -32,12 +41,13 @@ em_sysmng_t sysmng;
 em_datamng_t dm;
 
 em_systaskinfo_t systaskstg[] = {
-	//{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main}, NULL, NULL},
 	{{"App1", TASK_ID_APP1, 0, 0, 256, app1_main}, &app1_init, &app1_signal},
-	{{"App2", TASK_ID_APP2, 0, 0, 256, app2_main}, &app2_init, &app2_signal}};
+	{{"App2", TASK_ID_APP2, 0, 0, 256, app2_main}, &app2_init, &app2_signal},
+	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main}, NULL, NULL}};
 
 int b_shutdown1 = 0;
 int b_shutdown2 = 0;
+int b_shutdown = 0;
 
 em_sysmng_stg_t sys_setting = {0};
 em_cmdsetting_t shutdowncmd_setting = {1, "shutdown", &cmd_shutdown};
@@ -66,6 +76,7 @@ void cmd_shutdown(int argc, char **argv)
 			systaskstg[i].system_cbfunc(0);
 		}
 	}
+	b_shutdown = 1;
 
 	em_cmd_stop(&sysmng.cmdmng);
 }
@@ -160,6 +171,19 @@ int app2_main()
 	return 1;
 }
 
+int cmd_main()
+{
+	// shutdown command
+	if (0 != em_cmd_regist(&sysmng.cmdmng, &shutdowncmd_setting))
+	{
+		printf("error\n");
+	}
+
+	em_cmd_start(&sysmng.cmdmng);
+
+	return 1;
+}
+
 void timer_func(void *arg)
 {
 	timer_arg_t *timer_arg = (timer_arg_t *)arg;
@@ -167,7 +191,9 @@ void timer_func(void *arg)
 	testmsg_t msg;
 	msg.msg_type = timer_arg->data;
 	msg.data = em_get_tick_count(&sysmng.timemng);
-	em_msg_send(&sysmng.tskmng, timer_arg->task_to, &msg, 1000);
+	if(0 != em_msg_send(&sysmng.tskmng, timer_arg->task_to, &msg, 1000)){
+		em_printf(EM_LOG_ERROR, "msg send fail\n");
+	}
 }
 
 int init()
@@ -180,7 +206,7 @@ int init()
 	sys_setting.max_num_sem = 100;
 	sys_setting.max_num_timer = 2;
 	sys_setting.max_num_cmd = 5;
-	sys_setting.max_num_task = 2;
+	sys_setting.max_num_task = 3;
 	sys_setting.msgdata_size = sizeof(testmsg_t);
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
@@ -231,14 +257,11 @@ int main()
 		return -1;
 	}
 
-	// shutdown command
-	if (0 != em_cmd_regist(&sysmng.cmdmng, &shutdowncmd_setting))
-	{
-		printf("error\n");
-	}
-
 	// task initialize
 	int task_num = sizeof(systaskstg) / sizeof(em_systaskinfo_t);
+
+	em_printf(EM_LOG_INFO, "task num = %d\n", task_num);
+
 	for (int i = 0; i < task_num; i++)
 	{
 		if (NULL != systaskstg[i].initialize_func)
@@ -257,7 +280,10 @@ int main()
 		}
 	}
 
-	em_cmd_start(&sysmng.cmdmng);
+	while (b_shutdown)
+	{
+		sleep(1);
+	}
 
 	for (int i = 0; i < task_num; i++)
 	{
