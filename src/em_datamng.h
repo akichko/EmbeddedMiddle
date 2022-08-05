@@ -25,27 +25,11 @@ SOFTWARE.
 #define __EM_DATAMNG_H__
 
 #include "em_mempool.h"
+#include "em_gdatamng.h"
 
-#define EM_DMNG_DPLCT_ERROR 1
-#define EM_DMNG_DPLCT_UPDATE 2
-#define EM_DMNG_DPLCT_COUNTUP 3
 
 #define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
 
-typedef struct
-{
-	ulong id;
-	int count;
-} em_idcnt_t;
-
-typedef struct
-{
-	em_mpool_t mp;
-	em_idcnt_t *idcnt;
-	int duplicate_mode;
-	em_mutex_t mutex;
-	void (*free_func)(void *);
-} em_datamng_t;
 
 int em_datamng_create(em_datamng_t *dm,
 					  uint data_size,

@@ -33,8 +33,6 @@ SOFTWARE.
 #define EM_DMNG_DPLCT_UPDATE 2
 #define EM_DMNG_DPLCT_COUNTUP 3
 
-#define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
-
 typedef struct
 {
 	void *key;
@@ -51,9 +49,9 @@ typedef struct
 	char key_type;
 	em_mutex_t mutex;
 	void (*free_func)(void *);
-} em_gdatamng_t;
+} em_datamng_t;
 
-int em_gdatamng_create(em_gdatamng_t *dm,
+int em_gdatamng_create(em_datamng_t *dm,
 					   uint data_size,
 					   uint data_num,
 					   char key_type,
@@ -62,41 +60,41 @@ int em_gdatamng_create(em_gdatamng_t *dm,
 					   void *(*alloc_func)(size_t),
 					   void (*free_func)(void *));
 
-int em_gdatamng_delete(em_gdatamng_t *dm);
+int em_gdatamng_delete(em_datamng_t *dm);
 
-int em_gdatamng_print(em_gdatamng_t *dm);
+int em_gdatamng_print(em_datamng_t *dm);
 
-int em_gdatamng_add_data(em_gdatamng_t *dm,
+int em_gdatamng_add_data(em_datamng_t *dm,
 						 const void *key,
 						 const void *data);
 
-void *em_gdatamng_get_data_ptr(em_gdatamng_t *dm,
+void *em_gdatamng_get_data_ptr(em_datamng_t *dm,
 							   void *key);
 
-int em_gdatamng_get_dataidx(em_gdatamng_t *dm,
+int em_gdatamng_get_dataidx(em_datamng_t *dm,
 							void *key);
 
-void *em_gdatamng_get_dataptr_by_dataidx(em_gdatamng_t *dm,
+void *em_gdatamng_get_dataptr_by_dataidx(em_datamng_t *dm,
 										 uint data_idx);
 
-int em_gdatamng_get_data(em_gdatamng_t *dm,
+int em_gdatamng_get_data(em_datamng_t *dm,
 						 void *key,
 						 void *data);
 
-int em_gdatamng_get_data_cnt(em_gdatamng_t *dm,
+int em_gdatamng_get_data_cnt(em_datamng_t *dm,
 							 void *key);
 
-int em_gdatamng_remove_data(em_gdatamng_t *dm,
+int em_gdatamng_remove_data(em_datamng_t *dm,
 							void *key);
 
-void *em_gdatamng_get_key(em_gdatamng_t *dm,
+void *em_gdatamng_get_key(em_datamng_t *dm,
 						  void *searchdata);
 
-void *em_gdatamng_get_key_by_func(em_gdatamng_t *dm,
+void *em_gdatamng_get_key_by_func(em_datamng_t *dm,
 								  void *searchdata,
 								  char (*comparator)(void *, void *));
 
-int em_gdatamng_get_data_by_func(em_gdatamng_t *dm,
+int em_gdatamng_get_data_by_func(em_datamng_t *dm,
 								 void *searchdata,
 								 char (*comparator)(void *, void *),
 								 void *data);

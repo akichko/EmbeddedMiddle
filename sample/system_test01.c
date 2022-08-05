@@ -50,7 +50,7 @@ int b_shutdown2 = 0;
 int b_shutdown = 0;
 
 em_sysmng_stg_t sys_setting = {0};
-em_cmdsetting_t shutdowncmd_setting = {1, "shutdown", &cmd_shutdown};
+em_cmdsetting_t shutdowncmd_setting = {"shutdown", &cmd_shutdown};
 
 void *local_malloc(size_t size)
 {

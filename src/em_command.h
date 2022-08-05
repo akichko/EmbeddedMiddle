@@ -41,7 +41,7 @@ typedef struct
 typedef struct
 {
 	char is_running;
-	em_gdatamng_t cmdmng;
+	em_datamng_t cmdmng;
 } em_cmdmng_t;
 
 int em_cmd_init(em_cmdmng_t *cm,
