@@ -21,8 +21,8 @@ void test_cmd_version(int argc, char **argv)
 }
 
 em_cmdsetting_t testcmdset[] = {
-	{1, "test", test_cmd_func},
-	{2, "version", test_cmd_version}};
+	{"test", test_cmd_func},
+	{"version", test_cmd_version}};
 
 int main()
 {

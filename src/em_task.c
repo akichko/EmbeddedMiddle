@@ -169,7 +169,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]\n", tasksetting.task_id);
 		return -1;
 	}
-	em_printf(EM_LOG_INFO, "TaskId %d (%s) created. threadId=%ld\n", tasksetting.task_id, tasksetting.task_name, thread_id);
+	em_printf(EM_LOG_TOP, "TaskId %d (%s) created. threadId=%ld\n", tasksetting.task_id, tasksetting.task_name, thread_id);
 
 	if (task_info != NULL)
 	{

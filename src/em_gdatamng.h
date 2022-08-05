@@ -21,10 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifndef __EM_DATAMNG_H__
-#define __EM_DATAMNG_H__
+#ifndef __EM_GDATAMNG_H__
+#define __EM_GDATAMNG_H__
 
 #include "em_mempool.h"
+
+#define EM_DMNG_KEY_INTEGER 1
+#define EM_DMNG_KEY_STRING 2
 
 #define EM_DMNG_DPLCT_ERROR 1
 #define EM_DMNG_DPLCT_UPDATE 2
@@ -34,63 +37,68 @@ SOFTWARE.
 
 typedef struct
 {
-	ulong id;
+	void *key;
 	int count;
-} em_idcnt_t;
+} em_keycnt_t;
 
 typedef struct
 {
 	em_mpool_t mp;
-	em_idcnt_t *idcnt;
-	int duplicate_mode;
+	em_keycnt_t *keycnt;
+	uint key_size;
+	void *keymem;
+	char duplicate_mode;
+	char key_type;
 	em_mutex_t mutex;
 	void (*free_func)(void *);
-} em_datamng_t;
+} em_gdatamng_t;
 
-int em_datamng_create(em_datamng_t *dm,
-					  uint data_size,
-					  uint data_num,
-					  int duplicate_mode,
-					  void *(*alloc_func)(size_t),
-					  void (*free_func)(void *));
+int em_gdatamng_create(em_gdatamng_t *dm,
+					   uint data_size,
+					   uint data_num,
+					   char key_type,
+					   uint key_size,
+					   char duplicate_mode,
+					   void *(*alloc_func)(size_t),
+					   void (*free_func)(void *));
 
-int em_datamng_delete(em_datamng_t *dm);
+int em_gdatamng_delete(em_gdatamng_t *dm);
 
-int em_datamng_print(em_datamng_t *dm);
+int em_gdatamng_print(em_gdatamng_t *dm);
 
-int em_datamng_add_data(em_datamng_t *dm,
-						ulong id,
-						void *data);
+int em_gdatamng_add_data(em_gdatamng_t *dm,
+						 const void *key,
+						 const void *data);
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm,
-							  ulong id);
+void *em_gdatamng_get_data_ptr(em_gdatamng_t *dm,
+							   void *key);
 
-int em_datamng_get_dataidx(em_datamng_t *dm,
-						   ulong id);
+int em_gdatamng_get_dataidx(em_gdatamng_t *dm,
+							void *key);
 
-void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm,
-										uint data_idx);
+void *em_gdatamng_get_dataptr_by_dataidx(em_gdatamng_t *dm,
+										 uint data_idx);
 
-int em_datamng_get_data(em_datamng_t *dm,
-						ulong id,
-						void *data);
+int em_gdatamng_get_data(em_gdatamng_t *dm,
+						 void *key,
+						 void *data);
 
-int em_datamng_get_data_cnt(em_datamng_t *dm,
-							ulong id);
+int em_gdatamng_get_data_cnt(em_gdatamng_t *dm,
+							 void *key);
 
-int em_datamng_remove_data(em_datamng_t *dm,
-						   ulong id);
+int em_gdatamng_remove_data(em_gdatamng_t *dm,
+							void *key);
 
-ulong em_datamng_get_id(em_datamng_t *dm,
-						void *searchdata);
+void *em_gdatamng_get_key(em_gdatamng_t *dm,
+						  void *searchdata);
 
-ulong em_datamng_get_id_by_func(em_datamng_t *dm,
-								void *searchdata,
-								char (*comparator)(void *, void *));
+void *em_gdatamng_get_key_by_func(em_gdatamng_t *dm,
+								  void *searchdata,
+								  char (*comparator)(void *, void *));
 
-int em_datamng_get_data_by_func(em_datamng_t *dm,
-								void *searchdata,
-								char (*comparator)(void *, void *),
-								void *data);
+int em_gdatamng_get_data_by_func(em_gdatamng_t *dm,
+								 void *searchdata,
+								 char (*comparator)(void *, void *),
+								 void *data);
 
-#endif //__EM_DATAMNG_H__
+#endif //__EM_GDATAMNG_H__

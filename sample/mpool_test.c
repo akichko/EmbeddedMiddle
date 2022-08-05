@@ -5,7 +5,7 @@
 int main()
 {
 	em_mpool_t mp;
-	
+
 	int *idata[10];
 	em_mpool_create(&mp, sizeof(int), 10, &malloc, &free);
 	em_mpool_print(&mp);
@@ -39,6 +39,24 @@ int main()
 	*idata[0] = 11;
 	em_mpool_print(&mp);
 
-	
+	uint data_num;
+	printf("*data_ptr array: ");
+	int *dataPtr[10];
+	em_mpool_get_dataptr_array(&mp, 10, &data_num, (void **)dataPtr);
+	for (int i = 0; i < data_num; i++)
+	{
+		printf("[%d]", *dataPtr[i]);
+	}
+	printf("\n");
+
+	printf("data_idx array: ");
+	uint dataIdx[10];
+	em_mpool_get_dataidx_array(&mp, 10, &data_num, (void*)&dataIdx);
+	for (int i = 0; i < data_num; i++)
+	{
+		printf("[%d]", dataIdx[i]);
+	}
+	printf("\n");
+
 	em_mpool_delete(&mp);
 }

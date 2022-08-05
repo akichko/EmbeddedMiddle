@@ -6,6 +6,7 @@ int main()
 {
 	em_omemmng_t mm;
 	void *pt[10];
+	void **ppt = pt;
 	int blockSize = 16;
 
 	printf("block size = %d\n", blockSize);

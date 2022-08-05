@@ -26,59 +26,91 @@ SOFTWARE.
 #include <memory.h>
 #include <string.h>
 
-#include "em_datamng.h"
+#include "em_gdatamng.h"
 #include "em_print.h"
 
-static int _em_datamng_init(em_datamng_t *dm, em_idcnt_t *idcnt)
+// static int _em_gdatamng_init(em_gdatamng_t *dm, em_keycnt_t *keycnt, void *keymem)
+//{
+//	dm->keycnt = keycnt;
+//	for (int i = 0; i < dm->mp.num_max; i++)
+//	{
+//		//dm->keycnt[i].id = EM_DATAMNG_INVALID_ID;
+//		dm->keycnt[i].count = 0;
+//	}
+//	em_mutex_init(&dm->mutex);
+//
+//	return 0;
+// }
+
+static int _em_gdatamng_keycmp(char key_type, const void *s1, const void *s2, size_t n)
 {
-	dm->idcnt = idcnt;
-	for (int i = 0; i < dm->mp.num_max; i++)
+	if (key_type == EM_DMNG_KEY_STRING)
+		return strncmp(s1, s2, n);
+	else
+		return memcmp(s1, s2, n);
+}
+
+int em_gdatamng_create(em_gdatamng_t *dm, uint data_size, uint data_num,
+					   char key_type, uint key_size, char duplicate_mode,
+					   void *(*alloc_func)(size_t), void (*free_func)(void *))
+{
+	dm->key_size = key_size;
+	dm->key_type = key_type;
+	dm->duplicate_mode = duplicate_mode;
+	dm->free_func = free_func;
+	dm->keycnt = (em_keycnt_t *)alloc_func(sizeof(em_keycnt_t) * data_num);
+	dm->keymem = alloc_func(key_size * data_num);
+
+	em_mpool_create(&dm->mp, data_size, data_num, alloc_func, free_func);
+
+	for (int i = 0; i < data_num; i++)
 	{
-		dm->idcnt[i].id = EM_DATAMNG_INVALID_ID;
-		dm->idcnt[i].count = 0;
+		dm->keycnt[i].key = (char *)dm->keymem + i * dm->key_size;
+		dm->keycnt[i].count = 0;
 	}
 	em_mutex_init(&dm->mutex);
 
 	return 0;
 }
 
-
-int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
-					  void *(*alloc_func)(size_t),
-					  void (*free_func)(void *))
-{
-	dm->duplicate_mode = duplicate_mode;
-	dm->free_func = free_func;
-	em_idcnt_t *idcnt = (em_idcnt_t *)alloc_func(sizeof(em_idcnt_t) * data_num);
-
-	em_mpool_create(&dm->mp, data_size, data_num, alloc_func, free_func);
-	// dm->idcnt = (em_idcnt_t *)alloc_func(sizeof(em_idcnt_t) * data_size);
-
-	return _em_datamng_init(dm, idcnt);
-}
-
-int em_datamng_delete(em_datamng_t *dm)
+int em_gdatamng_delete(em_gdatamng_t *dm)
 {
 	em_mpool_delete(&dm->mp);
-	dm->free_func(dm->idcnt);
+	dm->free_func(dm->keycnt);
+	dm->free_func(dm->keymem);
 	em_mutex_destroy(&dm->mutex);
 
 	return 0;
 }
 
-int em_datamng_print(em_datamng_t *dm)
+int em_gdatamng_print(em_gdatamng_t *dm)
 {
-	printf("print %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->mp.block_size);
-
+	printf("print %d %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->key_size, dm->mp.block_size);
+	char ckey;
+	long ikey;
 	for (int i = 0; i < dm->mp.num_max; i++)
 	{
 		if (i == dm->mp.num_used)
 		{
 			printf("   ");
 		}
-		printf("[%ld:%d:%d] ",
-			   dm->idcnt[dm->mp.block_ptr[i]->index].id,
-			   dm->idcnt[dm->mp.block_ptr[i]->index].count,
+		printf("[");
+		if (dm->key_type == EM_DMNG_KEY_STRING)
+		{
+			printf("%.8s", (char *)dm->keycnt[dm->mp.block_ptr[i]->index].key);
+		}
+		else if (dm->key_type == EM_DMNG_KEY_INTEGER)
+		{
+			ikey = 0;
+			memcpy(&ikey, dm->keycnt[dm->mp.block_ptr[i]->index].key, dm->key_size);
+			printf("%ld", ikey);
+		}
+		else
+		{
+			em_printf(EM_LOG_ERROR, "unknown key type\n");
+		}
+		printf(":%d:%d] ",
+			   dm->keycnt[dm->mp.block_ptr[i]->index].count,
 			   *(int *)(dm->mp.block_ptr[i]->data_ptr));
 	}
 	printf("\n");
@@ -87,14 +119,14 @@ int em_datamng_print(em_datamng_t *dm)
 }
 
 // unsafe
-static int _em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
+static int _em_gdatamng_get_dataidx(em_gdatamng_t *dm, const void *key)
 {
 	int ret = -1;
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
-		if (dm->idcnt[data_index].id == id)
+		if (0 == _em_gdatamng_keycmp(dm->key_type, dm->keycnt[data_index].key, key, dm->key_size))
 		{
 			ret = data_index;
 			break;
@@ -104,14 +136,14 @@ static int _em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
 }
 
 // unsafe
-static int _em_datamng_get_blockinfo(em_datamng_t *dm, ulong id, em_blkinfo_t **block)
+static int _em_gdatamng_get_blockinfo(em_gdatamng_t *dm, void *key, em_blkinfo_t **block)
 {
 	int ret = -1;
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
-		if (dm->idcnt[data_index].id == id)
+		if (0 == _em_gdatamng_keycmp(dm->key_type, dm->keycnt[data_index].key, key, dm->key_size))
 		{
 			*block = dm->mp.block_ptr[i];
 			ret = 0;
@@ -121,12 +153,12 @@ static int _em_datamng_get_blockinfo(em_datamng_t *dm, ulong id, em_blkinfo_t **
 	return ret;
 }
 
-int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
+int em_gdatamng_add_data(em_gdatamng_t *dm, const void *key, const void *data)
 {
 	int ret = -1;
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 
-	int exist_dataidx = _em_datamng_get_dataidx(dm, id);
+	int exist_dataidx = _em_gdatamng_get_dataidx(dm, key);
 	if (exist_dataidx < 0) // no data
 	{
 		void *new_data_ptr;
@@ -138,8 +170,8 @@ int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 		{
 			int dataidx = em_mpool_get_dataidx(&dm->mp, new_data_ptr);
 			memcpy(new_data_ptr, data, dm->mp.block_size);
-			dm->idcnt[dataidx].id = id;
-			dm->idcnt[dataidx].count = 1;
+			memcpy(dm->keycnt[dataidx].key, key, dm->key_size);
+			dm->keycnt[dataidx].count = 1;
 			ret = 0;
 		}
 	}
@@ -147,7 +179,7 @@ int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 	{
 		if (dm->duplicate_mode == EM_DMNG_DPLCT_ERROR)
 		{
-			em_printf(EM_LOG_DEBUG, "id %ld already exists\n", id);
+			em_printf(EM_LOG_ERROR, "key already exists\n");
 		}
 		else if (dm->duplicate_mode == EM_DMNG_DPLCT_UPDATE)
 		{
@@ -157,7 +189,7 @@ int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 		}
 		else if (dm->duplicate_mode == EM_DMNG_DPLCT_COUNTUP)
 		{
-			dm->idcnt[exist_dataidx].count++;
+			dm->keycnt[exist_dataidx].count++;
 			ret = 0;
 		}
 		else
@@ -171,11 +203,11 @@ int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
 }
 
 // unsafe
-static void *_em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
+static void *_em_gdatamng_get_data_ptr(em_gdatamng_t *dm, void *key)
 {
 	em_blkinfo_t *block_tmp;
 
-	if (0 != _em_datamng_get_blockinfo(dm, id, &block_tmp))
+	if (0 != _em_gdatamng_get_blockinfo(dm, key, &block_tmp))
 	{
 		return NULL;
 	}
@@ -183,25 +215,25 @@ static void *_em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
 	return block_tmp->data_ptr;
 }
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
+void *em_gdatamng_get_data_ptr(em_gdatamng_t *dm, void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
-	void *ret = _em_datamng_get_data_ptr(dm, id);
+	void *ret = _em_gdatamng_get_data_ptr(dm, key);
 	em_mutex_unlock(&dm->mutex);
 
 	return ret;
 }
 
-int em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
+int em_gdatamng_get_dataidx(em_gdatamng_t *dm, void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
-	int ret = _em_datamng_get_dataidx(dm, id);
+	int ret = _em_gdatamng_get_dataidx(dm, key);
 	em_mutex_unlock(&dm->mutex);
 
 	return ret;
 }
 
-void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
+void *em_gdatamng_get_dataptr_by_dataidx(em_gdatamng_t *dm, uint data_idx)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	void *ret = em_mpool_get_dataptr(&dm->mp, data_idx);
@@ -210,12 +242,12 @@ void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
 	return ret;
 }
 
-int em_datamng_get_data(em_datamng_t *dm, ulong id, void *data)
+int em_gdatamng_get_data(em_gdatamng_t *dm, void *key, void *data)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
 
-	void *data_ptr = _em_datamng_get_data_ptr(dm, id);
+	void *data_ptr = _em_gdatamng_get_data_ptr(dm, key);
 	if (data_ptr != NULL)
 	{
 		memcpy(data, data_ptr, dm->mp.block_size);
@@ -226,29 +258,29 @@ int em_datamng_get_data(em_datamng_t *dm, ulong id, void *data)
 	return ret;
 }
 
-int em_datamng_get_data_cnt(em_datamng_t *dm, ulong id)
+int em_gdatamng_get_data_cnt(em_gdatamng_t *dm, void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
 	em_blkinfo_t *block_tmp;
-	if (0 == _em_datamng_get_blockinfo(dm, id, &block_tmp))
+	if (0 == _em_gdatamng_get_blockinfo(dm, key, &block_tmp))
 	{
-		ret = dm->idcnt[block_tmp->index].count;
+		ret = dm->keycnt[block_tmp->index].count;
 	}
 
 	em_mutex_unlock(&dm->mutex);
 	return ret;
 }
 
-int em_datamng_remove_data(em_datamng_t *dm, ulong id)
+int em_gdatamng_remove_data(em_gdatamng_t *dm, void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
 	em_blkinfo_t *block_tmp;
-	if (0 == _em_datamng_get_blockinfo(dm, id, &block_tmp))
+	if (0 == _em_gdatamng_get_blockinfo(dm, key, &block_tmp))
 	{
-		dm->idcnt[block_tmp->index].count--;
-		if (dm->idcnt[block_tmp->index].count <= 0)
+		dm->keycnt[block_tmp->index].count--;
+		if (dm->keycnt[block_tmp->index].count <= 0)
 		{
 			em_mpool_free_block_by_dataidx(&dm->mp, block_tmp->index);
 		}
@@ -258,18 +290,18 @@ int em_datamng_remove_data(em_datamng_t *dm, ulong id)
 	return ret;
 }
 
-ulong em_datamng_get_id(em_datamng_t *dm,
-								void *searchdata)
+void *em_gdatamng_get_key(em_gdatamng_t *dm,
+						  void *searchdata)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
-	ulong ret = EM_DATAMNG_INVALID_ID;
+	void *ret = NULL;
 
 	for (int i = 0; i < dm->mp.num_used; i++)
 	{
 		// if (comparator(dm->mp.block_ptr[i]->data_ptr, searchdata))
 		if (0 == memcmp(dm->mp.block_ptr[i]->data_ptr, searchdata, dm->mp.block_size))
 		{
-			ret = dm->idcnt[i].id;
+			ret = dm->keycnt[i].key;
 			break;
 		}
 	}
@@ -279,9 +311,9 @@ ulong em_datamng_get_id(em_datamng_t *dm,
 }
 
 // unsafe
-static int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
-											  void *searchdata,
-											  char (*comparator)(void *, void *))
+static int _em_gdatamng_get_data_index_by_func(em_gdatamng_t *dm,
+											   void *searchdata,
+											   char (*comparator)(void *, void *))
 {
 	int data_index;
 	for (int i = 0; i < dm->mp.num_used; i++)
@@ -296,32 +328,32 @@ static int _em_datamng_get_data_index_by_func(em_datamng_t *dm,
 	return -1;
 }
 
-ulong em_datamng_get_id_by_func(em_datamng_t *dm,
-										void *searchdata,
-										char (*comparator)(void *, void *))
+void *em_gdatamng_get_key_by_func(em_gdatamng_t *dm,
+								  void *searchdata,
+								  char (*comparator)(void *, void *))
 {
-	ulong ret = EM_DATAMNG_INVALID_ID;
+	void *ret = NULL;
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 
-	int data_index = _em_datamng_get_data_index_by_func(dm, searchdata, comparator);
+	int data_index = _em_gdatamng_get_data_index_by_func(dm, searchdata, comparator);
 	if (data_index >= 0)
 	{
-		ret = dm->idcnt[data_index].id;
+		ret = dm->keycnt[data_index].key;
 	}
 
 	em_mutex_unlock(&dm->mutex);
 	return ret;
 }
 
-int em_datamng_get_data_by_func(em_datamng_t *dm,
-								void *searchdata,
-								char (*comparator)(void *, void *),
-								void *data)
+int em_gdatamng_get_data_by_func(em_gdatamng_t *dm,
+								 void *searchdata,
+								 char (*comparator)(void *, void *),
+								 void *data)
 {
 	int ret = -1;
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 
-	int data_index = _em_datamng_get_data_index_by_func(dm, searchdata, comparator);
+	int data_index = _em_gdatamng_get_data_index_by_func(dm, searchdata, comparator);
 	if (data_index >= 0)
 	{
 		memcpy(data, dm->mp.block[data_index].data_ptr, dm->mp.block_size);

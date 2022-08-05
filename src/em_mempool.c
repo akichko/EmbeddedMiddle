@@ -88,9 +88,9 @@ int em_mpool_print(em_mpool_t *mp)
 			printf("   ");
 		}
 		printf("[%ld:%d:%d] ",
-				  ((char *)mp->block_ptr[i]->data_ptr - (char *)mp->rawdata) / mp->block_size,
-				  mp->block[i].index_ptr,
-				  *(int *)(mp->block_ptr[i]->data_ptr));
+			   ((char *)mp->block_ptr[i]->data_ptr - (char *)mp->rawdata) / mp->block_size,
+			   mp->block[i].index_ptr,
+			   *(int *)(mp->block_ptr[i]->data_ptr));
 	}
 	printf("\n");
 
@@ -183,4 +183,34 @@ int em_mpool_free_block(em_mpool_t *mp, void *block_data)
 	em_printf(EM_LOG_TRACE, "free idx=%d val=%d\n", mp->block[data_offset].index_ptr, *(int *)block_data);
 
 	return em_mpool_free_block_by_dataidx(mp, data_offset); // with lock
+}
+
+int em_mpool_get_dataptr_array(em_mpool_t *mp, uint max_size, uint *data_num, void **data_ptrs)
+{
+	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
+
+	*data_num = mp->num_used;
+
+	for (int i = 0; (i < mp->num_used) && (i < max_size); i++)
+	{
+		data_ptrs[i] = mp->block_ptr[i]->data_ptr;
+	}
+
+	em_mutex_unlock(&mp->mutex);
+	return 0;
+}
+
+int em_mpool_get_dataidx_array(em_mpool_t *mp, uint max_size, uint *data_num, uint *data_idxs)
+{
+	em_mutex_lock(&mp->mutex, EM_NO_TIMEOUT);
+
+	*data_num = mp->num_used;
+
+	for (int i = 0; (i < mp->num_used) && (i < max_size); i++)
+	{
+		data_idxs[i] = mp->block_ptr[i]->index;
+	}
+
+	em_mutex_unlock(&mp->mutex);
+	return 0;
 }

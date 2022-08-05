@@ -122,6 +122,7 @@ int em_enqueue(em_queue_t *qu, void *block_data, int timeout_ms)
 	}
 	if (0 != em_mutex_lock(&qu->mutex, EM_WAIT))
 	{
+		em_printf(EM_LOG_ERROR, "lock error\n");
 		em_sem_post(&qu->sem_in);
 		return -1;
 	}
@@ -178,32 +179,35 @@ static int _em_dequeue_increment(em_queue_t *qu)
 int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 {
 	int ret;
-	void *tmp;
+	void *data_ptr;
 
 	ret = em_sem_wait(&qu->sem_out, timeout_ms);
 	if (ret != 0)
 	{
 		// printf("em_dequeue timeout\n");
-		return -1;
+		return EM_E_TIMEOUT;
 	}
 	// lock
 	ret = em_mutex_lock(&qu->mutex, EM_WAIT);
 	if (ret != 0)
 	{
+		em_printf(EM_LOG_ERROR, "lock error\n");
 		em_sem_post(&qu->sem_out);
-		return -1;
+		return EM_E_OTHER;
 	}
 
-	tmp = _em_dequeue_get_dataptr(qu);
+	data_ptr = _em_dequeue_get_dataptr(qu);
 
-	if (tmp == NULL)
+	if (data_ptr == NULL)
 	{
+		//キューが空なら最初のセマフォではじかれるので想定外
+		em_printf(EM_LOG_ERROR, "Fatal queue error\n");
 		em_sem_post(&qu->sem_out);
 		em_mutex_unlock(&qu->mutex);
-		return -1;
+		return EM_E_OTHER;
 	}
 
-	memcpy(block_data, tmp, qu->block_size);
+	memcpy(block_data, data_ptr, qu->block_size);
 
 	ret = _em_dequeue_increment(qu);
 	// unlock

@@ -44,7 +44,7 @@ typedef struct
 	void *rawdata; //実体
 	em_sem_t sem;
 	em_mutex_t mutex;
-	void(*free_func)(void *);
+	void (*free_func)(void *);
 } em_mpool_t;
 
 int em_mpool_create_with_mem(em_mpool_t *mp,
@@ -58,7 +58,7 @@ int em_mpool_create(em_mpool_t *mp,
 					uint block_size,
 					uint block_num,
 					void *(*alloc_func)(size_t),
-					void(*free_func)(void *));
+					void (*free_func)(void *));
 
 int em_mpool_delete(em_mpool_t *mp);
 
@@ -79,5 +79,15 @@ int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
 
 int em_mpool_free_block(em_mpool_t *mp,
 						void *block_data);
+
+int em_mpool_get_dataptr_array(em_mpool_t *mp,
+							   uint max_size,
+							   uint *data_num,
+							   void **data_ptrs);
+
+int em_mpool_get_dataidx_array(em_mpool_t *mp,
+							   uint max_size,
+							   uint *data_num,
+							   uint *data_idxs);
 
 #endif //__EM_MEMPOOL_H__

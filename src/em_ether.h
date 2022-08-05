@@ -38,6 +38,7 @@ typedef struct
 	int sock;
 	int socket_type;
 	struct sockaddr_in addr;
+	char has_queue;
 	em_queue_t queue;
 	void *(*alloc_func)(size_t);
 	void (*free_func)(void *);
@@ -46,14 +47,14 @@ typedef struct
 int em_udp_tx_init(em_socket_t *sk,
 				   const char *dest_ip,
 				   const uint16_t dest_port,
-				   int queue_size,
+				   uint queue_size,
 				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *));
 
 int em_udp_rx_init(em_socket_t *sk,
 				   const char *ip_from, //送信元フィルタ
 				   const uint16_t local_port,
-				   int queue_size,
+				   uint queue_size,
 				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *));
 

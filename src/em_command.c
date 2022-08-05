@@ -27,9 +27,15 @@ SOFTWARE.
 #include "em_command.h"
 #include "em_print.h"
 
+#define EM_LAST_WORD 1
+#define EM_LAST_EMPTY 2
+#define EM_WORD_SUCCESS 0
+#define EM_WORD_ERROR -1
+
 int em_cmd_init(em_cmdmng_t *cm, int num_cmd, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	if (0 != em_datamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd, EM_DMNG_DPLCT_ERROR, alloc_func, free_func))
+	if (0 != em_gdatamng_create(&cm->cmdmng, sizeof(em_cmdsetting_t), num_cmd,
+								EM_DMNG_KEY_STRING, EM_CMD_NAME_LENGTH_MAX, EM_DMNG_DPLCT_ERROR, alloc_func, free_func))
 	{
 		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
@@ -37,14 +43,15 @@ int em_cmd_init(em_cmdmng_t *cm, int num_cmd, void *(*alloc_func)(size_t), void 
 	return 0;
 }
 
-int em_cmd_destroy(em_cmdmng_t *cm){
-	return em_datamng_delete(&cm->cmdmng);
+int em_cmd_destroy(em_cmdmng_t *cm)
+{
+	return em_gdatamng_delete(&cm->cmdmng);
 }
 
 int em_cmd_regist(em_cmdmng_t *cm,
 				  em_cmdsetting_t *cmdsetting)
 {
-	if (0 != em_datamng_add_data(&cm->cmdmng, cmdsetting->cmd_id, cmdsetting))
+	if (0 != em_gdatamng_add_data(&cm->cmdmng, cmdsetting->cmd_name, cmdsetting))
 	{
 		// em_printf(EM_LOG_ERROR, "register error\n");
 		return -1;
@@ -52,23 +59,24 @@ int em_cmd_regist(em_cmdmng_t *cm,
 	return 0;
 }
 
-static char _em_cmdname_comparator(void *dm_data, void *cmd_name)
-{
-	if (0 == strcmp((char *)cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
-	{
-		return 1;
-	}
-	return 0;
-}
+//static char _em_cmdname_comparator(void *dm_data, void *cmd_name)
+//{
+//	if (0 == strcmp((char *)cmd_name, ((em_cmdsetting_t *)dm_data)->cmd_name))
+//	{
+//		return 1;
+//	}
+//	return 0;
+//}
 
 static void (*_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname))(int, char **)
 {
-	em_cmdsetting_t cmdsetting;
-	if (0 != em_datamng_get_data_by_func(&cm->cmdmng, cmdname, _em_cmdname_comparator, &cmdsetting))
+	em_cmdsetting_t *cmdsetting = (em_cmdsetting_t*)em_gdatamng_get_data_ptr(&cm->cmdmng, cmdname);
+	//if (0 != em_gdatamng_get_data_by_func(&cm->cmdmng, cmdname, _em_cmdname_comparator, &cmdsetting))
+	if (NULL == cmdsetting)
 	{
 		return NULL;
 	}
-	return cmdsetting.cmd_func;
+	return cmdsetting->cmd_func;
 }
 
 static int _em_read_until_line_end()
