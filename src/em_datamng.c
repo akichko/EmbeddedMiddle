@@ -30,8 +30,7 @@ SOFTWARE.
 #include "em_print.h"
 
 int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
-					  void *(*alloc_func)(size_t),
-					  void (*free_func)(void *))
+					  void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	return em_gdatamng_create(dm, data_size, data_num,
 							  EM_DMNG_KEY_INTEGER, sizeof(ulong), duplicate_mode,
@@ -83,8 +82,7 @@ int em_datamng_remove_data(em_datamng_t *dm, ulong id)
 	return em_gdatamng_remove_data(dm, &id);
 }
 
-ulong em_datamng_get_id(em_datamng_t *dm,
-						void *searchdata)
+ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 {
 	ulong *ret = em_gdatamng_get_key(dm, searchdata);
 	if (ret == NULL)
@@ -93,8 +91,7 @@ ulong em_datamng_get_id(em_datamng_t *dm,
 	return *ret;
 }
 
-ulong em_datamng_get_id_by_func(em_datamng_t *dm,
-								void *searchdata,
+ulong em_datamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
 								char (*comparator)(void *, void *))
 {
 	ulong *ret = em_gdatamng_get_key_by_func(dm, searchdata, comparator);
@@ -104,10 +101,8 @@ ulong em_datamng_get_id_by_func(em_datamng_t *dm,
 	return *ret;
 }
 
-int em_datamng_get_data_by_func(em_datamng_t *dm,
-								void *searchdata,
-								char (*comparator)(void *, void *),
-								void *data)
+int em_datamng_get_data_by_func(em_datamng_t *dm, void *searchdata,
+								char (*comparator)(void *, void *), void *data)
 {
 	return em_gdatamng_get_data_by_func(dm, searchdata, comparator, data);
 }

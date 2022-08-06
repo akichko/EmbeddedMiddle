@@ -69,23 +69,23 @@ int em_gdatamng_add_data(em_datamng_t *dm,
 						 const void *data);
 
 void *em_gdatamng_get_data_ptr(em_datamng_t *dm,
-							   void *key);
+							   const void *key);
 
 int em_gdatamng_get_dataidx(em_datamng_t *dm,
-							void *key);
+							const void *key);
 
 void *em_gdatamng_get_dataptr_by_dataidx(em_datamng_t *dm,
 										 uint data_idx);
 
 int em_gdatamng_get_data(em_datamng_t *dm,
-						 void *key,
+						 const void *key,
 						 void *data);
 
 int em_gdatamng_get_data_cnt(em_datamng_t *dm,
-							 void *key);
+							 const void *key);
 
 int em_gdatamng_remove_data(em_datamng_t *dm,
-							void *key);
+							const void *key);
 
 void *em_gdatamng_get_key(em_datamng_t *dm,
 						  void *searchdata);

@@ -38,9 +38,9 @@ typedef struct
 int app1_main()
 {
 	testmsg_t msg;
-
-	em_timersetting_t timersetting = {100, 1000, timer_func, NULL};
-	if (0 != em_timer_create(&tmrmng, &timersetting))
+	em_timersetting_t timersetting = {1000, timer_func, NULL};
+	uint timer_id;
+	if (0 != em_timer_create(&tmrmng, &timersetting, &timer_id))
 	{
 		printf("em_timer_create error!!\n");
 		exit(1);
@@ -54,7 +54,7 @@ int app1_main()
 		printf("[App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
 	}
 
-	if (0 != em_timer_delete(&tmrmng, timersetting.timer_id))
+	if (0 != em_timer_delete(&tmrmng, timer_id))
 	{
 		printf("em_timer_delete error!!\n");
 		exit(1);
@@ -94,7 +94,7 @@ int main()
 	}
 
 	// shutdown command
-	em_cmdsetting_t shutdowncmd_setting = {1, "shutdown", &cmd_shutdown};
+	em_cmdsetting_t shutdowncmd_setting = {"shutdown", &cmd_shutdown};
 	if (0 != em_cmd_regist(&cmdmng, &shutdowncmd_setting))
 	{
 		printf("error\n");

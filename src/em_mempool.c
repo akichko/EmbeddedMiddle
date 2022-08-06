@@ -58,6 +58,10 @@ int em_mpool_create(em_mpool_t *mp, uint block_size, uint block_num,
 					void *(*alloc_func)(size_t),
 					void (*free_func)(void *))
 {
+	if(block_size == 0 || block_num == 0){
+		em_printf(EM_LOG_ERROR, "param error\n");
+		return -1;
+	}
 	mp->free_func = free_func;
 	em_blkinfo_t **block_ptr = (em_blkinfo_t **)alloc_func(sizeof(em_blkinfo_t *) * block_num);
 	em_blkinfo_t *block = (em_blkinfo_t *)alloc_func(sizeof(em_blkinfo_t) * block_num);

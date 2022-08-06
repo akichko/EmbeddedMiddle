@@ -123,3 +123,129 @@ int em_event_set(em_event_t *event)
 
 	return 0;
 }
+
+// event array
+
+int em_evtarray_init(em_evtarray_t *evtarray, uint array_size,
+					 void *(*alloc_func)(size_t),
+					 void (*free_func)(void *))
+{
+	evtarray->array_size = array_size;
+	evtarray->free_func = free_func;
+	evtarray->events = (em_event_t *)alloc_func(sizeof(em_event_t) * array_size);
+	for (int i = 0; i < array_size; i++)
+	{
+		int ret = em_event_init(&evtarray->events[i]);
+		if (ret != 0)
+		{
+			em_printf(EM_LOG_ERROR, "init error\n");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int em_evtarray_destroy(em_evtarray_t *evtarray)
+{
+
+	for (int i = 0; i < evtarray->array_size; i++)
+	{
+		int ret = em_event_destroy(&evtarray->events[i]);
+		if (ret != 0)
+		{
+			em_printf(EM_LOG_ERROR, "destroy error\n");
+			return -1;
+		}
+	}
+	evtarray->free_func(evtarray->events);
+	return 0;
+}
+
+int em_evtarray_wait(em_evtarray_t *evtarray, uint event_id, int timeout_ms)
+{
+	if (event_id >= evtarray->array_size)
+	{
+		em_printf(EM_LOG_ERROR, "param error\n");
+	}
+	return em_event_wait(&evtarray->events[event_id], timeout_ms);
+}
+
+int em_evtarray_broadcast(em_evtarray_t *evtarray, uint event_id)
+{
+	if (event_id >= evtarray->array_size)
+	{
+		em_printf(EM_LOG_ERROR, "param error\n");
+	}
+	return em_event_broadcast(&evtarray->events[event_id]);
+}
+
+int em_evtarray_set(em_evtarray_t *evtarray, uint event_id)
+{
+	if (event_id >= evtarray->array_size)
+	{
+		em_printf(EM_LOG_ERROR, "param error\n");
+	}
+	return em_event_set(&evtarray->events[event_id]);
+}
+
+// event manage
+
+int em_evtmng_init(em_evtmng_t *evtmng, uint max_event_num,
+				   void *(*alloc_func)(size_t),
+				   void (*free_func)(void *))
+{
+	evtmng->free_func = free_func;
+	if (0 != em_mpool_create(&evtmng->mp_event, sizeof(em_event_t), max_event_num, alloc_func, free_func))
+	{
+		em_printf(EM_LOG_ERROR, "init error\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int em_evtmng_destroy(em_evtmng_t *evtmng)
+{
+	int ret = em_mpool_delete(&evtmng->mp_event);
+	if (ret != 0)
+	{
+		em_printf(EM_LOG_ERROR, "error\n");
+		return -1;
+	}
+	return 0;
+}
+
+em_event_t *em_evtmng_factory(em_evtmng_t *evtmng)
+{
+	em_event_t *event;
+	if (0 != em_mpool_alloc_block(&evtmng->mp_event, (void **)&event, EM_NO_WAIT))
+	{
+		em_printf(EM_LOG_ERROR, "error\n");
+		return NULL;
+	}
+	if (0 != em_event_init(event))
+	{
+		return NULL;
+	}
+	return event;
+}
+
+int em_evtmng_dispose(em_evtmng_t *evtmng, em_event_t *evt_p)
+{
+	if (0 != em_event_destroy((em_event_t *)evt_p))
+	{
+		em_printf(EM_LOG_ERROR, "error\n");
+		return -1;
+	}
+	return em_mpool_free_block(&evtmng->mp_event, evt_p);
+}
+
+int em_evtmng_evtp2id(em_evtmng_t *evtmng, em_event_t *evt_p)
+{
+	return em_mpool_get_dataidx(&evtmng->mp_event, evt_p);
+}
+
+em_event_t *em_evtmng_evtid2p(em_evtmng_t *evtmng, int event_id)
+{
+	return (em_event_t *)em_mpool_get_dataptr(&evtmng->mp_event, event_id);
+}

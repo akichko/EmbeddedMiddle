@@ -29,6 +29,7 @@ SOFTWARE.
 #include "em_mtxmng.h"
 #include "em_semmng.h"
 #include "em_system.h"
+#include "em_eventflag.h"
 
 int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 {
@@ -59,6 +60,13 @@ int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 		return -1;
 	}
 
+	if (0 != em_evtmng_init(&sysmng->evtmng, setting->max_num_event,
+							setting->alloc_func, setting->free_func))
+	{
+		em_printf(EM_LOG_ERROR, "evtmng init error\n");
+		return -1;
+	}
+
 	if (0 != em_cmd_init(&sysmng->cmdmng, setting->max_num_cmd,
 						 setting->alloc_func, setting->free_func))
 	{
@@ -70,6 +78,13 @@ int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 							 setting->alloc_func, setting->free_func))
 	{
 		em_printf(EM_LOG_ERROR, "tskmng init error\n");
+		return -1;
+	}
+
+	if (0 != em_evtarray_init(&sysmng->gevents, setting->num_global_event,
+							  setting->alloc_func, setting->free_func))
+	{
+		em_printf(EM_LOG_ERROR, "event array init error\n");
 		return -1;
 	}
 
@@ -97,6 +112,12 @@ int em_sysmng_finalize(em_sysmng_t *sysmng)
 		return -1;
 	}
 
+	if (0 != em_evtmng_destroy(&sysmng->evtmng))
+	{
+		em_printf(EM_LOG_ERROR, "evtmng destroy error\n");
+		return -1;
+	}
+
 	if (0 != em_cmd_destroy(&sysmng->cmdmng))
 	{
 		em_printf(EM_LOG_ERROR, "cmdmng destroy error\n");
@@ -106,6 +127,12 @@ int em_sysmng_finalize(em_sysmng_t *sysmng)
 	if (0 != em_taskmng_destroy(&sysmng->tskmng))
 	{
 		em_printf(EM_LOG_ERROR, "tskmng init error\n");
+		return -1;
+	}
+
+	if (0 != em_evtarray_destroy(&sysmng->gevents))
+	{
+		em_printf(EM_LOG_ERROR, "event array destroy error\n");
 		return -1;
 	}
 

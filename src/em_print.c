@@ -26,6 +26,7 @@ SOFTWARE.
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include "em_print.h"
@@ -59,11 +60,19 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 
 	if (s_is_timeprint)
 	{
-		time_t timer;
-		time(&timer);
-		char *t = ctime(&timer);
-		t[strlen(t) - 1] = '\0';
-		length = snprintf(buf + total_length, 64, "[%s] ", t);
+		struct timeval tv;
+		struct tm *time_st;
+		gettimeofday(&tv, NULL);
+		time_st = localtime(&tv.tv_sec);
+
+		length = snprintf(buf + total_length, 64, "[%d/%02d/%02d %02d:%02d:%02d.%03ld] ", // 現在時刻
+						  time_st->tm_year + 1900,
+						  time_st->tm_mon + 1,
+						  time_st->tm_mday,
+						  time_st->tm_hour,
+						  time_st->tm_min,
+						  time_st->tm_sec,
+						  tv.tv_usec / 1000);
 		total_length += length;
 	}
 

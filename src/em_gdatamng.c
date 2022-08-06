@@ -73,7 +73,6 @@ int em_gdatamng_delete(em_datamng_t *dm)
 int em_gdatamng_print(em_datamng_t *dm)
 {
 	printf("print %d %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->key_size, dm->mp.block_size);
-	char ckey;
 	long ikey;
 	for (int i = 0; i < dm->mp.num_max; i++)
 	{
@@ -123,7 +122,7 @@ static int _em_gdatamng_get_dataidx(em_datamng_t *dm, const void *key)
 }
 
 // unsafe
-static int _em_gdatamng_get_blockinfo(em_datamng_t *dm, void *key, em_blkinfo_t **block)
+static int _em_gdatamng_get_blockinfo(em_datamng_t *dm, const void *key, em_blkinfo_t **block)
 {
 	int ret = -1;
 	int data_index;
@@ -190,7 +189,7 @@ int em_gdatamng_add_data(em_datamng_t *dm, const void *key, const void *data)
 }
 
 // unsafe
-static void *_em_gdatamng_get_data_ptr(em_datamng_t *dm, void *key)
+static void *_em_gdatamng_get_data_ptr(em_datamng_t *dm, const void *key)
 {
 	em_blkinfo_t *block_tmp;
 
@@ -202,7 +201,7 @@ static void *_em_gdatamng_get_data_ptr(em_datamng_t *dm, void *key)
 	return block_tmp->data_ptr;
 }
 
-void *em_gdatamng_get_data_ptr(em_datamng_t *dm, void *key)
+void *em_gdatamng_get_data_ptr(em_datamng_t *dm, const void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	void *ret = _em_gdatamng_get_data_ptr(dm, key);
@@ -211,7 +210,7 @@ void *em_gdatamng_get_data_ptr(em_datamng_t *dm, void *key)
 	return ret;
 }
 
-int em_gdatamng_get_dataidx(em_datamng_t *dm, void *key)
+int em_gdatamng_get_dataidx(em_datamng_t *dm, const void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = _em_gdatamng_get_dataidx(dm, key);
@@ -229,7 +228,7 @@ void *em_gdatamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
 	return ret;
 }
 
-int em_gdatamng_get_data(em_datamng_t *dm, void *key, void *data)
+int em_gdatamng_get_data(em_datamng_t *dm, const void *key, void *data)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
@@ -245,7 +244,7 @@ int em_gdatamng_get_data(em_datamng_t *dm, void *key, void *data)
 	return ret;
 }
 
-int em_gdatamng_get_data_cnt(em_datamng_t *dm, void *key)
+int em_gdatamng_get_data_cnt(em_datamng_t *dm, const void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;
@@ -259,7 +258,7 @@ int em_gdatamng_get_data_cnt(em_datamng_t *dm, void *key)
 	return ret;
 }
 
-int em_gdatamng_remove_data(em_datamng_t *dm, void *key)
+int em_gdatamng_remove_data(em_datamng_t *dm, const void *key)
 {
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	int ret = -1;

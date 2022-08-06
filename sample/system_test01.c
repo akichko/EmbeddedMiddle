@@ -7,6 +7,13 @@
 #define TASK_ID_APP2 200
 #define TASK_ID_CMD 300
 
+typedef enum{
+	EVENT_TIMER = 0,
+	EVENT_OTHER,
+	EVENT_MAXNUM
+} e_event_no;
+
+
 typedef struct
 {
 	int msg_type;
@@ -17,7 +24,12 @@ typedef struct
 {
 	int task_to;
 	int data;
-} timer_arg_t;
+} timer_arg_msg_t;
+
+typedef struct
+{
+	e_event_no event_no;
+} timer_arg_evt_t;
 
 typedef struct
 {
@@ -33,7 +45,8 @@ int app2_signal(int arg);
 int app1_main();
 int app2_main();
 int cmd_main();
-void timer_func(void *arg);
+void timer_func_msg(void *arg);
+void timer_func_evt(void *arg);
 void cmd_shutdown(int argc, char **argv);
 
 em_memmng_t memmng;
@@ -89,6 +102,7 @@ int app1_init(void *arg)
 
 int app2_init(void *arg)
 {
+	//gevent = em_evtmng_factory(&sysmng.evtmng);	
 	em_printf(EM_LOG_INFO, "app2 init\n");
 	return 0;
 }
@@ -110,10 +124,11 @@ int app2_signal(int arg)
 int app1_main()
 {
 	testmsg_t msg;
-	timer_arg_t timerarg = {TASK_ID_APP1, 10};
+	timer_arg_msg_t timerarg = {TASK_ID_APP1, 10};
+	uint timer_id;
 
-	em_timersetting_t timersetting = {100, 1000, timer_func, &timerarg};
-	if (0 != em_timer_create(&sysmng.tmrmng, &timersetting))
+	em_timersetting_t timersetting = {1000, timer_func_msg, &timerarg};
+	if (0 != em_timer_create(&sysmng.tmrmng, &timersetting, &timer_id))
 	{
 		printf("em_timer_create error!!\n");
 		exit(1);
@@ -124,10 +139,10 @@ int app1_main()
 	{
 		em_msg_recv(&sysmng.tskmng, &msg, EM_NO_TIMEOUT);
 
-		em_printf(EM_LOG_INFO, "[App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
+		em_printf(EM_LOG_INFO, " => [App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
 	}
 
-	if (0 != em_timer_delete(&sysmng.tmrmng, timersetting.timer_id))
+	if (0 != em_timer_delete(&sysmng.tmrmng, timer_id))
 	{
 		printf("em_timer_delete error!!\n");
 		exit(1);
@@ -140,10 +155,11 @@ int app1_main()
 int app2_main()
 {
 	testmsg_t msg;
-	timer_arg_t timerarg = {TASK_ID_APP2, 20};
+	timer_arg_evt_t timerarg = {EVENT_TIMER};
+	uint timer_id;
 
-	em_timersetting_t timersetting = {200, 2500, timer_func, &timerarg};
-	if (0 != em_timer_create(&sysmng.tmrmng, &timersetting))
+	em_timersetting_t timersetting = {2500, timer_func_evt, &timerarg};
+	if (0 != em_timer_create(&sysmng.tmrmng, &timersetting, &timer_id))
 	{
 		printf("em_timer_create error!!\n");
 		exit(1);
@@ -152,8 +168,8 @@ int app2_main()
 
 	while (!b_shutdown2)
 	{
-		em_msg_recv(&sysmng.tskmng, &msg, EM_NO_TIMEOUT);
-		em_printf(EM_LOG_INFO, "[App2] msgType=%d, data=%d\n", msg.msg_type, msg.data);
+		em_evtarray_wait(&sysmng.gevents, EVENT_TIMER, EM_NO_TIMEOUT);
+		em_printf(EM_LOG_INFO, " => [App2] event received\n");
 
 		memset(&msg, 0, sizeof(testmsg_t));
 		msg.msg_type = 21;
@@ -161,7 +177,7 @@ int app2_main()
 		em_msg_send(&sysmng.tskmng, TASK_ID_APP1, &msg, 1000);
 	}
 
-	if (0 != em_timer_delete(&sysmng.tmrmng, timersetting.timer_id))
+	if (0 != em_timer_delete(&sysmng.tmrmng, timer_id))
 	{
 		printf("em_timer_delete error!!\n");
 		exit(1);
@@ -184,15 +200,27 @@ int cmd_main()
 	return 1;
 }
 
-void timer_func(void *arg)
+void timer_func_msg(void *arg)
 {
-	timer_arg_t *timer_arg = (timer_arg_t *)arg;
-	em_printf(EM_LOG_INFO, "timer_func \n");
+	timer_arg_msg_t *timer_arg = (timer_arg_msg_t *)arg;
+	em_printf(EM_LOG_INFO, "timer_func_msg => \n");
 	testmsg_t msg;
 	msg.msg_type = timer_arg->data;
 	msg.data = em_get_tick_count(&sysmng.timemng);
-	if(0 != em_msg_send(&sysmng.tskmng, timer_arg->task_to, &msg, 1000)){
-		em_printf(EM_LOG_ERROR, "msg send fail\n");
+	if (0 != em_msg_send(&sysmng.tskmng, timer_arg->task_to, &msg, 1000))
+	{
+		em_printf(EM_LOG_ERROR, "msg send failed\n");
+	}
+}
+
+void timer_func_evt(void *arg)
+{
+	timer_arg_evt_t *timer_arg = (timer_arg_evt_t *)arg;
+	em_printf(EM_LOG_INFO, "timer_func_evt =>\n");
+
+	if (0 != em_evtarray_broadcast(&sysmng.gevents, timer_arg->event_no))
+	{
+		em_printf(EM_LOG_ERROR, "event broadcast failed\n");
 	}
 }
 
@@ -204,12 +232,17 @@ int init()
 
 	sys_setting.max_num_mutex = 100;
 	sys_setting.max_num_sem = 100;
+	sys_setting.max_num_event = 10;
 	sys_setting.max_num_timer = 2;
 	sys_setting.max_num_cmd = 5;
 	sys_setting.max_num_task = 3;
 	sys_setting.msgdata_size = sizeof(testmsg_t);
+	sys_setting.num_global_event = EVENT_MAXNUM;
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
+
+	em_print_is_timeprint(TRUE);
+
 
 	if (0 != em_memmng_create(&memmng, mem_total_size, mem_unit_size, max_alloc_num))
 	{
@@ -222,6 +255,7 @@ int init()
 		printf("sys init error\n");
 		return -1;
 	}
+	
 	em_datamng_create(&dm, 128, 128, EM_DMNG_DPLCT_ERROR, &local_malloc, &local_free);
 
 	em_memmng_print(&memmng, TRUE);

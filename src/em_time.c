@@ -73,7 +73,7 @@ struct timespec em_timespec_sub(struct timespec a, struct timespec b)
 
 void em_print_timespec(struct timespec ts)
 {
-	em_printf(EM_LOG_ERROR, "%10ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
+	printf("%10ld.%09ld\n", ts.tv_sec, ts.tv_nsec);
 }
 
 struct timespec em_get_offset_timestamp(int milliseconds)

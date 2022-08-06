@@ -23,26 +23,27 @@ SOFTWARE.
 ============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <pthread.h>
+#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 #include <sys/timerfd.h>
 #include <time.h>
 #include "em_time.h"
 #include "em_timer.h"
 #include "em_datamng.h"
-#include "em_print.h"
 
 int em_timermng_init(em_timermng_t *tmrmng, int num_timer, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	return em_datamng_create(&tmrmng->timerinfo_mng, sizeof(em_timerinfo_t), num_timer, EM_DMNG_DPLCT_ERROR, alloc_func, free_func);
+	int ret = em_mpool_create(&tmrmng->mp_timerinfo, sizeof(em_timerinfo_t), num_timer,
+							  alloc_func, free_func);
+	return ret;
 }
 
 int em_timermng_destroy(em_timermng_t *tmrmng)
 {
-	return em_datamng_delete(&tmrmng->timerinfo_mng);
+	int ret = em_mpool_delete(&tmrmng->mp_timerinfo);
+	return ret;
 }
+
 static void _em_timer_cbfunc(__sigval_t sigval)
 {
 	em_timersetting_t *timersetting = (em_timersetting_t *)sigval.sival_ptr;
@@ -50,63 +51,73 @@ static void _em_timer_cbfunc(__sigval_t sigval)
 	timersetting->timer_func(timersetting->arg);
 }
 
-int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting)
+int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting, uint *timer_id)
 {
-	timer_t timer_id;
+	timer_t linux_timer_id;
 	int ret;
+
+	em_timerinfo_t *timer_info;
+	if (0 != em_mpool_alloc_block(&tmrmng->mp_timerinfo, (void **)&timer_info, EM_NO_WAIT))
+	{
+		em_printf(EM_LOG_ERROR, "mem alloc error\n");
+		return -1;
+	}
+
+	memcpy(&timer_info->setting, setting, sizeof(em_timersetting_t));
+
+	*timer_id = 1 + em_mpool_get_dataidx(&tmrmng->mp_timerinfo, timer_info);
 
 	struct sigevent se;
 	se.sigev_notify = SIGEV_THREAD;
 	se.sigev_notify_function = _em_timer_cbfunc;
-	se.sigev_value.sival_ptr = setting; // heap or static
+	se.sigev_value.sival_ptr = &timer_info->setting; // heap or static
 	se.sigev_notify_attributes = NULL;
+
+	ret = timer_create(CLOCK_MONOTONIC, &se, &linux_timer_id);
+	if (ret == -1)
+	{
+		em_printf(EM_LOG_ERROR, "Fail to creat timer\n");
+		em_mpool_free_block(&tmrmng->mp_timerinfo, timer_info);
+
+		return -1;
+	}
+
+	timer_info->linux_timer_id = linux_timer_id;
 
 	struct itimerspec ts;
 	ts.it_value = em_calc_timespec(setting->interval_ms);
 	ts.it_interval = em_calc_timespec(setting->interval_ms);
 
-	ret = timer_create(CLOCK_MONOTONIC, &se, &timer_id);
-	if (ret == -1)
-	{
-		em_printf(EM_LOG_ERROR, "Fail to creat timer\n");
-		return -1;
-	}
-
-	em_timerinfo_t timerinfo;
-	timerinfo.linux_timer_id = timer_id;
-	ret = em_datamng_add_data(&tmrmng->timerinfo_mng, setting->timer_id, &timerinfo);
-	if (ret == -1)
-	{
-		em_printf(EM_LOG_ERROR, "Error: em_datamng_add_data\n");
-		return -2;
-	}
-
-	ret = timer_settime(timer_id, 0, &ts, 0);
+	ret = timer_settime(linux_timer_id, 0, &ts, 0);
 	if (ret == -1)
 	{
 		em_printf(EM_LOG_ERROR, "Fail to set timer\n");
+		em_mpool_free_block(&tmrmng->mp_timerinfo, timer_info);
 		return -2;
 	}
 
-	em_printf(EM_LOG_INFO, "timer created. id=%d\n", setting->timer_id);
+	em_printf(EM_LOG_INFO, "timer created. id=%d %p\n", *timer_id, linux_timer_id);
 	return 0;
 }
 
-int em_timer_delete(em_timermng_t *tmrmng, int timer_id)
+int em_timer_delete(em_timermng_t *tmrmng, uint timer_id)
 {
 	int ret;
-	em_timerinfo_t timer_info;
+	em_timerinfo_t *timer_info = em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
 
-	if (0 != em_datamng_get_data(&tmrmng->timerinfo_mng, timer_id, (void *)&timer_info))
+	if (timer_info == NULL)
 	{
 		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
-	ret = timer_delete(timer_info.linux_timer_id);
+
+	ret = timer_delete(timer_info->linux_timer_id);
 	if (ret != 0)
 	{
 		em_printf(EM_LOG_ERROR, "timer delete error!!\n");
 	}
+	em_mpool_free_block(&tmrmng->mp_timerinfo, timer_info);
+	em_printf(EM_LOG_INFO, "timer deleted. id=%d %p\n", timer_id, timer_info->linux_timer_id);
 
 	return ret;
 }

@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <pthread.h>
 #include "em_cmndefs.h"
+#include "em_mempool.h"
 
 #define EM_NO_TIMEOUT -1
 #define EM_NO_WAIT 0
@@ -46,5 +47,53 @@ int em_event_wait(em_event_t *event,
 int em_event_broadcast(em_event_t *event);
 
 int em_event_set(em_event_t *event);
+
+typedef struct
+{
+	uint array_size;
+	em_event_t *events;
+	void (*free_func)(void *);
+} em_evtarray_t;
+
+int em_evtarray_init(em_evtarray_t *evtarray,
+					 uint array_size,
+					 void *(*alloc_func)(size_t),
+					 void (*free_func)(void *));
+
+int em_evtarray_destroy(em_evtarray_t *evtarray);
+
+int em_evtarray_wait(em_evtarray_t *evtarray,
+					 uint event_id,
+					 int timeout_ms);
+
+int em_evtarray_broadcast(em_evtarray_t *evtarray,
+						  uint event_id);
+
+int em_evtarray_set(em_evtarray_t *evtarray,
+					uint event_id);
+
+typedef struct
+{
+	em_mpool_t mp_event;
+	void (*free_func)(void *);
+} em_evtmng_t;
+
+int em_evtmng_init(em_evtmng_t *evtmng,
+				   uint max_event_num,
+				   void *(*alloc_func)(size_t),
+				   void (*free_func)(void *));
+
+int em_evtmng_destroy(em_evtmng_t *evtmng);
+
+em_event_t *em_evtmng_factory(em_evtmng_t *smm);
+
+int em_evtmng_dispose(em_evtmng_t *evtmng,
+					  em_event_t *evt_p);
+
+int em_evtmng_evtp2id(em_evtmng_t *evt,
+					  em_event_t *evt_p);
+
+em_event_t *em_evtmng_evtid2p(em_evtmng_t *evtmng,
+							  int event_id);
 
 #endif //__EM_EVENTFLAG_H__

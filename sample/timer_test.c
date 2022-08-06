@@ -39,62 +39,42 @@ void timer_func_1(void *arg)
 char teststr[] = "test string";
 
 em_timersetting_t timersetting[] = {
-	{100, 1200, timer_func_1, NULL},
-	{200, 900, timer_func_1, NULL},
-	{300, 900, timer_func_2, teststr}};
+	{1200, timer_func_1, NULL},
+	//	{200, 900, timer_func_1, NULL},
+	{900, timer_func_2, teststr}};
 
 int main()
 {
 	em_timermng_t tmrmng;
-	// timer_t timer1_id, timer2_id;
-	//int ret;
 	em_tick_init(&tm);
+
+	int timer_num = sizeof(timersetting) / sizeof(em_timersetting_t);
+	uint timer_id[timer_num];
 
 	if (0 != em_timermng_init(&tmrmng, 10, &malloc, &free))
 	{
 		printf("error\n");
 	}
 
-	if (0 != em_timer_create(&tmrmng, &timersetting[0]))
+	for (int i = 0; i < timer_num; i++)
 	{
-		printf("em_timer_create error!!\n");
-		exit(1);
-	}
-#if 0
-	if (0 != em_timer_create(&tmrmng, &timersetting[1]))
-	{
-		printf("em_timer_create error!!\n");
-		exit(1);
-	}
-#endif
-	if (0 != em_timer_create(&tmrmng, &timersetting[2]))
-	{
-		printf("em_timer_create2 error!!\n");
-		exit(1);
+		if (0 != em_timer_create(&tmrmng, &timersetting[i], &timer_id[i]))
+		{
+			printf("em_timer_create error!!\n");
+			exit(1);
+		}
 	}
 
 	sleep(7);
 
-	if (0 != em_timer_delete(&tmrmng, timersetting[0].timer_id))
+	for (int i = 0; i < timer_num; i++)
 	{
-		printf("em_timer_delete error!!\n");
-		exit(1);
+		if (0 != em_timer_delete(&tmrmng, timer_id[i]))
+		{
+			printf("em_timer_delete error!!\n");
+			exit(1);
+		}
 	}
-	printf("timer1 deleted\n");
-#if 0
-	if (0 != em_timer_delete(&tmrmng, timersetting[1].timer_id))
-	{
-		printf("em_timer_delete error!!\n");
-		exit(1);
-	}
-	printf("timer2 deleted\n");
-#endif
-	if (0 != em_timer_delete(&tmrmng, timersetting[2].timer_id))
-	{
-		printf("em_timer_delete error!!\n");
-		exit(1);
-	}
-	printf("timer3 deleted\n");
 
 	return 0;
 }

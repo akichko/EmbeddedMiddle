@@ -31,7 +31,6 @@ SOFTWARE.
 
 typedef struct
 {
-	int timer_id;
 	int interval_ms;
 	void (*timer_func)(void *);
 	void *arg;
@@ -40,11 +39,12 @@ typedef struct
 typedef struct
 {
 	timer_t linux_timer_id;
+	em_timersetting_t setting;
 } em_timerinfo_t;
 
 typedef struct
 {
-	em_datamng_t timerinfo_mng;
+	em_mpool_t mp_timerinfo;
 } em_timermng_t;
 
 int em_timermng_init(em_timermng_t *tmrmng,
@@ -55,9 +55,10 @@ int em_timermng_init(em_timermng_t *tmrmng,
 int em_timermng_destroy(em_timermng_t *tmrmng);
 
 int em_timer_create(em_timermng_t *tmrmng,
-					em_timersetting_t *setting);
+					em_timersetting_t *setting,
+					uint *time_id);
 
 int em_timer_delete(em_timermng_t *tmrmng,
-					int timer_id);
+					uint timer_id);
 
 #endif //__EM_TIMER_H__
