@@ -1,8 +1,8 @@
 CC            = gcc
-CFLAGS        = -g -Wall -fdiagnostics-color=always
+SRCDIR        = ./src
+CFLAGS        = -g -Wall -fdiagnostics-color=always -I$(SRCDIR)
 LDFLAGS       = -L$(OUTDIR)
-LIBS          = -lem -lrt -lpthread -lm
-SRCDIR        = src
+LIBS          = -lem -lrt -lpthread -lm -lcurl
 BUILDDIR      = ./build
 OBJDIR        = $(BUILDDIR)/obj
 OUTDIR        = $(BUILDDIR)/lib
