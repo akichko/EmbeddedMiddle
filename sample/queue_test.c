@@ -40,7 +40,7 @@ int main()
 	ret = em_dequeue(&qu, &test_buf, 1000);
 	printf("dequeue -> ret:%d val=%d\n", ret, test_buf.attr1);
 
-	ret = em_queue_getnum(&qu, 1000);
+	ret = em_queue_getnum(&qu);
 	printf("em_queue_getnum -> ret:%d\n", ret);
 
 	em_queue_print(&qu);

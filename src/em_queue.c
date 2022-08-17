@@ -216,12 +216,12 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	return 0;
 }
 
-int em_queue_getnum(em_queue_t *qu, int timeout_ms)
+int em_queue_getnum(em_queue_t *qu)
 {
 	int ret;
 
 	// lock
-	if (0 != em_mutex_lock(&qu->mutex, timeout_ms))
+	if (0 != em_mutex_lock(&qu->mutex, EM_NO_WAIT))
 	{
 		return -1;
 	}

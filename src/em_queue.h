@@ -74,7 +74,6 @@ int em_dequeue(em_queue_t *qu,
 			   void *block_data,
 			   int timeout_ms);
 
-int em_queue_getnum(em_queue_t *qu,
-					int timeout_ms);
+int em_queue_getnum(em_queue_t *qu);
 
 #endif //__EM_QUEUE_H__
