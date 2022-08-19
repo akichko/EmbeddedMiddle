@@ -29,7 +29,7 @@ SOFTWARE.
 
 typedef struct
 {
-	uint buf_maxsize;
+	uint buf_capacity;
 	uint data_size;
 	char *data;
 	void (*free_func)(void *);
@@ -38,9 +38,11 @@ typedef struct
 // http client
 
 int em_buf_init(em_buf_t *bf,
-				uint buf_size,
+				uint buf_capacity,
 				void *(*alloc_func)(size_t),
 				void (*free_func)(void *));
+
+int em_buf_clear(em_buf_t *bf);
 
 int em_buf_destroy(em_buf_t *bf);
 

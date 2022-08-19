@@ -40,28 +40,9 @@ static size_t _em_buffer_writer(char *buffer, size_t size, size_t nitems, void *
 		return CURL_WRITEFUNC_PAUSE;
 	}
 
-	//if (buf == NULL)
-	//{
-	//	return block;
-	//}
-//
-	//if (buf->data == NULL)
-	//{
-	//	return block;
-	//}
-//
-	//if (buf->data_size + block > buf->buf_maxsize)
-	//{
-	//	em_printf(EM_LOG_ERROR, "buffer overflow %ld/%ld\n", buf->data_size + block, buf->buf_maxsize);
-	//	return CURL_WRITEFUNC_PAUSE;
-	//}
-
 	em_printf(EM_LOG_TRACE, "buffer = %p, size = %ld, nitems = %ld, outstream = %p\n",
 			  buffer, size, nitems, outstream);
 
-	//memcpy(buf->data + buf->data_size, buffer, block);
-//
-	//buf->data_size += block;
 	buf->data[buf->data_size] = '\0';
 
 	return block;
@@ -81,27 +62,18 @@ static int _em_curl_init(em_httpc_t *hc)
 int em_httpc_init(em_httpc_t *hc, uint buf_size,
 				  void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	// hc->curl = curl_easy_init();
 	hc->header_slist = NULL;
 	em_buf_init(&hc->buf, buf_size, alloc_func, free_func);
-	//hc->buf.buf_maxsize = buf_size;
-	//hc->buf.data_size = 0;
-	//hc->buf.data = (char *)alloc_func(buf_size);
-	//hc->buf.data[0] = '\0';
 	hc->free_func = free_func;
 
 	em_printf(EM_LOG_TRACE, "outstream addr = %p\n", &hc->buf);
-
-	//_em_curl_init(hc);
 
 	return 0;
 }
 
 int em_httpc_destroy(em_httpc_t *hc)
 {
-	// curl_easy_cleanup(hc->curl);
 	curl_slist_free_all(hc->header_slist);
-	//hc->free_func(hc->buf.data);
 	em_buf_destroy(&hc->buf);
 	return 0;
 }
@@ -137,8 +109,7 @@ int em_httpc_setopt(em_httpc_t *hc, int opt, int opt_value)
 	return 0;
 }
 
-int em_httpc_get(em_httpc_t *hc, char *url, em_httphdr_t *headers,
-				 em_httpres_t *response)
+int em_httpc_get(em_httpc_t *hc, char *url, em_httphdr_t *headers, em_httpres_t *response)
 {
 	CURLcode curlRet;
 	if (response == NULL)
@@ -146,7 +117,6 @@ int em_httpc_get(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 		em_printf(EM_LOG_ERROR, "param error\n");
 		return -1;
 	}
-	// hc->buf.data_size = 0;
 
 	_em_curl_init(hc);
 	curl_easy_setopt(hc->curl, CURLOPT_URL, url);
@@ -179,8 +149,6 @@ int em_httpc_post(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 				  void *postdata, int postdata_size, em_httpres_t *response)
 {
 	CURLcode curlRet;
-	// char *post_data = "name=edo&age=20";
-	// hc->buf.data_size = 0;
 
 	_em_curl_init(hc);
 	curl_easy_setopt(hc->curl, CURLOPT_URL, url);
@@ -263,6 +231,10 @@ int em_httpc_post_multipart(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 		em_printf(EM_LOG_ERROR, "http error ret=%d\n", curlRet);
 		return -1;
 	}
+
+	curl_easy_getinfo(hc->curl, CURLINFO_RESPONSE_CODE, &response->status_code);
+	response->data_size = hc->buf.data_size;
+	response->data = hc->buf.data;
 
 	/* then cleanup the form */
 	curl_mime_free(form);

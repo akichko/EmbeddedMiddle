@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "../src/em_list.h"
 
 void list_print(em_list_t *li)
@@ -19,8 +18,7 @@ void list_print(em_list_t *li)
 
 int main()
 {
-	char *test_data[] = {
-		"aa", "bb", "cc", "dd"};
+	char *test_data[] = {"aa", "bb", "cc", "dd"};
 
 	em_list_t li;
 	int ret;
@@ -34,20 +32,20 @@ int main()
 	}
 	list_print(&li);
 
-	printf("del idx=1\n");
 	ret = em_list_remove_at(&li, 1);
+	printf("del idx=1 -> ret=%d\n",ret);
 	list_print(&li);
 
-	printf("del idx=0\n");
 	ret = em_list_remove_at(&li, 0);
+	printf("del idx=0 -> ret=%d\n",ret);
 	list_print(&li);
 
-	printf("del idx=0\n");
 	ret = em_list_remove_at(&li, 0);
+	printf("del idx=0 -> ret=%d\n",ret);
 	list_print(&li);
 
-	printf("del idx=0\n");
 	ret = em_list_remove_at(&li, 0);
+	printf("del idx=0 -> ret=%d\n",ret);
 	list_print(&li);
 
 	for (int i = 0; i < 6; i++)

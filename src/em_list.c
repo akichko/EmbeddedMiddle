@@ -23,9 +23,7 @@ SOFTWARE.
 ============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
 #include "em_list.h"
-#include "em_mutex.h"
 #include "em_print.h"
 
 int em_list_create(em_list_t *li,
@@ -40,8 +38,7 @@ int em_list_create(em_list_t *li,
 	li->count = 0;
 	li->first = NULL;
 	li->last = NULL;
-	// li->first.next = &li->last;
-	// li->last.back = &li->first;
+	
 	return 0;
 }
 
@@ -59,11 +56,6 @@ int em_list_add(em_list_t *li, void *data)
 		em_printf(EM_LOG_ERROR, "error\n");
 		return -1;
 	}
-	// newitem->data = data;
-	// newitem->next = &li->last;
-	// newitem->back = li->last.back;
-	// newitem->back->next = newitem;
-	// newitem->next->back = newitem;
 
 	newitem->data = data;
 	newitem->next = NULL;
@@ -80,6 +72,7 @@ int em_list_add(em_list_t *li, void *data)
 	li->last = newitem;
 
 	li->count++;
+	return 0;
 }
 
 int em_list_remove_at(em_list_t *li, uint index)
@@ -87,7 +80,7 @@ int em_list_remove_at(em_list_t *li, uint index)
 	em_listitem_t *delitem = li->first;
 	if (index >= li->count)
 	{
-		em_printf(EM_LOG_ERROR, "error\n");
+		em_printf(EM_LOG_ERROR, "index error %d/%d\n", index, li->count);
 		return -1;
 	}
 
@@ -95,8 +88,6 @@ int em_list_remove_at(em_list_t *li, uint index)
 	{
 		delitem = delitem->next;
 	}
-	// delitem->back->next = delitem->next;
-	// delitem->next->back = delitem->back;
 
 	if (delitem->back == NULL) //先頭アイテム
 	{
