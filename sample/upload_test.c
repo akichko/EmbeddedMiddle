@@ -14,6 +14,8 @@ typedef struct
 	int idata3;
 } ultest_t;
 
+//cserver's IP should be written in /etc/hosts
+
 int main(void)
 {
 	em_upload_t ul;
@@ -23,8 +25,7 @@ int main(void)
 	em_httpres_t response;
 	int ret;
 	char *url;
-
-	url = "http://127.0.0.1:8080/ConnectedService/FileuploadServlet";
+	url = "http://cserver:8080/ConnectedService/FileuploadServlet";
 
 	em_uldata_init(&uldata, 100, EM_HTTP_PART_TYPE_STRING, 1024 * 1024, &malloc, &free);
 	strcpy(uldata.name, "OnePart.txt");

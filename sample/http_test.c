@@ -6,6 +6,8 @@
 #include <curl/curl.h>
 #include "em_httpc.h"
 
+//cserver's IP should be written in /etc/hosts
+
 int main(void)
 {
 	em_httpc_t hc;
@@ -15,8 +17,7 @@ int main(void)
 
 	// GET test
 	printf("** GET TEST ***********************************\n");
-	// url = "http://192.168.3.4:8080/ConnectedService/RequestInfoServlet?aaa=123&bbb=ccc";
-	url = "http://127.0.0.1:8080/ConnectedService/RequestInfoServlet?aaa=123&bbb=ccc";
+	url = "http://cserver:8080/ConnectedService/RequestInfoServlet?aaa=123&bbb=ccc";
 
 	em_httpc_init(&hc, 1024 * 1024, &malloc, &free);
 	em_httpc_setopt(&hc, CURLOPT_SSL_VERIFYPEER, 0);
@@ -39,8 +40,8 @@ int main(void)
 
 	// POST test
 	printf("\n** POST TEST ***********************************\n");
-	url = "http://127.0.0.1:8080/ConnectedService/RequestInfoServlet";
-	char *post_str = "name=edo&age=20";
+	url = "http://cserver:8080/ConnectedService/RequestInfoServlet";
+	char *post_str = "xx=123&yy=abc";
 
 	printf("request to %s\n", url);
 
@@ -52,7 +53,7 @@ int main(void)
 
 	// POST multi form test
 	printf("\n** POST multiform TEST ***********************************\n");
-	url = "http://127.0.0.1:8080/ConnectedService/RequestInfoServlet";
+	url = "http://cserver:8080/ConnectedService/RequestInfoServlet";
 
 	em_httppart_t parts[3] = {
 		{"part1", EM_HTTP_PART_TYPE_STRING, "body data", strlen("body data")},
