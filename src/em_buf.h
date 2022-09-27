@@ -24,7 +24,6 @@ SOFTWARE.
 #ifndef __EM_BUF_H__
 #define __EM_BUF_H__
 
-#include <stdlib.h>
 #include "em_cmndefs.h"
 
 typedef struct
@@ -35,10 +34,9 @@ typedef struct
 	void (*free_func)(void *);
 } em_buf_t;
 
-// http client
 
 int em_buf_init(em_buf_t *bf,
-				uint buf_capacity,
+				uint buf_capacity, //メモリ確保は+1
 				void *(*alloc_func)(size_t),
 				void (*free_func)(void *));
 

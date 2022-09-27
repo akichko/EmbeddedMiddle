@@ -204,12 +204,13 @@ int em_httpc_post_multipart(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 			field = curl_mime_addpart(form);
 			/* Fill in the filename field */
 			curl_mime_name(field, parts[i].name);
-			// curl_mime_type(field, "text/html");
+			curl_mime_type(field, "text/plain");
 			curl_mime_data(field, parts[i].data, CURL_ZERO_TERMINATED);
 			break;
 		case EM_HTTP_PART_TYPE_BINARY:
 			field = curl_mime_addpart(form);
 			curl_mime_name(field, parts[i].name);
+			curl_mime_type(field, "binary/octet-stream");
 			curl_mime_data(field, parts[i].data, parts[i].data_length);
 			break;
 		case EM_HTTP_PART_TYPE_FILE:

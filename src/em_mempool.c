@@ -74,8 +74,11 @@ int em_mpool_create(em_mpool_t *mp, uint block_size, uint block_num,
 int em_mpool_delete(em_mpool_t *mp)
 {
 	mp->free_func(mp->block_ptr);
+	mp->block_ptr = NULL;
 	mp->free_func(mp->block);
+	mp->block = NULL;
 	mp->free_func(mp->rawdata);
+	mp->rawdata = NULL;
 	em_sem_destroy(&mp->sem);
 	em_mutex_destroy(&mp->mutex);
 	return 0;

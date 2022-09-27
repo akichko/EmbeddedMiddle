@@ -51,13 +51,6 @@ typedef struct
 	int data_length;
 } em_httppart_t;
 
-//typedef struct
-//{
-//	uint buf_maxsize;
-//	uint data_size;
-//	char *data;
-//} em_buf_t;
-
 typedef struct
 {
 	CURL *curl;

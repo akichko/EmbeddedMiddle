@@ -24,6 +24,8 @@ SOFTWARE.
 #ifndef EM_CMNDEFS_H
 #define EM_CMNDEFS_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "em_print.h"
 
 typedef unsigned char		uchar;

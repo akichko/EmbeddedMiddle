@@ -33,8 +33,9 @@ int em_buf_init(em_buf_t *bf, uint buf_capacity,
 {
 	bf->buf_capacity = buf_capacity;
 	bf->data_size = 0;
-	bf->data = (char *)alloc_func(buf_capacity);
+	bf->data = (char *)alloc_func(buf_capacity+1);
 	bf->data[0] = '\0';
+	bf->data[buf_capacity] = '\0';
 	bf->free_func = free_func;
 
 	return 0;
@@ -50,6 +51,7 @@ int em_buf_clear(em_buf_t *bf)
 int em_buf_destroy(em_buf_t *bf)
 {
 	bf->free_func(bf->data);
+	bf->data = NULL;
 	return 0;
 }
 
@@ -71,12 +73,7 @@ int em_buf_get_remain_size(em_buf_t *bf)
 
 int em_buf_append(em_buf_t *bf, char *append_data, int length)
 {
-	if (bf == NULL)
-	{
-		em_printf(EM_LOG_ERROR, "not init\n");
-		return -1;
-	}
-	if (bf->data == NULL)
+	if (bf == NULL || bf->data == NULL)
 	{
 		em_printf(EM_LOG_ERROR, "not init\n");
 		return -1;
@@ -84,7 +81,7 @@ int em_buf_append(em_buf_t *bf, char *append_data, int length)
 	if (bf->data_size + length > bf->buf_capacity)
 	{
 		em_printf(EM_LOG_ERROR, "bffer overflow %ld/%ld\n", bf->data_size + length, bf->buf_capacity);
-		return -1;
+		return -2;
 	}
 
 	memcpy(bf->data + bf->data_size, append_data, length);
