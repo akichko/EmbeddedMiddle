@@ -26,10 +26,11 @@ SOFTWARE.
 
 #include "em_mempool.h"
 #include "em_httpc.h"
+#include "em_ringbuf.h"
 
 typedef struct
 {
-	char name[32];
+	char data_name[32];
 	int data_type;
 	int data_ver;
 	int data_num;
@@ -39,11 +40,12 @@ typedef struct
 typedef struct
 {
 	char *server_url;
+	char *uldata_name;
 	int uldata_ver;
 	uint uldata_type;
 	uint uldata_buf_capacity;
 	em_uldata_t *uldata;
-	em_mpool_t mp_uldata;
+	em_ring_t rb_uldata;
 	int num_sendbuf;
 	int max_sendbuf;
 	em_uldata_t **sendbuf;
@@ -55,6 +57,7 @@ typedef struct
 // uldata
 
 int em_uldata_init(em_uldata_t *ud,
+				   char *data_name,
 				   int data_ver,
 				   uint data_type,
 				   uint buf_capacity,
@@ -71,10 +74,11 @@ int em_uldata_append_buf(em_uldata_t *ud,
 
 int em_upload_init(em_upload_t *ul,
 				   char *server_url,
+				   char *uldata_name,
 				   int uldata_ver,
 				   uint uldata_type,
 				   uint uldata_buf_capacity,
-				   uint uldata_max_num,
+				   uint uldata_sendbuf_num,
 				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *));
 
