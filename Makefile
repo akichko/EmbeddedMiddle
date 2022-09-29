@@ -2,7 +2,7 @@ CC            = gcc
 SRCDIR        = ./src
 CFLAGS        = -g -Wall -fdiagnostics-color=always -I$(SRCDIR)
 LDFLAGS       = -L$(OUTDIR)
-LIBS          = -lem -lrt -lpthread -lm -lcurl
+LIBS          = -lem -lrt -lpthread -lm -lcurl -lmosquitto
 BUILDDIR      = ./build
 OBJDIR        = $(BUILDDIR)/obj
 OUTDIR        = $(BUILDDIR)/lib
