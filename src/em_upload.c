@@ -28,10 +28,10 @@ SOFTWARE.
 
 // upload data
 
-int em_uldata_init(em_uldata_t *ud, char *data_name, int data_ver, uint data_type, uint buf_capacity,
+int em_uldata_init(em_uldata_t *ud, char *data_name, uint data_type, uint data_ver, uint buf_capacity,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
-	if(data_name == NULL)
+	if (data_name == NULL)
 		strcpy(ud->data_name, "NoName");
 	else
 		strcpy(ud->data_name, data_name);
@@ -64,7 +64,7 @@ int em_uldata_append_buf(em_uldata_t *ud, void *data, int length)
 // upload
 
 int em_upload_init(em_upload_t *ul, char *server_url, char *uldata_name,
-				   int uldata_ver, uint uldata_type, uint uldata_buf_capacity, uint uldata_sendbuf_num,
+				   uint uldata_type, uint uldata_ver, uint uldata_buf_capacity, uint uldata_sendbuf_num,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	ul->server_url = server_url;
@@ -79,8 +79,6 @@ int em_upload_init(em_upload_t *ul, char *server_url, char *uldata_name,
 	ul->free_func = free_func;
 
 	em_httpc_init(&ul->hc, 16 * 1024, alloc_func, free_func);
-	// em_mpool_create(&ul->mp_uldata, sizeof(em_uldata_t), uldata_sendbuf_num, alloc_func, free_func);
-	// em_mpool_alloc_block(&ul->mp_uldata, (void **)&ul->uldata, EM_NO_WAIT);
 	em_ring_create(&ul->rb_uldata, sizeof(em_uldata_t), uldata_sendbuf_num, EM_RINGBUF_ERROR, alloc_func, free_func);
 	ul->uldata = em_ring_get_dataptr_new(&ul->rb_uldata);
 	em_uldata_init(ul->uldata, ul->uldata_name, ul->uldata_ver, ul->uldata_type, ul->uldata_buf_capacity, ul->alloc_func, ul->free_func);
@@ -90,10 +88,9 @@ int em_upload_init(em_upload_t *ul, char *server_url, char *uldata_name,
 
 int em_upload_destroy(em_upload_t *ul)
 {
-	// ul->free_func(ul->sendbuf);
-	// ul->sendbuf = NULL;
+	ul->free_func(ul->sendbuf);
+	ul->sendbuf = NULL;
 	em_uldata_destroy(ul->uldata);
-	// em_mpool_delete(&ul->mp_uldata);
 	em_httpc_destroy(&ul->hc);
 	em_ring_destroy(&ul->rb_uldata);
 	return 0;
@@ -107,7 +104,6 @@ int em_upload_append_buf(em_upload_t *ul, void *data, int length)
 	return ret;
 }
 
-// upload後free
 int em_upload_add_uldata(em_upload_t *ul)
 {
 	if (ul->num_sendbuf >= ul->max_sendbuf)
@@ -119,12 +115,9 @@ int em_upload_add_uldata(em_upload_t *ul)
 	em_ring_add_newdata(&ul->rb_uldata);
 	ul->uldata = em_ring_get_dataptr_new(&ul->rb_uldata);
 
-	// ul->sendbuf[ul->num_sendbuf] = ul->uldata;
-	// em_mpool_alloc_block(&ul->mp_uldata, (void **)&ul->sendbuf[ul->num_sendbuf], EM_NO_WAIT);
-	//  memcpy(ul->sendbuf[ul->num_sendbuf], uldata, sizeof(em_uldata_t));
-
 	em_uldata_init(ul->uldata, ul->uldata_name, ul->uldata_ver, ul->uldata_type, ul->uldata_buf_capacity, ul->alloc_func, ul->free_func);
 	ul->num_sendbuf++;
+
 	return 0;
 }
 
@@ -177,7 +170,6 @@ int em_upload_sendbuf(em_upload_t *ul, em_httpres_t *response)
 	for (int i = 0; i < ul->num_sendbuf; i++)
 	{
 		em_uldata_destroy(ul->sendbuf[i]);
-		//em_mpool_free_block(&ul->mp_uldata, ul->sendbuf[i]);
 	}
 	em_ring_delete_taildata(&ul->rb_uldata, ul->num_sendbuf);
 	ul->num_sendbuf = 0;

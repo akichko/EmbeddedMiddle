@@ -38,7 +38,7 @@ int main(void)
 		em_buf_append(&uldata.buf, "test", 4);
 		em_buf_append(&uldata.buf, (void *)&i, 1);
 
-		em_upload_append_buf(&ul, "test", 4);
+		em_upload_append_buf(&ul, "test", 4); // sendbuf
 	}
 	em_upload_add_uldata(&ul); // sendbuf登録
 
@@ -58,8 +58,9 @@ int main(void)
 	for (int i = 0; i < 2000; i++)
 	{
 		em_buf_append(&uldata3[0].buf, (void *)&i, 1);
-		em_upload_append_buf(&ul, "abcdefghijklmnopqrstuvwxyz\n", 27);
+		em_upload_append_buf(&ul, "abcdefghijklmnopqrstuvwxyz\n", 27); // sendbuf
 	}
+	em_upload_add_uldata(&ul); // sendbuf登録
 
 	uldata3ptr[0] = &uldata3[0];
 	uldata3ptr[1] = &uldata3[0];
@@ -77,7 +78,6 @@ int main(void)
 	// send buf test
 	printf("** send buf test **************************************\n");
 
-	em_upload_add_uldata(&ul);
 	if (0 != em_upload_sendbuf(&ul, &response))
 	{
 		printf("upload error\n");
