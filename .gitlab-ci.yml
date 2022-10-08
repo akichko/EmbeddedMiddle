@@ -1,0 +1,32 @@
+image: ubuntu:latest
+
+stages:
+  - build
+  - test
+
+before_script:
+    - pwd
+    - ls -al
+    - apt-get update
+    - >-
+      apt-get install -y
+      build-essential
+      libcurl4-openssl-dev
+      libmosquittopp-dev 
+
+build_job1:
+  stage: build
+  script: 
+    - make
+  tags:
+    - tag-runner
+
+test_job1:
+  stage: test
+  script: 
+    - make test
+    - ./build/test/oalloc_test
+#    - ./build/test/fail_test
+  tags:
+    - tag-runner
+        
