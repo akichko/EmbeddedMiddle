@@ -41,5 +41,5 @@ jobs:
       - name: Exec tests
         run: |
           ./build/test/oalloc_test
-          ./build/test/fail_test
+#          ./build/test/fail_test
           
