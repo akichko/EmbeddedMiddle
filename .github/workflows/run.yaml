@@ -8,5 +8,5 @@ jobs:
     - uses: actions/checkout@v2
     - run: |
         ls -al
-        cd .github/workflows/
-        ls -al
+        make
+        
