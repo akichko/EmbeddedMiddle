@@ -8,25 +8,37 @@ OBJDIR        = $(BUILDDIR)/obj
 OUTDIR        = $(BUILDDIR)/lib
 SRCS          = $(wildcard $(SRCDIR)/*.c)
 SAMPLESRCS    = $(wildcard sample/*.c)
+TESTSRCS      = $(wildcard test/*.c)
 OBJS          = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 AR            = ar
 ARFLAGS       = rcs
 PROGRAM       = $(OUTDIR)/libem.a
 
-all:            $(PROGRAM)
 
-$(PROGRAM):     $(OBJS)
-				@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-				$(AR) $(ARFLAGS) $(PROGRAM) $(OBJS) 
+all:	$(PROGRAM)
+
+$(PROGRAM):	$(OBJS)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(AR) $(ARFLAGS) $(PROGRAM) $(OBJS) 
 
 $(OBJDIR)/%.o:	$(SRCDIR)/%.c
-				@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-				$(CC) $(CFLAGS) -o $@ -c $<
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-sample:			$(PROGRAM) $(SAMPLESRCS:%.c=$(BUILDDIR)/%)
+
+sample:		$(PROGRAM) $(SAMPLESRCS:%.c=$(BUILDDIR)/%)
 				
 $(BUILDDIR)/sample/%:	sample/%.c
-						@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
-						$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
-clean:;         rm -f $(OBJDIR)/*.o *~ $(PROGRAM) $(BUILDDIR)/sample/*
+
+test:		$(PROGRAM) $(TESTSRCS:%.c=$(BUILDDIR)/%)
+				
+$(BUILDDIR)/test/%:	test/%.c
+	@if [ ! -e `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
+
+
+clean:
+	rm -f $(OBJDIR)/*.o *~ $(PROGRAM) $(BUILDDIR)/sample/* $(BUILDDIR)/test/*
