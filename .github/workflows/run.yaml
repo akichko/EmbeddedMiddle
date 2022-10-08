@@ -1,0 +1,13 @@
+name: EmbeddedMiddle-CI
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "CI start"
+    - uses: actions/checkout@v2
+    - run: |
+        ls -al
+        cd .github/workflows/
+        ls -al
