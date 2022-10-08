@@ -1,14 +1,30 @@
 name: EmbeddedMiddle-CI
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - run: echo "CI start"
-    - uses: actions/checkout@v2
-    - run: |
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: |
         pwd
         sudo apt-get update
         sudo apt-get install -y libcurl4-openssl-dev libmosquittopp-dev
         ls -al
         make
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exec tests
+        run: |
+          build/test/oalloc_test
+          build/test/fail_test
+          
