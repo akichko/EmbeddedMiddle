@@ -24,6 +24,9 @@ SOFTWARE.
 #ifndef __EM_PRINT_H__
 #define __EM_PRINT_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #define EM_LOG_TOP 6
 #define EM_LOG_ERROR 5
@@ -40,5 +43,9 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 int em_print_set_loglevel(int newlevel);
 int em_print_is_timeprint(int is_timeprint);
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_PRINT_H__

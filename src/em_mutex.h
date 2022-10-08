@@ -27,6 +27,10 @@ SOFTWARE.
 #include <pthread.h>
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	pthread_mutex_t mtx;
@@ -39,5 +43,9 @@ int em_mutex_destroy(em_mutex_t *mutex);
 int em_mutex_lock(em_mutex_t *mutex, int timeout_ms);
 
 int em_mutex_unlock(em_mutex_t *mutex);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_MUTEX_H__

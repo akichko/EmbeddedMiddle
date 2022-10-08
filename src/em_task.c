@@ -121,7 +121,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
-	em_thrdarg_t *thrdarg = tm->alloc_func(sizeof(em_thrdarg_t));
+	em_thrdarg_t *thrdarg = (em_thrdarg_t*)tm->alloc_func(sizeof(em_thrdarg_t));
 
 	thrdarg->sem_ptr = &tm->sem;
 	thrdarg->entry_func = tasksetting.entry_func;

@@ -48,7 +48,7 @@ int em_uldata_destroy(em_uldata_t *ud)
 	return em_buf_destroy(&ud->buf);
 }
 
-int em_uldata_append_buf(em_uldata_t *ud, void *data, int length)
+int em_uldata_append_buf(em_uldata_t *ud, const void *data, int length)
 {
 	// int remain = em_buf_get_remain_size(&ud->buf);
 	// if (remain < length)
@@ -56,7 +56,7 @@ int em_uldata_append_buf(em_uldata_t *ud, void *data, int length)
 	//	em_printf(EM_LOG_ERROR, "buffer full\n");
 	//	return -1;
 	// }
-	int ret = em_buf_append(&ud->buf, data, length);
+	int ret = em_buf_append(&ud->buf, (char*)data, length);
 
 	return ret;
 }
@@ -80,7 +80,7 @@ int em_upload_init(em_upload_t *ul, char *server_url, char *uldata_name,
 
 	em_httpc_init(&ul->hc, 16 * 1024, alloc_func, free_func);
 	em_ring_create(&ul->rb_uldata, sizeof(em_uldata_t), uldata_sendbuf_num, EM_RINGBUF_ERROR, alloc_func, free_func);
-	ul->uldata = em_ring_get_dataptr_new(&ul->rb_uldata);
+	ul->uldata = (em_uldata_t*)em_ring_get_dataptr_new(&ul->rb_uldata);
 	em_uldata_init(ul->uldata, ul->uldata_name, ul->uldata_ver, ul->uldata_type, ul->uldata_buf_capacity, ul->alloc_func, ul->free_func);
 
 	return 0;
@@ -96,7 +96,7 @@ int em_upload_destroy(em_upload_t *ul)
 	return 0;
 }
 
-int em_upload_append_buf(em_upload_t *ul, void *data, int length)
+int em_upload_append_buf(em_upload_t *ul, const void *data, int length)
 {
 	// lock
 	int ret = em_uldata_append_buf(ul->uldata, data, length);
@@ -113,7 +113,7 @@ int em_upload_add_uldata(em_upload_t *ul)
 	}
 
 	em_ring_add_newdata(&ul->rb_uldata);
-	ul->uldata = em_ring_get_dataptr_new(&ul->rb_uldata);
+	ul->uldata = (em_uldata_t*)em_ring_get_dataptr_new(&ul->rb_uldata);
 
 	em_uldata_init(ul->uldata, ul->uldata_name, ul->uldata_ver, ul->uldata_type, ul->uldata_buf_capacity, ul->alloc_func, ul->free_func);
 	ul->num_sendbuf++;
@@ -139,7 +139,7 @@ int em_upload_multi(em_upload_t *ul, em_uldata_t **uldata, uint uldata_num, em_h
 {
 	em_httppart_t parts[uldata_num];
 
-	for (int i = 0; i < uldata_num; i++)
+	for (uint i = 0; i < uldata_num; i++)
 	{
 		parts[i].name = uldata[i]->data_name;
 		parts[i].data_type = uldata[i]->data_type;
@@ -156,7 +156,7 @@ int em_upload_sendbuf(em_upload_t *ul, em_httpres_t *response)
 {
 	for (int i = 0; i < ul->num_sendbuf; i++)
 	{
-		ul->sendbuf[i] = em_ring_get_dataptr_tail(&ul->rb_uldata, i);
+		ul->sendbuf[i] = (em_uldata_t*)em_ring_get_dataptr_tail(&ul->rb_uldata, i);
 	}
 
 	int ret = em_upload_multi(ul, ul->sendbuf, ul->num_sendbuf, response);

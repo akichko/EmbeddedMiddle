@@ -41,7 +41,7 @@ int em_ring_create(em_ring_t *rb,
 	rb->head_ptr = 0;
 	rb->tail_ptr = 0;
 
-	for (int i = 0; i < rb->num_max; i++)
+	for (uint i = 0; i < rb->num_max; i++)
 	{
 		rb->block_ptr[i] = (char *)rb->rawdata + block_size * i;
 	}
@@ -128,7 +128,7 @@ void *em_ring_get_dataptr_tail(em_ring_t *rb, uint offset)
 	if (offset + 1 > rb->num_used)
 		return NULL;
 
-	int idx = rb->tail_ptr + offset;
+	uint idx = rb->tail_ptr + offset;
 	if (idx >= rb->num_max)
 	{
 		idx %= rb->num_max;

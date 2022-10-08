@@ -30,6 +30,10 @@ SOFTWARE.
 #include "em_datamng.h"
 //#include "em_task.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	int is_initialized;
@@ -57,5 +61,9 @@ struct timespec em_timespec_sub(struct timespec a,
 								struct timespec b);
 
 void em_print_timespec(struct timespec ts);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_TIME_H__

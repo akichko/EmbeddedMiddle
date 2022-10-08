@@ -102,14 +102,14 @@ int em_memmng_print(em_memmng_t *mm, int detail)
 	if (detail)
 	{
 
-		for (int i = 0; i < mm->mp_used.num_used; i++)
+		for (uint i = 0; i < mm->mp_used.num_used; i++)
 		{
 			meminfo = (em_meminfo_t *)mm->mp_used.block_ptr[i]->data_ptr;
 			// total_used += meminfo->mem_length;
 			printf("[%d %d] ", meminfo->mem_index, meminfo->mem_length);
 		}
 		printf("\n    free: ");
-		for (int i = 0; i < mm->mp_free.num_used; i++)
+		for (uint i = 0; i < mm->mp_free.num_used; i++)
 		{
 			meminfo = (em_meminfo_t *)mm->mp_free.block_ptr[i]->data_ptr;
 			// total_free += meminfo->mem_length;

@@ -27,6 +27,10 @@ SOFTWARE.
 #include <arpa/inet.h>
 #include "em_queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	int length;
@@ -80,4 +84,7 @@ int em_udp_recv_dequeue(em_socket_t *sk,
 						em_ethpacket_t *packet,
 						int timeout_ms);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif //__EM_ETHER_H__

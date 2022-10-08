@@ -28,6 +28,10 @@ SOFTWARE.
 #include "em_httpc.h"
 #include "em_ringbuf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	char data_name[32];
@@ -67,7 +71,7 @@ int em_uldata_init(em_uldata_t *ud,
 int em_uldata_destroy(em_uldata_t *ud);
 
 int em_uldata_append_buf(em_uldata_t *ud,
-						 void *data,
+						 const void *data,
 						 int length);
 
 // upload
@@ -85,7 +89,7 @@ int em_upload_init(em_upload_t *ul,
 int em_upload_destroy(em_upload_t *ul);
 
 int em_upload_append_buf(em_upload_t *ul,
-						 void *data,
+						 const void *data,
 						 int length);
 
 int em_upload_add_uldata(em_upload_t *ul);
@@ -101,5 +105,9 @@ int em_upload_multi(em_upload_t *ul,
 
 int em_upload_sendbuf(em_upload_t *ul,
 					  em_httpres_t *response);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_UPLOAD_H__

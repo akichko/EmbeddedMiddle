@@ -28,6 +28,10 @@ SOFTWARE.
 #include <stdlib.h>
 #include "em_print.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef unsigned char		uchar;
 typedef unsigned int		uint;
 typedef unsigned short int	ushort;
@@ -47,5 +51,9 @@ typedef unsigned long int	ulong;
 #define EM_NO_TIMEOUT -1
 #define EM_NO_WAIT 0
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif // EM_CMNDEFS_H

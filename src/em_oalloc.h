@@ -24,6 +24,10 @@ SOFTWARE.
 #ifndef __EM_OALLOC_H__
 #define __EM_OALLOC_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	int is_malloc;
@@ -47,5 +51,9 @@ int em_omemmng_print(em_omemmng_t *mm);
 
 void *em_oalloc(em_omemmng_t *mm,
 				size_t size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_OALLOC_H__

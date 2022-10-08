@@ -84,7 +84,7 @@ int em_list_remove_at(em_list_t *li, uint index)
 		return -1;
 	}
 
-	for (int i = 0; i < index; i++)
+	for (uint i = 0; i < index; i++)
 	{
 		delitem = delitem->next;
 	}

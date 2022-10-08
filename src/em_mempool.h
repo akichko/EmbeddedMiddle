@@ -27,10 +27,14 @@ SOFTWARE.
 #include "em_mutex.h"
 #include "em_semaphore.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
-	int index;		// block index
-	int index_ptr;	// search index from
+	uint index;		// block index
+	uint index_ptr;	// search index from
 	void *data_ptr; // raw data
 } em_blkinfo_t;
 
@@ -89,5 +93,9 @@ int em_mpool_get_dataidx_array(em_mpool_t *mp,
 							   uint max_size,
 							   uint *data_num,
 							   uint *data_idxs);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_MEMPOOL_H__

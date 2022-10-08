@@ -26,6 +26,10 @@ SOFTWARE.
 
 #include "em_gdatamng.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 #define EM_CMD_NAME_LENGTH_MAX 16
 #define EM_CMD_WORD_NUM_MAX 10
@@ -62,4 +66,7 @@ int em_cmd_exec(em_cmdmng_t *cm,
 				int argc,
 				char **argv);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif // EM_COMMAND_H

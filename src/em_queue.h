@@ -27,6 +27,10 @@ SOFTWARE.
 #include "em_mutex.h"
 #include "em_semaphore.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	int block_size;
@@ -75,5 +79,9 @@ int em_dequeue(em_queue_t *qu,
 			   int timeout_ms);
 
 int em_queue_getnum(em_queue_t *qu);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_QUEUE_H__

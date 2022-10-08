@@ -51,7 +51,7 @@ int main()
 
 	printf("data_idx array: ");
 	uint dataIdx[10];
-	em_mpool_get_dataidx_array(&mp, 10, &data_num, (void*)&dataIdx);
+	em_mpool_get_dataidx_array(&mp, 10, &data_num, dataIdx);
 	for (int i = 0; i < data_num; i++)
 	{
 		printf("[%d]", dataIdx[i]);

@@ -103,7 +103,7 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting, uint *tim
 int em_timer_delete(em_timermng_t *tmrmng, uint timer_id)
 {
 	int ret;
-	em_timerinfo_t *timer_info = em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
+	em_timerinfo_t *timer_info = (em_timerinfo_t*)em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
 
 	if (timer_info == NULL)
 	{

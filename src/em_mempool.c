@@ -43,7 +43,7 @@ int em_mpool_create_with_mem(em_mpool_t *mp,
 	em_sem_init(&mp->sem, block_num);
 	em_mutex_init(&mp->mutex);
 
-	for (int i = 0; i < mp->num_max; i++)
+	for (uint i = 0; i < mp->num_max; i++)
 	{
 		mp->block_ptr[i] = &mp->block[i];
 		mp->block[i].index = i;
@@ -88,7 +88,7 @@ int em_mpool_print(em_mpool_t *mp)
 {
 	printf("print %d %d %d ", mp->num_max, mp->num_used, mp->block_size);
 
-	for (int i = 0; i < mp->num_max; i++)
+	for (uint i = 0; i < mp->num_max; i++)
 	{
 		if (i == mp->num_used)
 		{
@@ -198,7 +198,7 @@ int em_mpool_get_dataptr_array(em_mpool_t *mp, uint max_size, uint *data_num, vo
 
 	*data_num = mp->num_used;
 
-	for (int i = 0; (i < mp->num_used) && (i < max_size); i++)
+	for (uint i = 0; (i < mp->num_used) && (i < max_size); i++)
 	{
 		data_ptrs[i] = mp->block_ptr[i]->data_ptr;
 	}
@@ -213,7 +213,7 @@ int em_mpool_get_dataidx_array(em_mpool_t *mp, uint max_size, uint *data_num, ui
 
 	*data_num = mp->num_used;
 
-	for (int i = 0; (i < mp->num_used) && (i < max_size); i++)
+	for (uint i = 0; (i < mp->num_used) && (i < max_size); i++)
 	{
 		data_idxs[i] = mp->block_ptr[i]->index;
 	}

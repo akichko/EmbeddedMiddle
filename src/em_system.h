@@ -10,6 +10,10 @@
 #include "em_semmng.h"
 #include "em_eventflag.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	em_timemng_t timemng;
@@ -44,5 +48,9 @@ int em_sysmng_init(em_sysmng_t *sysmng,
 				   em_sysmng_stg_t *setting);
 
 int em_sysmng_finalize(em_sysmng_t *sysmng);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_SYSTEM_H__

@@ -26,6 +26,10 @@ SOFTWARE.
 
 #include "em_mempool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	em_mpool_t mp_semaphore;
@@ -50,5 +54,9 @@ int em_semmng_semp2id(em_semmng_t *smm,
 
 em_sem_t *em_semmng_semid2p(em_semmng_t *smm,
 							int sem_id);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif // EM_SEMMNG_H

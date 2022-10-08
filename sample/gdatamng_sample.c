@@ -54,13 +54,13 @@ int main()
 	ret = em_gdatamng_get_data(&dm, &key, &read_data);
 	printf("get_block id=5 -> ret:%d\n", ret);
 
-	key_ptr = em_gdatamng_get_key(&dm, &test_data2);
+	key_ptr = (int*)em_gdatamng_get_key(&dm, &test_data2);
 	printf("em_gdatamng_get_id by test_data2 -> ret:%d\n", *key_ptr);
 
-	key_ptr = em_gdatamng_get_key(&dm, &test_data3);
+	key_ptr = (int*)em_gdatamng_get_key(&dm, &test_data3);
 	printf("em_gdatamng_get_id by test_data3 -> ret addr:%p\n", key_ptr);
 
-	key_ptr = em_gdatamng_get_key_by_func(&dm, &test_data3, &test_comparator);
+	key_ptr = (int*)em_gdatamng_get_key_by_func(&dm, &test_data3, &test_comparator);
 	printf("em_gdatamng_get_id_by_func by test_data3 -> ret:%d\n", *key_ptr);
 
 	printf("add id=1\n");
@@ -73,10 +73,10 @@ int main()
 	em_gdatamng_remove_data(&dm, &key);
 	em_gdatamng_print(&dm);
 
-	key_ptr = em_gdatamng_get_key(&dm, &test_data2);
+	key_ptr = (int*)em_gdatamng_get_key(&dm, &test_data2);
 	printf("em_gdatamng_get_id by test_data2 -> ret addr:%p\n", key_ptr);
 
-	key_ptr = em_gdatamng_get_key_by_func(&dm, &test_data3, &test_comparator);
+	key_ptr = (int*)em_gdatamng_get_key_by_func(&dm, &test_data3, &test_comparator);
 	printf("em_gdatamng_get_id_by_func by test_data3 -> ret addr:%p\n", key_ptr);
 
 	printf("add id=5\n");

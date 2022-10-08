@@ -26,6 +26,10 @@ SOFTWARE.
 
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define EM_RINGBUF_ERROR 1
 #define EM_RINGBUF_UPDATE 2
 
@@ -72,4 +76,10 @@ int em_ring_delete_taildata(em_ring_t *rb,
 							uint del_num);
 
 // int em_ring_get_datanum(em_ring_t *rb);
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
 #endif //__EM_RINGBUF_H__

@@ -196,7 +196,7 @@ int em_httpc_post_multipart(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 	/* Create the form */
 	curl_mime *form = curl_mime_init(hc->curl);
 	curl_mimepart *field = NULL;
-	for (int i = 0; i < part_num; i++)
+	for (uint i = 0; i < part_num; i++)
 	{
 		switch (parts[i].data_type)
 		{

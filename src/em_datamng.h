@@ -27,6 +27,10 @@ SOFTWARE.
 #include "em_mempool.h"
 #include "em_gdatamng.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 #define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
 
@@ -77,4 +81,7 @@ int em_datamng_get_data_by_func(em_datamng_t *dm,
 								char (*comparator)(void *, void *),
 								void *data);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif //__EM_DATAMNG_H__

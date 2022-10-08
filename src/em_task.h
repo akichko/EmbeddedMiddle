@@ -29,6 +29,10 @@ SOFTWARE.
 #include "em_mutex.h"
 //#include "em_eventflag.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef int em_taskid_t;
 
 typedef struct
@@ -108,5 +112,9 @@ int em_msg_send(em_taskmng_t *tm,
 int em_msg_recv(em_taskmng_t *tm,
 				void *msgdata,
 				int timeout_ms);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_TASK_H__

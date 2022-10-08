@@ -26,6 +26,10 @@ SOFTWARE.
 
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	uint buf_capacity;
@@ -47,7 +51,10 @@ int em_buf_destroy(em_buf_t *bf);
 int em_buf_get_remain_size(em_buf_t *bf);
 
 int em_buf_append(em_buf_t *bf,
-				  char *append_data,
+				  const char *append_data,
 				  int length);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 #endif //__EM_BUF_H__

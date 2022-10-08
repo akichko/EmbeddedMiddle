@@ -7,7 +7,7 @@ int add_buf(em_ring_t *rb, int val)
 {
 	int *setbuf;
 	printf("add %d\n", val);
-	setbuf = em_ring_get_dataptr_new(rb);
+	setbuf = (int*)em_ring_get_dataptr_new(rb);
 	if (setbuf == NULL)
 		return -1;
 	*setbuf = val;
@@ -28,7 +28,7 @@ int main()
 		em_printf(EM_LOG_ERROR, "error\n");
 	em_ring_print(&rb);
 
-	getbuf = em_ring_get_dataptr_head(&rb, 0);
+	getbuf = (int*)em_ring_get_dataptr_head(&rb, 0);
 	em_printf(EM_LOG_INFO, "getbuf(head 0) = %d\n", *getbuf);
 
 	if(NULL == em_ring_get_dataptr_head(&rb, 1))
@@ -38,13 +38,13 @@ int main()
 		em_printf(EM_LOG_ERROR, "error\n");
 	em_ring_print(&rb);
 
-	getbuf = em_ring_get_dataptr_head(&rb, 0);
+	getbuf = (int*)em_ring_get_dataptr_head(&rb, 0);
 	em_printf(EM_LOG_INFO, "getbuf(head 0) = %d\n", *getbuf);
 
-	getbuf = em_ring_get_dataptr_head(&rb, 1);
+	getbuf = (int*)em_ring_get_dataptr_head(&rb, 1);
 	em_printf(EM_LOG_INFO, "getbuf(head 1) = %d\n", *getbuf);
 
-	getbuf = em_ring_get_dataptr_tail(&rb, 0);
+	getbuf = (int*)em_ring_get_dataptr_tail(&rb, 0);
 	em_printf(EM_LOG_INFO, "getbuf(tail 0) = %d\n", *getbuf);
 
 	if (0 != add_buf(&rb, 30))
@@ -74,16 +74,16 @@ int main()
 		em_printf(EM_LOG_ERROR, "error\n");
 	em_ring_print(&rb);
 
-	getbuf = em_ring_get_dataptr_head(&rb, 0);
+	getbuf = (int*)em_ring_get_dataptr_head(&rb, 0);
 	em_printf(EM_LOG_INFO, "getbuf(head 0) = %d\n", *getbuf);
 
-	getbuf = em_ring_get_dataptr_head(&rb, 1);
+	getbuf = (int*)em_ring_get_dataptr_head(&rb, 1);
 	em_printf(EM_LOG_INFO, "getbuf(head 1) = %d\n", *getbuf);
 
-	getbuf = em_ring_get_dataptr_tail(&rb, 0);
+	getbuf = (int*)em_ring_get_dataptr_tail(&rb, 0);
 	em_printf(EM_LOG_INFO, "getbuf(tail 0) = %d\n", *getbuf);
 
-	getbuf = em_ring_get_dataptr_tail(&rb, 1);
+	getbuf = (int*)em_ring_get_dataptr_tail(&rb, 1);
 	em_printf(EM_LOG_INFO, "getbuf(tail 1) = %d\n", *getbuf);
 
 	em_ring_destroy(&rb);

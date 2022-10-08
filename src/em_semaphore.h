@@ -27,6 +27,10 @@ SOFTWARE.
 #include <semaphore.h>
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	sem_t smf;
@@ -39,5 +43,9 @@ int em_sem_destroy(em_sem_t *sem);
 int em_sem_wait(em_sem_t *sem, int timeout_ms);
 
 int em_sem_post(em_sem_t *sem);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_SEMAPHORE_H__

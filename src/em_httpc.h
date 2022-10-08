@@ -27,6 +27,10 @@ SOFTWARE.
 #include <curl/curl.h>
 #include "em_buf.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define EM_HTTP_PART_TYPE_STRING 1
 #define EM_HTTP_PART_TYPE_BINARY 2
 #define EM_HTTP_PART_TYPE_FILE 3
@@ -104,5 +108,9 @@ int em_httphdr_add_header(em_httphdr_t *hh,
 						  char *header_str);
 
 int em_httphdr_destroy(em_httphdr_t *hh);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_HTTPC_H__

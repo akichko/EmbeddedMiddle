@@ -27,6 +27,10 @@ SOFTWARE.
 #include <pthread.h>
 #include "em_mempool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	unsigned short is_used : 1;
@@ -95,5 +99,9 @@ void *em_trymalloc(em_memmng_t *mm,
 
 void em_free(em_memmng_t *mm,
 			 void *addr);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_MALLOC_H__

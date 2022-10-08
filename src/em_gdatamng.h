@@ -26,6 +26,10 @@ SOFTWARE.
 
 #include "em_mempool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define EM_DMNG_KEY_INTEGER 1
 #define EM_DMNG_KEY_STRING 2
 
@@ -98,5 +102,9 @@ int em_gdatamng_get_data_by_func(em_datamng_t *dm,
 								 void *searchdata,
 								 char (*comparator)(void *, void *),
 								 void *data);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_GDATAMNG_H__

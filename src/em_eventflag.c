@@ -133,7 +133,7 @@ int em_evtarray_init(em_evtarray_t *evtarray, uint array_size,
 	evtarray->array_size = array_size;
 	evtarray->free_func = free_func;
 	evtarray->events = (em_event_t *)alloc_func(sizeof(em_event_t) * array_size);
-	for (int i = 0; i < array_size; i++)
+	for (uint i = 0; i < array_size; i++)
 	{
 		int ret = em_event_init(&evtarray->events[i]);
 		if (ret != 0)
@@ -148,7 +148,7 @@ int em_evtarray_init(em_evtarray_t *evtarray, uint array_size,
 int em_evtarray_destroy(em_evtarray_t *evtarray)
 {
 
-	for (int i = 0; i < evtarray->array_size; i++)
+	for (uint i = 0; i < evtarray->array_size; i++)
 	{
 		int ret = em_event_destroy(&evtarray->events[i]);
 		if (ret != 0)

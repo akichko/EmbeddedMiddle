@@ -36,7 +36,7 @@ int main(void)
 	for (int i = 1; i < 100; i++)
 	{
 		em_buf_append(&uldata.buf, "test", 4);
-		em_buf_append(&uldata.buf, (void *)&i, 1);
+		em_buf_append(&uldata.buf, (char *)&i, 1);
 
 		em_upload_append_buf(&ul, "test", 4); // sendbuf
 	}
@@ -57,7 +57,7 @@ int main(void)
 
 	for (int i = 0; i < 2000; i++)
 	{
-		em_buf_append(&uldata3[0].buf, (void *)&i, 1);
+		em_buf_append(&uldata3[0].buf, (char *)&i, 1);
 		em_upload_append_buf(&ul, "abcdefghijklmnopqrstuvwxyz\n", 27); // sendbuf
 	}
 	em_upload_add_uldata(&ul); // sendbuf登録

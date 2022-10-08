@@ -53,7 +53,7 @@ static void on_connect_pub(struct mosquitto *mosq, void *obj, int rc)
 // Brokerとの接続を切断した時に実行されるcallback関数
 static void on_disconnect(struct mosquitto *mosq, void *obj, int rc)
 {
-	em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
+	//em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
 	em_printf(EM_LOG_INFO, "on_disconnect: rc = %d\n", rc);
 }
 
@@ -87,7 +87,7 @@ static void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto
 		mqbuf.mid = &mid_tmp;
 	}
 	mqbuf.topic = message->topic;
-	mqbuf.payload = message->payload;
+	mqbuf.payload = (char*)message->payload;
 	mqbuf.payload_length = message->payloadlen;
 
 	if (obj_mc->sub_callback != NULL)
@@ -154,6 +154,7 @@ int em_mqttc_destroy(em_mqttc_t *mc)
 {
 	mosquitto_destroy(mc->mosq);
 	// mosquitto_lib_cleanup();
+	return 0;
 }
 
 static int _em_mqttc_connect(em_mqttc_t *mc)

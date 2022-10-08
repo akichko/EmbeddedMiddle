@@ -71,7 +71,7 @@ int em_buf_get_remain_size(em_buf_t *bf)
 	return bf->buf_capacity - bf->data_size;
 }
 
-int em_buf_append(em_buf_t *bf, char *append_data, int length)
+int em_buf_append(em_buf_t *bf, const char *append_data, int length)
 {
 	if (bf == NULL || bf->data == NULL)
 	{

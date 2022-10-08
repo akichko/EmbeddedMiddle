@@ -29,6 +29,10 @@ SOFTWARE.
 #include <sys/timerfd.h>
 #include "em_datamng.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	int interval_ms;
@@ -60,5 +64,9 @@ int em_timer_create(em_timermng_t *tmrmng,
 
 int em_timer_delete(em_timermng_t *tmrmng,
 					uint timer_id);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_TIMER_H__

@@ -84,7 +84,7 @@ int em_datamng_remove_data(em_datamng_t *dm, ulong id)
 
 ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 {
-	ulong *ret = em_gdatamng_get_key(dm, searchdata);
+	ulong *ret = (ulong*)em_gdatamng_get_key(dm, searchdata);
 	if (ret == NULL)
 		return EM_DATAMNG_INVALID_ID;
 
@@ -94,7 +94,7 @@ ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 ulong em_datamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
 								char (*comparator)(void *, void *))
 {
-	ulong *ret = em_gdatamng_get_key_by_func(dm, searchdata, comparator);
+	ulong *ret = (ulong*)em_gdatamng_get_key_by_func(dm, searchdata, comparator);
 	if (ret == NULL)
 		return EM_DATAMNG_INVALID_ID;
 

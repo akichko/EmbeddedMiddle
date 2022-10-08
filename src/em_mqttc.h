@@ -27,6 +27,10 @@ SOFTWARE.
 #include <mosquitto.h>
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	char client_id[128];
@@ -91,5 +95,9 @@ int em_mqttc_publish_txt(em_mqttc_t *mc,
 						 int *mid,
 						 char *topic,
 						 char *message);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //_EM_MQTTC_H_

@@ -27,6 +27,10 @@ SOFTWARE.
 #include "em_mempool.h"
 #include "em_cmndefs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct
 {
 	char *islock;
@@ -51,5 +55,9 @@ int em_mtxmng_lock(em_mtxmng_t *mtxm,
 
 int em_mtxmng_unlock(em_mtxmng_t *mtxm,
 					 int mutex_id);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_MTXMNG_H__

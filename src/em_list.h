@@ -27,6 +27,10 @@ SOFTWARE.
 #include "em_mutex.h"
 #include "em_mempool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct _em_listitem_t em_listitem_t;
 
 struct _em_listitem_t
@@ -41,7 +45,7 @@ typedef struct
 	em_mpool_t mp;
 	em_listitem_t *first;
 	em_listitem_t *last;
-	int count;
+	uint count;
 } em_list_t;
 
 int em_list_create(em_list_t *li,
@@ -57,5 +61,9 @@ int em_list_add(em_list_t *li,
 int em_list_remove_at(em_list_t *li,
 					  uint index);
 
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_LIST_H__

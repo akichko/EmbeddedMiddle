@@ -28,6 +28,10 @@ SOFTWARE.
 #include "em_cmndefs.h"
 #include "em_mempool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #define EM_NO_TIMEOUT -1
 #define EM_NO_WAIT 0
 
@@ -95,5 +99,9 @@ int em_evtmng_evtp2id(em_evtmng_t *evt,
 
 em_event_t *em_evtmng_evtid2p(em_evtmng_t *evtmng,
 							  int event_id);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif //__EM_EVENTFLAG_H__

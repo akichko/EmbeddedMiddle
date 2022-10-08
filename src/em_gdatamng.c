@@ -32,7 +32,7 @@ SOFTWARE.
 static int _em_gdatamng_keycmp(char key_type, const void *s1, const void *s2, size_t n)
 {
 	if (key_type == EM_DMNG_KEY_STRING)
-		return strncmp(s1, s2, n);
+		return strncmp((const char*)s1, (const char*)s2, n);
 	else
 		return memcmp(s1, s2, n);
 }
@@ -50,7 +50,7 @@ int em_gdatamng_create(em_datamng_t *dm, uint data_size, uint data_num,
 
 	em_mpool_create(&dm->mp, data_size, data_num, alloc_func, free_func);
 
-	for (int i = 0; i < data_num; i++)
+	for (uint i = 0; i < data_num; i++)
 	{
 		dm->keycnt[i].key = (char *)dm->keymem + i * dm->key_size;
 		dm->keycnt[i].count = 0;
@@ -74,7 +74,7 @@ int em_gdatamng_print(em_datamng_t *dm)
 {
 	printf("print %d %d %d %d ", dm->mp.num_max, dm->mp.num_used, dm->key_size, dm->mp.block_size);
 	long ikey;
-	for (int i = 0; i < dm->mp.num_max; i++)
+	for (uint i = 0; i < dm->mp.num_max; i++)
 	{
 		if (i == dm->mp.num_used)
 		{
@@ -109,7 +109,7 @@ static int _em_gdatamng_get_dataidx(em_datamng_t *dm, const void *key)
 {
 	int ret = -1;
 	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
+	for (uint i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
 		if (0 == _em_gdatamng_keycmp(dm->key_type, dm->keycnt[data_index].key, key, dm->key_size))
@@ -126,7 +126,7 @@ static int _em_gdatamng_get_blockinfo(em_datamng_t *dm, const void *key, em_blki
 {
 	int ret = -1;
 	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
+	for (uint i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
 		if (0 == _em_gdatamng_keycmp(dm->key_type, dm->keycnt[data_index].key, key, dm->key_size))
@@ -282,7 +282,7 @@ void *em_gdatamng_get_key(em_datamng_t *dm,
 	em_mutex_lock(&dm->mutex, EM_NO_TIMEOUT);
 	void *ret = NULL;
 
-	for (int i = 0; i < dm->mp.num_used; i++)
+	for (uint i = 0; i < dm->mp.num_used; i++)
 	{
 		// if (comparator(dm->mp.block_ptr[i]->data_ptr, searchdata))
 		if (0 == memcmp(dm->mp.block_ptr[i]->data_ptr, searchdata, dm->mp.block_size))
@@ -302,7 +302,7 @@ static int _em_gdatamng_get_data_index_by_func(em_datamng_t *dm,
 											   char (*comparator)(void *, void *))
 {
 	int data_index;
-	for (int i = 0; i < dm->mp.num_used; i++)
+	for (uint i = 0; i < dm->mp.num_used; i++)
 	{
 		data_index = dm->mp.block_ptr[i]->index;
 		if (comparator(dm->mp.block[data_index].data_ptr, searchdata))
