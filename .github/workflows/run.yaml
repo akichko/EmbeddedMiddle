@@ -23,8 +23,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Build tests
+        run: make test
+
       - name: Exec tests
         run: |
-          build/test/oalloc_test
-          build/test/fail_test
+          ./build/test/oalloc_test
+          ./build/test/fail_test
           
