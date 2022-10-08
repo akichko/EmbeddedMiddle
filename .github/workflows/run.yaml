@@ -4,6 +4,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - run: echo "CI start"
 
@@ -22,7 +23,13 @@ jobs:
     name: Test
     needs: build
     runs-on: ubuntu-latest
+
     steps:
+      - run: pwd
+
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
       - name: Build tests
         run: make test
 
