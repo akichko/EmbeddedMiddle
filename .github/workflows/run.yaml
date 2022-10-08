@@ -25,13 +25,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: pwd
+      - run: |
+          pwd
+          ls -al
 
       - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Build tests
-        run: make test
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcurl4-openssl-dev libmosquittopp-dev
+          make test
 
       - name: Exec tests
         run: |
