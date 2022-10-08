@@ -89,6 +89,6 @@ void *em_oalloc(em_omemmng_t *mm, size_t size)
 		return ret;
 	}
 
-	em_printf(EM_LOG_ERROR, "allocation failed\n");
+	em_printf(EM_LOG_DEBUG, "allocation failed\n");
 	return NULL;
 }

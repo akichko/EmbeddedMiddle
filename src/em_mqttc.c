@@ -60,7 +60,6 @@ static void on_disconnect(struct mosquitto *mosq, void *obj, int rc)
 // BrokerにMQTTメッセージ送信後に実行されるcallback関数
 static void on_publish(struct mosquitto *mosq, void *userdata, int mid)
 {
-
 	mosquitto_disconnect(mosq);
 }
 
@@ -120,14 +119,6 @@ void em_mqtt_lib_init()
 void em_mqtt_lib_cleanup()
 {
 	mosquitto_lib_cleanup();
-}
-
-int em_mqttenv_init(em_mqttenv_t *env,
-					char *client_id, char *host, int port,
-					char *cafile, char *certfile, char *keyfile, int keepalive)
-{
-
-	return 0;
 }
 
 int em_mqttc_create(em_mqttc_t *mc,
