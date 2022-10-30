@@ -24,6 +24,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include "em_command.h"
 #include "em_print.h"
 
@@ -72,13 +73,13 @@ static void (*_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname))(int, 
 
 static int _em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 {
-	if(argc == 0)
+	if (argc == 0)
 		return 0;
 
 	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
 	if (NULL == cmd_func)
 	{
-		printf("  command '%s' not found\n", argv[0]);
+		printf("command '%s' not found\n", argv[0]);
 		return -1;
 	}
 
@@ -216,31 +217,65 @@ static int _em_read_line(char *src, char **dst, int *word_num, int max_word_num,
 	return 0;
 }
 
+static int timed_fgets(char *dst, int size, FILE *stream, int timeout_sec)
+{
+	if (timeout_sec >= 0)
+	{
+		fd_set readfds;
+		int fd = 0; /* stdinのファイルディスクリプタは0 */
+		FD_ZERO(&readfds);
+		FD_SET(fd, &readfds);
+		struct timeval tv = {timeout_sec, 0};
+
+		int ret_select = select(fd + 1, &readfds, NULL, NULL, &tv);
+
+		if (ret_select == 0) /* タイムアウトが発生 */
+		{
+			return -1;
+		}
+	}
+
+	fgets(dst, size, stream);
+	return 0;
+}
+
 int em_cmd_start(em_cmdmng_t *cm)
 {
 	char cmdstr[EM_CMD_WORD_NUM_MAX + 1][EM_CMD_WORD_LENGTH_MAX + 1];
 	char *cmdstr_ptr[EM_CMD_WORD_NUM_MAX + 1];
 	char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
 
+	fd_set readfds;
+	int ret_select;
+	int fd = 0; /* stdinのファイルディスクリプタは0 */
+	struct timeval tv;
+
 	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
 	{
 		cmdstr_ptr[i] = cmdstr[i];
 	}
 
+	printf("cmd > ");
+	fflush(stdout);
 	cm->is_running = 1;
 	while (cm->is_running)
 	{
-		memset(cmdstr, 0, sizeof(cmdstr));
 		int pos_word = 0;
-		printf("cmd > ");
 
-		fgets(input_buf, sizeof(input_buf), stdin);
+		int ret = timed_fgets(input_buf, sizeof(input_buf), stdin, 1);
+		if (ret != 0)
+		{
+			// printf(">");
+			// fflush(stdout);
+			continue;
+		}
 
 		if (0 == _em_read_line(input_buf, (char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
-		// if (0 == _em_read_line_old((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
 		{
 			_em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
+		printf("cmd > ");
+		fflush(stdout);
 	}
 	return 0;
 }
@@ -257,7 +292,7 @@ int em_cmd_exec(em_cmdmng_t *cm, char *input_buf)
 
 	char cmdstr[EM_CMD_WORD_NUM_MAX + 1][EM_CMD_WORD_LENGTH_MAX + 1];
 	char *cmdstr_ptr[EM_CMD_WORD_NUM_MAX + 1];
-	//char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
+	// char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
 	int word_num;
 
 	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
