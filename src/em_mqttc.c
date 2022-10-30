@@ -25,54 +25,46 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include "em_mqttc.h"
+#include "em_eventflag.h"
 #include "em_print.h"
 
-// Brokerとの接続成功時に実行されるcallback関数
-static void on_connect_pub(struct mosquitto *mosq, void *obj, int rc)
+void em_mqtt_lib_init()
+{
+	mosquitto_lib_init();
+}
+
+void em_mqtt_lib_cleanup()
+{
+	mosquitto_lib_cleanup();
+}
+
+// Broker接続成功時callback
+static void on_connect_sync(struct mosquitto *mosq, void *obj, int rc)
 {
 	em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
 
-	int mid;
-	if (obj_mc->buf_publish.mid == NULL)
-	{
-		mid = -1;
+	if(0 !=em_event_broadcast(&obj_mc->evt_connect)){
+		em_printf(EM_LOG_ERROR, "error\n");
 	}
-	else
-	{
-		mid = *obj_mc->buf_publish.mid;
-	}
-	em_printf(EM_LOG_INFO, "on_connect_pub: rc = %d, mid=%d, topic=%s\n", rc,
-			  mid, obj_mc->buf_publish.topic);
-	if (rc != 0)
-	{
-		return;
-	}
-	mosquitto_publish(mosq, obj_mc->buf_publish.mid, obj_mc->buf_publish.topic, obj_mc->buf_publish.payload_length, obj_mc->buf_publish.payload, 0, false);
+
+	//if(0 !=em_sem_post(&obj_mc->sem_connect)){
+	//	em_printf(EM_LOG_ERROR, "error\n");
+	//}
+
+	return;
 }
 
-// Brokerとの接続を切断した時に実行されるcallback関数
+// Broker切断時callback
 static void on_disconnect(struct mosquitto *mosq, void *obj, int rc)
 {
-	//em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
-	em_printf(EM_LOG_INFO, "on_disconnect: rc = %d\n", rc);
+	// em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
+	em_printf(EM_LOG_DEBUG, "on_disconnect: rc = %d\n", rc);
 }
 
-// BrokerにMQTTメッセージ送信後に実行されるcallback関数
-static void on_publish(struct mosquitto *mosq, void *userdata, int mid)
+// メッセージ送信callback
+static void on_publish(struct mosquitto *mosq, void *obj, int mid)
 {
-	mosquitto_disconnect(mosq);
-}
-
-// Brokerとの接続成功時に実行されるcallback関数
-static void on_connect_sub(struct mosquitto *mosq, void *obj, int rc)
-{
-	em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
-	em_printf(EM_LOG_INFO, "on_connect_sub: rc = %d\n", rc);
-	if (rc != 0)
-	{
-		return;
-	}
-	mosquitto_subscribe(mosq, NULL, obj_mc->topic_subscribe, 0);
+	em_printf(EM_LOG_DEBUG, "published mid = %d\n", mid);
 }
 
 //メッセージ受信処理
@@ -87,7 +79,7 @@ static void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto
 		mqbuf.mid = &mid_tmp;
 	}
 	mqbuf.topic = message->topic;
-	mqbuf.payload = (char*)message->payload;
+	mqbuf.payload = (char *)message->payload;
 	mqbuf.payload_length = message->payloadlen;
 
 	if (obj_mc->sub_callback != NULL)
@@ -96,7 +88,7 @@ static void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto
 	}
 	else
 	{
-		printf("%s(%d)\n", __FUNCTION__, __LINE__);
+		em_printf(EM_LOG_WARNING, "no callback registered\n");
 		if (message->payloadlen > 0)
 		{
 			printf("%s ", message->topic);
@@ -109,16 +101,6 @@ static void on_message(struct mosquitto *mosq, void *obj, const struct mosquitto
 		}
 		fflush(stdout);
 	}
-}
-
-void em_mqtt_lib_init()
-{
-	mosquitto_lib_init();
-}
-
-void em_mqtt_lib_cleanup()
-{
-	mosquitto_lib_cleanup();
 }
 
 int em_mqttc_create(em_mqttc_t *mc,
@@ -139,12 +121,13 @@ int em_mqttc_create(em_mqttc_t *mc,
 	mc->env.keyfile = keyfile;
 	mc->env.keepalive = keepalive;
 
+	em_event_init(&mc->evt_connect);
+
 	bool clean_session = true;
 	mc->mosq = mosquitto_new(client_id, clean_session, mc);
 	if (mc->mosq == NULL)
 	{
 		fprintf(stderr, "Cannot create mosquitto object\n");
-		// mosquitto_lib_cleanup();
 		return (EXIT_FAILURE);
 	}
 	return 0;
@@ -174,31 +157,31 @@ static int _em_mqttc_connect(em_mqttc_t *mc)
 	return ret;
 }
 
-int em_mqttc_subscribe_start(em_mqttc_t *mc, char *topic, void (*callback)(em_mqbuf_t *))
+int em_mqttc_connect(em_mqttc_t *mc)
 {
 	int ret;
-	// param check
-	if (topic == NULL)
-	{
-		return -1;
-	}
-	mc->topic_subscribe = topic;
-	mc->sub_callback = callback;
-	mosquitto_connect_callback_set(mc->mosq, on_connect_sub);
+
+	mosquitto_connect_callback_set(mc->mosq, on_connect_sync);
 	mosquitto_disconnect_callback_set(mc->mosq, on_disconnect);
-	mosquitto_message_callback_set(mc->mosq, on_message);
+	mosquitto_publish_callback_set(mc->mosq, on_publish);
 
 	if (0 != _em_mqttc_connect(mc))
 	{
 		fprintf(stderr, "failed to connect broker.\n");
 		return -2;
 	}
+
 	ret = mosquitto_loop_start(mc->mosq);
+
+	if (0 != em_event_wait(&mc->evt_connect, 10000)){
+		em_printf(EM_LOG_WARNING, "on_connect func wait timeout\n");
+		mosquitto_disconnect(mc->mosq);
+	}
 
 	return ret;
 }
 
-int em_mqttc_subscribe_stop(em_mqttc_t *mc)
+int em_mqttc_disconnect(em_mqttc_t *mc)
 {
 	int ret;
 	ret = mosquitto_loop_stop(mc->mosq, TRUE);
@@ -215,6 +198,37 @@ int em_mqttc_subscribe_stop(em_mqttc_t *mc)
 	return ret;
 }
 
+int em_mqttc_subscribe(em_mqttc_t *mc, char *topic, void (*callback)(em_mqbuf_t *))
+{
+	int ret;
+	// param check
+	if (topic == NULL)
+	{
+		return -1;
+	}
+	mc->topic_subscribe = topic;
+	mc->sub_callback = callback;
+	mosquitto_message_callback_set(mc->mosq, on_message);
+
+	ret = mosquitto_subscribe(mc->mosq, NULL, mc->topic_subscribe, 1);
+	return ret;
+}
+
+int em_mqttc_unsubscribe(em_mqttc_t *mc, char *topic)
+{
+	int ret;
+	// param check
+	if (topic == NULL)
+	{
+		return -1;
+	}
+	mc->topic_subscribe = NULL;
+	mc->sub_callback = NULL;
+	
+	ret = mosquitto_unsubscribe(mc->mosq, NULL, topic);
+	return ret;
+}
+
 int em_mqttc_publish(em_mqttc_t *mc, int *mid, char *topic, char *payload, int payload_length)
 {
 	int ret;
@@ -224,28 +238,7 @@ int em_mqttc_publish(em_mqttc_t *mc, int *mid, char *topic, char *payload, int p
 		return -1;
 	}
 
-	mc->buf_publish.mid = mid;
-	mc->buf_publish.topic = topic;
-	mc->buf_publish.payload = payload;
-	mc->buf_publish.payload_length = payload_length;
-
-	mosquitto_connect_callback_set(mc->mosq, on_connect_pub);
-	mosquitto_disconnect_callback_set(mc->mosq, on_disconnect);
-	mosquitto_publish_callback_set(mc->mosq, on_publish);
-
-	ret = _em_mqttc_connect(mc);
-	if (ret != 0)
-	{
-		fprintf(stderr, "failed to connect broker.\n");
-		return ret;
-	}
-
-	ret = mosquitto_loop_forever(mc->mosq, -1, 1);
-	if (ret != 0)
-	{
-		fprintf(stderr, "mosquitto_loop_forever error. ret=%d\n", ret);
-		return ret;
-	}
+	ret = mosquitto_publish(mc->mosq, mid, topic, payload_length, payload, 1, true);
 
 	return ret;
 }

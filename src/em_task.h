@@ -45,6 +45,7 @@ typedef struct
 	// int (*initialize_func)();
 	int (*entry_func)();
 	// int (*system_cbfunc)(int);
+	char wait_shutdown;
 } em_tasksetting_t;
 
 typedef struct

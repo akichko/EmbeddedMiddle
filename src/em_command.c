@@ -70,6 +70,22 @@ static void (*_em_cmd_get_func_by_cmdname(em_cmdmng_t *cm, char *cmdname))(int, 
 	return cmdsetting->cmd_func;
 }
 
+static int _em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
+{
+	if(argc == 0)
+		return 0;
+
+	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
+	if (NULL == cmd_func)
+	{
+		printf("  command '%s' not found\n", argv[0]);
+		return -1;
+	}
+
+	cmd_func(argc, argv);
+	return 0;
+}
+
 static int _em_read_until_line_end()
 {
 	char c;
@@ -124,7 +140,7 @@ static int _em_read_word(char *dst, int max_size)
 	}
 }
 
-static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_word_length)
+static int _em_read_line_old(char **dst, int *word_num, int max_word_num, int max_word_length)
 {
 	int pos_word = 0;
 	int ret_word;
@@ -185,10 +201,27 @@ static int _em_read_line(char **dst, int *word_num, int max_word_num, int max_wo
 	return ret;
 }
 
+static int _em_read_line(char *src, char **dst, int *word_num, int max_word_num, int max_word_length)
+{
+	int ret_scan;
+
+	ret_scan = sscanf(src, "%20s %20s %20s %20s %20s %20s %20s %20s %20s %20s",
+					  dst[0], dst[1], dst[2], dst[3], dst[4],
+					  dst[5], dst[6], dst[7], dst[8], dst[9]);
+
+	if (ret_scan <= 0)
+		return -1;
+	*word_num = ret_scan;
+
+	return 0;
+}
+
 int em_cmd_start(em_cmdmng_t *cm)
 {
 	char cmdstr[EM_CMD_WORD_NUM_MAX + 1][EM_CMD_WORD_LENGTH_MAX + 1];
 	char *cmdstr_ptr[EM_CMD_WORD_NUM_MAX + 1];
+	char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
+
 	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
 	{
 		cmdstr_ptr[i] = cmdstr[i];
@@ -201,9 +234,12 @@ int em_cmd_start(em_cmdmng_t *cm)
 		int pos_word = 0;
 		printf("cmd > ");
 
-		if (0 == _em_read_line((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
+		fgets(input_buf, sizeof(input_buf), stdin);
+
+		if (0 == _em_read_line(input_buf, (char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
+		// if (0 == _em_read_line_old((char **)cmdstr_ptr, &pos_word, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
 		{
-			em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
+			_em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
 	}
 	return 0;
@@ -215,15 +251,23 @@ int em_cmd_stop(em_cmdmng_t *cm)
 	return 0;
 }
 
-int em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
+int em_cmd_exec(em_cmdmng_t *cm, char *input_buf)
 {
-	void (*cmd_func)(int, char **) = _em_cmd_get_func_by_cmdname(cm, argv[0]);
-	if (NULL == cmd_func)
+	int ret = -1;
+
+	char cmdstr[EM_CMD_WORD_NUM_MAX + 1][EM_CMD_WORD_LENGTH_MAX + 1];
+	char *cmdstr_ptr[EM_CMD_WORD_NUM_MAX + 1];
+	//char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
+	int word_num;
+
+	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
 	{
-		printf("command '%s' not found\n", argv[0]);
-		return -1;
+		cmdstr_ptr[i] = cmdstr[i];
 	}
 
-	cmd_func(argc, argv);
-	return 0;
+	if (0 == _em_read_line(input_buf, (char **)cmdstr_ptr, &word_num, EM_CMD_WORD_NUM_MAX, EM_CMD_WORD_LENGTH_MAX))
+	{
+		ret = _em_cmd_exec(cm, word_num, (char **)cmdstr_ptr);
+	}
+	return ret;
 }

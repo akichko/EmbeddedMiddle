@@ -3,6 +3,14 @@
 
 #include "../src/em_command.h"
 
+em_cmdmng_t cm;
+
+void exit_cmd_func(int argc, char **argv)
+{
+	printf("command stop\n");
+	em_cmd_stop(&cm);
+}
+
 void test_cmd_func(int argc, char **argv)
 {
 	if (argc == 1)
@@ -21,13 +29,13 @@ void test_cmd_version(int argc, char **argv)
 }
 
 em_cmdsetting_t testcmdset[] = {
+	{"exit", exit_cmd_func},
 	{"test", test_cmd_func},
 	{"version", test_cmd_version}};
 
 int main()
 {
-	em_cmdmng_t cm;
-	//int ret;
+	// int ret;
 
 	if (0 != em_cmd_init(&cm, 5, &malloc, &free))
 	{
@@ -44,6 +52,20 @@ int main()
 			printf("regist error\n");
 			// exit(2);
 		}
+	}
+
+	char cmd1[16] = "test aa bb cc";
+	printf("$ test cmd %s\n", cmd1);
+	if (0 != em_cmd_exec(&cm, cmd1))
+	{
+		printf(" -> em_cmd_exec error\n");
+	}
+
+	char cmd2[16] = "tes aa bb cc";
+	printf("$ test cmd %s\n", cmd2);
+	if (0 != em_cmd_exec(&cm, cmd2))
+	{
+		printf(" -> em_cmd_exec error\n");
 	}
 
 	em_cmd_start(&cm);

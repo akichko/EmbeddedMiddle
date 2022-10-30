@@ -86,7 +86,7 @@ int em_event_wait(em_event_t *event, int timeout_ms)
 			return EM_E_TIMEOUT;
 		}
 	}
-	return EM_ERROR;
+	return EM_SUCCESS;
 }
 
 int em_event_broadcast(em_event_t *event)

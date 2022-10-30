@@ -26,75 +26,82 @@ SOFTWARE.
 
 #include <mosquitto.h>
 #include "em_cmndefs.h"
+#include "em_eventflag.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-typedef struct
-{
-	char client_id[128];
-	char host[256];
-	int port;
-	char *cafile;
-	char *certfile;
-	char *keyfile;
-	int keepalive;
-} em_mqttenv_t;
+	typedef struct
+	{
+		char client_id[128];
+		char host[256];
+		int port;
+		char *cafile;
+		char *certfile;
+		char *keyfile;
+		int keepalive;
+	} em_mqttenv_t;
 
-typedef struct
-{
-	int *mid;
-	char *topic;
-	char *payload;
-	int payload_length;
-} em_mqbuf_t;
+	typedef struct
+	{
+		int *mid;
+		char *topic;
+		char *payload;
+		int payload_length;
+	} em_mqbuf_t;
 
-typedef struct
-{
-	struct mosquitto *mosq;
-	em_mqttenv_t env;
-	em_mqbuf_t buf_publish;
-	char *topic_subscribe;
-	char connect_desire;
-	void (*sub_callback)(em_mqbuf_t *);
-	void (*free_func)(void *);
-} em_mqttc_t;
+	typedef struct
+	{
+		struct mosquitto *mosq;
+		em_mqttenv_t env;
+		em_mqbuf_t buf_publish;
+		char *topic_subscribe;
+		char connect_desire;
+		void (*sub_callback)(em_mqbuf_t *);
+		void (*free_func)(void *);
+		em_event_t evt_connect;
+	} em_mqttc_t;
 
-void em_mqtt_lib_init();
+	void em_mqtt_lib_init();
 
-void em_mqtt_lib_cleanup();
+	void em_mqtt_lib_cleanup();
 
+	int em_mqttc_create(em_mqttc_t *mc,
+						char *client_id,
+						char *host,
+						int port,
+						char *cafile,
+						char *certfile,
+						char *keyfile,
+						int keepalive,
+						void *(*alloc_func)(size_t),
+						void (*free_func)(void *));
 
-int em_mqttc_create(em_mqttc_t *mc,
-					char *client_id,
-					char *host,
-					int port,
-					char *cafile,
-					char *certfile,
-					char *keyfile,
-					int keepalive,
-					void *(*alloc_func)(size_t),
-					void (*free_func)(void *));
+	int em_mqttc_destroy(em_mqttc_t *mc);
 
-int em_mqttc_destroy(em_mqttc_t *mc);
+	int em_mqttc_connect(em_mqttc_t *mc);
 
-int em_mqttc_subscribe_start(em_mqttc_t *mc,
-							 char *topic,
-							 void (*callback)(em_mqbuf_t *));
+	int em_mqttc_disconnect(em_mqttc_t *mc);
 
-int em_mqttc_subscribe_stop(em_mqttc_t *mc);
+	int em_mqttc_subscribe(em_mqttc_t *mc,
+								 char *topic,
+								 void (*callback)(em_mqbuf_t *));
 
-int em_mqttc_publish(em_mqttc_t *mc,
-					 int *mid,
-					 char *topic,
-					 char *payload,
-					 int payload_length);
+	int em_mqttc_unsubscribe(em_mqttc_t *mc,
+							 char *topic);
 
-int em_mqttc_publish_txt(em_mqttc_t *mc,
-						 int *mid,
-						 char *topic,
-						 char *message);
+	int em_mqttc_publish(em_mqttc_t *mc,
+								  int *mid,
+								  char *topic,
+								  char *payload,
+								  int payload_length);
+
+	int em_mqttc_publish_txt(em_mqttc_t *mc,
+									  int *mid,
+									  char *topic,
+									  char *message);
 
 #ifdef __cplusplus
 }

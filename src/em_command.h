@@ -33,7 +33,7 @@ extern "C" {
 
 #define EM_CMD_NAME_LENGTH_MAX 16
 #define EM_CMD_WORD_NUM_MAX 10
-#define EM_CMD_WORD_LENGTH_MAX 16
+#define EM_CMD_WORD_LENGTH_MAX 20
 
 typedef struct
 {
@@ -63,8 +63,7 @@ int em_cmd_regist(em_cmdmng_t *cm,
 				  em_cmdsetting_t *cmdsetting);
 
 int em_cmd_exec(em_cmdmng_t *cm,
-				int argc,
-				char **argv);
+				char *input_buf);
 
 #ifdef __cplusplus
 }
