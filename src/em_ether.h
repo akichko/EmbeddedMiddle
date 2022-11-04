@@ -66,23 +66,23 @@ int em_udp_send(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);
 
-int em_udp_send_enqueue(em_socket_t *sk,
-						em_ethpacket_t *packet,
-						int timeout_ms);
-
-int em_udp_send_dequeue(em_socket_t *sk,
-						int timeout_ms);
+//int em_udp_send_enqueue(em_socket_t *sk,
+//						em_ethpacket_t *packet,
+//						int timeout_ms);
+//
+//int em_udp_send_dequeue(em_socket_t *sk,
+//						int timeout_ms);
 
 int em_udp_recv(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);
 
-int em_udp_recv_enqueue(em_socket_t *sk,
-						int timeout_ms);
-
-int em_udp_recv_dequeue(em_socket_t *sk,
-						em_ethpacket_t *packet,
-						int timeout_ms);
+//int em_udp_recv_enqueue(em_socket_t *sk,
+//						int timeout_ms);
+//
+//int em_udp_recv_dequeue(em_socket_t *sk,
+//						em_ethpacket_t *packet,
+//						int timeout_ms);
 
 #ifdef __cplusplus
 }

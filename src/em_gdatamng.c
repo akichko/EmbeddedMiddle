@@ -60,9 +60,9 @@ int em_gdatamng_create(em_datamng_t *dm, uint data_size, uint data_num,
 	return 0;
 }
 
-int em_gdatamng_delete(em_datamng_t *dm)
+int em_gdatamng_destroy(em_datamng_t *dm)
 {
-	em_mpool_delete(&dm->mp);
+	em_mpool_destroy(&dm->mp);
 	dm->free_func(dm->keycnt);
 	dm->free_func(dm->keymem);
 	em_mutex_destroy(&dm->mutex);

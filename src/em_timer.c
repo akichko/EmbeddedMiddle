@@ -40,7 +40,7 @@ int em_timermng_init(em_timermng_t *tmrmng, int num_timer, void *(*alloc_func)(s
 
 int em_timermng_destroy(em_timermng_t *tmrmng)
 {
-	int ret = em_mpool_delete(&tmrmng->mp_timerinfo);
+	int ret = em_mpool_destroy(&tmrmng->mp_timerinfo);
 	return ret;
 }
 

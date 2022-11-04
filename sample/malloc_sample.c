@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include "../src/em_malloc.h"
 #include "../src/em_print.h"
-//#include "../src/em_mempool.h"
 
+//#define MALLOC
+#define STATIC
+
+#define BLOCK_SIZE 16
+#define BLOCK_NUM 50
+#define ALLOC_MAX_NUM 100
+
+static char memory[EM_MEMMNG_CALC_MEMSIZE(BLOCK_SIZE, BLOCK_NUM, ALLOC_MAX_NUM)];
+
+static char memory2[10000];
 
 int main()
 {
@@ -11,8 +20,16 @@ int main()
 	int detail = 1;
 
 	em_print_set_loglevel(EM_LOG_TRACE);
-	printf("block size = 16\n");
-	em_memmng_create(&mm, 800, 16, 100);
+	printf("block size = %d\n", BLOCK_SIZE);
+	
+#if defined MALLOC
+	em_memmng_create(&mm, BLOCK_SIZE, BLOCK_NUM, ALLOC_MAX_NUM, NULL);
+	
+#elif defined STATIC
+	printf("mem size: %ld\n", sizeof(memory));
+	em_memmng_create(&mm, BLOCK_SIZE, BLOCK_NUM, ALLOC_MAX_NUM, memory);
+#endif
+
 	em_memmng_print(&mm, detail);
 
 	//printf("0: malloc 16\n");

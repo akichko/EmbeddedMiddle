@@ -47,7 +47,7 @@ int em_cmd_init(em_cmdmng_t *cm, int num_cmd, void *(*alloc_func)(size_t), void 
 
 int em_cmd_destroy(em_cmdmng_t *cm)
 {
-	return em_gdatamng_delete(&cm->cmdmng);
+	return em_gdatamng_destroy(&cm->cmdmng);
 }
 
 int em_cmd_regist(em_cmdmng_t *cm,
@@ -245,11 +245,6 @@ int em_cmd_start(em_cmdmng_t *cm)
 	char *cmdstr_ptr[EM_CMD_WORD_NUM_MAX + 1];
 	char input_buf[EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1)];
 
-	fd_set readfds;
-	int ret_select;
-	int fd = 0; /* stdinのファイルディスクリプタは0 */
-	struct timeval tv;
-
 	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
 	{
 		cmdstr_ptr[i] = cmdstr[i];
@@ -274,8 +269,12 @@ int em_cmd_start(em_cmdmng_t *cm)
 		{
 			_em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
-		printf("cmd > ");
-		fflush(stdout);
+		
+		if (cm->is_running)
+		{
+			printf("cmd > ");
+			fflush(stdout);
+		}
 	}
 	return 0;
 }

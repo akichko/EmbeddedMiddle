@@ -44,7 +44,7 @@ int em_list_create(em_list_t *li,
 
 int em_list_delete(em_list_t *li)
 {
-	em_mpool_delete(&li->mp);
+	em_mpool_destroy(&li->mp);
 	return 0;
 }
 

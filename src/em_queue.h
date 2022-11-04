@@ -58,7 +58,7 @@ int em_queue_create(em_queue_t *qu,
 					void *(*alloc_func)(size_t),
 					void (*free_func)(void *));
 
-int em_queue_delete(em_queue_t *qu);
+int em_queue_destroy(em_queue_t *qu);
 
 int em_queue_print(em_queue_t *qu);
 

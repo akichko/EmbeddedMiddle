@@ -64,7 +64,7 @@ int em_gdatamng_create(em_datamng_t *dm,
 					   void *(*alloc_func)(size_t),
 					   void (*free_func)(void *));
 
-int em_gdatamng_delete(em_datamng_t *dm);
+int em_gdatamng_destroy(em_datamng_t *dm);
 
 int em_gdatamng_print(em_datamng_t *dm);
 

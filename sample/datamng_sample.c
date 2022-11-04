@@ -78,5 +78,5 @@ int main()
 	em_datamng_remove_data(&dm, 1);
 	em_datamng_print(&dm);
 
-	em_datamng_delete(&dm);
+	em_datamng_destroy(&dm);
 }

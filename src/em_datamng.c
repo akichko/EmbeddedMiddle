@@ -37,9 +37,9 @@ int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int dupli
 							  alloc_func, free_func);
 }
 
-int em_datamng_delete(em_datamng_t *dm)
+int em_datamng_destroy(em_datamng_t *dm)
 {
-	return em_gdatamng_delete(dm);
+	return em_gdatamng_destroy(dm);
 }
 
 int em_datamng_print(em_datamng_t *dm)

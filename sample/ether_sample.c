@@ -1,19 +1,18 @@
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
-#include <pthread.h>
 #include "../src/em_ether.h"
 #include "../src/em_queue.h"
 
 em_socket_t sock_tx;
-em_socket_t sock_tx2;
+em_socket_t sock_txq; // tx main
 em_socket_t sock_rx;
-em_socket_t sock_rx2;
+em_socket_t sock_rxq;
+
+em_queue_t queue_tx;
+em_queue_t queue_rx;
 
 int callback(em_ethpacket_t *packet)
 {
@@ -23,31 +22,34 @@ int callback(em_ethpacket_t *packet)
 
 void *routineTx(void *p)
 {
-    static int cnt = 10000;
+    static int cnt = 1000;
     em_ethpacket_t packet;
 
     while (1)
     {
-        printf("[Tx] Send Q\n");
-        if (0 != em_udp_send_dequeue(&sock_tx2, 1000))
+        // printf("[Tx] Send Q\n");
+        if (0 != em_dequeue(&queue_tx, &packet, 1000))
         {
-            printf("[Tx] Q error\n");
+            printf("[Tx] dequque error\n");
             continue;
         }
-        else
+
+        printf("[Tx] Send: %s [length:%d] QueueTx -> Rx2\n", packet.data, packet.length);
+        if (0 != em_udp_send(&sock_txq, &packet, 1000))
         {
-            printf("[Tx] Send Q success\n");
+            printf("[Tx] send error\n");
+            continue;
         }
-#if 1
-        sprintf((char *)packet.data, "Hello %d", cnt++);
-        packet.length = strlen((char*)packet.data);
-        printf("[Tx] Send: %s [length:%d]\n", packet.data, packet.length);
+
+        sprintf((char *)packet.data, "Hello %d from Tx", cnt++);
+        packet.length = strlen((char *)packet.data);
+        printf("[Tx] Send: %s [length:%d] -> Rx\n", packet.data, packet.length);
 
         if (0 != em_udp_send(&sock_tx, &packet, 300))
         {
             printf("[Tx] send error\n");
         }
-#endif
+
         sleep(1);
     }
     return (NULL);
@@ -56,7 +58,7 @@ void *routineTx(void *p)
 void *routineRx(void *p)
 {
     em_ethpacket_t packet;
-    //int data_size;
+    // int data_size;
 
     int (*callback_func)(em_ethpacket_t *) = callback;
     while (1)
@@ -73,16 +75,23 @@ void *routineRx(void *p)
 
 void *routineRx2(void *p)
 {
-   // em_ethpacket_t packet;
-   // int (*callback_func)(em_ethpacket_t *) = callback;
+    em_ethpacket_t packet;
+    // int (*callback_func)(em_ethpacket_t *) = callback;
     while (1)
     {
-        if (0 != em_udp_recv_enqueue(&sock_rx2, EM_NO_TIMEOUT))
+        if (0 != em_udp_recv(&sock_rxq, &packet, EM_NO_TIMEOUT))
         {
-            printf("[Rx2] error\n");
+            printf("[Rx2] receive error\n");
             continue;
         }
-            printf("[Rx2] receive Q\n");
+        // printf("[Rx2] receive Q\n");
+        printf("[Rx2] Receive: %s [length:%d] -> QueueRx\n", packet.data, packet.length);
+
+        if (0 != em_enqueue(&queue_rx, &packet, EM_NO_TIMEOUT))
+        {
+            printf("[Rx2] enqueue error\n");
+            continue;
+        }
     }
     return (NULL);
 }
@@ -94,8 +103,11 @@ int main(void)
 
     em_udp_tx_init(&sock_tx, "127.0.0.1", 23456, 10, &malloc, &free);
     em_udp_rx_init(&sock_rx, "0.0.0.0", 23456, 10, &malloc, &free);
-    em_udp_tx_init(&sock_tx2, "127.0.0.1", 34567, 10, &malloc, &free);
-    em_udp_rx_init(&sock_rx2, "0.0.0.0", 34567, 10, &malloc, &free);
+    em_udp_tx_init(&sock_txq, "127.0.0.1", 34567, 10, &malloc, &free);
+    em_udp_rx_init(&sock_rxq, "0.0.0.0", 34567, 10, &malloc, &free);
+
+    em_queue_create(&queue_tx, sizeof(em_ethpacket_t), 10, &malloc, &free);
+    em_queue_create(&queue_rx, sizeof(em_ethpacket_t), 10, &malloc, &free);
 
     pthread_create(&p1, NULL, &routineRx, NULL);
     pthread_create(&p2, NULL, &routineTx, NULL);
@@ -104,18 +116,18 @@ int main(void)
     em_ethpacket_t packet;
     while (1)
     {
-        sprintf((char*)packet.data, "Hello Q %d", cnt++);
-        packet.length = strlen((char*)packet.data);
-        printf("[Main] Send: %s [length:%d]\n", packet.data, packet.length);
+        sprintf((char *)packet.data, "Queue %d from Main", cnt++);
+        packet.length = strlen((char *)packet.data);
+        printf("[Main] Send: %s [length:%d] -> QueueTx\n", packet.data, packet.length);
 
-        if (0 != em_udp_send_enqueue(&sock_tx2, &packet, EM_NO_WAIT))
+        if (0 != em_enqueue(&queue_tx, &packet, EM_NO_WAIT))
         {
             printf("[Main] send Q error\n");
         }
 
-        if (0 == em_udp_recv_dequeue(&sock_rx2, &packet, EM_NO_TIMEOUT))
+        if (0 == em_dequeue(&queue_rx, &packet, EM_NO_TIMEOUT))
         {
-            printf("[Main] Receive Q: %s [length:%d]\n", packet.data, packet.length);
+            printf("[Main] Receive Q: %s [length:%d] <- QueueRx\n", packet.data, packet.length);
         }
         else
         {

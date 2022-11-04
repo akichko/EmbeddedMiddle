@@ -28,6 +28,8 @@ SOFTWARE.
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdio.h>
+
 #define EM_LOG_TOP 6
 #define EM_LOG_ERROR 5
 #define EM_LOG_WARNING 4
@@ -42,7 +44,7 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 
 int em_print_set_loglevel(int newlevel);
 int em_print_is_timeprint(int is_timeprint);
-
+int em_print_set_outstream(FILE *outstream);
 
 #ifdef __cplusplus
 }

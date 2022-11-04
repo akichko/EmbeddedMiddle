@@ -89,5 +89,5 @@ int main()
 	em_gdatamng_remove_data(&dm, &key);
 	em_gdatamng_print(&dm);
 
-	em_gdatamng_delete(&dm);
+	em_gdatamng_destroy(&dm);
 }

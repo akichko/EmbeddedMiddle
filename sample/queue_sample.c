@@ -69,5 +69,5 @@ int main()
 		em_queue_print(&qu);
 	}
 
-	em_queue_delete(&qu);
+	em_queue_destroy(&qu);
 }

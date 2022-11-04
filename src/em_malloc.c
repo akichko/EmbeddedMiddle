@@ -30,10 +30,10 @@ SOFTWARE.
 #include "em_print.h"
 #include "em_time.h"
 
-int em_set_meminfo_t(em_meminfo_t *minfo,
-					 int mem_index, int mem_length, char is_used,
-					 em_meminfo_t *next_meminfo,
-					 em_meminfo_t *back_meminfo)
+static int em_set_meminfo_t(em_meminfo_t *minfo,
+							int mem_index, int mem_length, char is_used,
+							em_meminfo_t *next_meminfo,
+							em_meminfo_t *back_meminfo)
 {
 	minfo->mem_index = mem_index;
 	minfo->mem_length = mem_length;
@@ -44,28 +44,45 @@ int em_set_meminfo_t(em_meminfo_t *minfo,
 }
 
 int em_memmng_create(em_memmng_t *mm,
-					 int mem_total_size,
 					 int mem_unit_size,
-					 int alloc_max_num)
+					 int mem_block_num,
+					 int alloc_max_num,
+					 char *memory)
 {
 	// mem_unit_sizeが２の階乗
+	mm->is_bshiftable = TRUE;
 	if (mem_unit_size <= 0 || ((mem_unit_size & (mem_unit_size - 1)) != 0))
 	{
-		em_printf(EM_LOG_ERROR, "Error: mem_unit_size shoud be 2 ^ x\n");
-		return -1;
+		mm->is_bshiftable = FALSE;
+		em_printf(EM_LOG_WARNING, "Warning: mem_unit_size shoud be 2 ^ x for fast process\n");
+		// return -1;
 	}
 
-	mm->mem_total_size = mem_total_size;
+	mm->mem_total_size = mem_unit_size * mem_block_num;
 	mm->mem_unit_size = mem_unit_size;
-	mm->mem_total_bnum = mem_total_size / mem_unit_size;
+	mm->mem_total_bnum = mem_block_num;
 	mm->mem_unit_bshift = log2((double)mem_unit_size);
 	mm->mem_used_bsize = 0;
-	em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), alloc_max_num, &malloc, &free);
-	em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), alloc_max_num, &malloc, &free);
-	mm->memory = malloc(mem_total_size);
-	mm->minfo_ptr = (em_meminfo_t **)malloc(sizeof(em_meminfo_t *) * mm->mem_total_bnum);
+	if (memory != NULL)
+	{
+		mm->is_malloc = FALSE;
+		int size_mp = em_mpool_calc_memsize(sizeof(em_meminfo_t), alloc_max_num);
+		char *mem_mp_used = memory;
+		char *mem_mp_free = mem_mp_used + size_mp;
+		mm->minfo_ptr = (em_meminfo_t **)(mem_mp_free + size_mp);
+		mm->memory = (char *)mm->minfo_ptr + (sizeof(em_meminfo_t *) * mm->mem_total_bnum);
+		em_mpool_create_with_mem2(&mm->mp_used, sizeof(em_meminfo_t), alloc_max_num, mem_mp_used);
+		em_mpool_create_with_mem2(&mm->mp_free, sizeof(em_meminfo_t), alloc_max_num, mem_mp_free);
+	}
+	else
+	{
+		mm->is_malloc = TRUE;
+		em_mpool_create(&mm->mp_used, sizeof(em_meminfo_t), alloc_max_num, &malloc, &free);
+		em_mpool_create(&mm->mp_free, sizeof(em_meminfo_t), alloc_max_num, &malloc, &free);
+		mm->minfo_ptr = (em_meminfo_t **)malloc(sizeof(em_meminfo_t *) * mm->mem_total_bnum);
+		mm->memory = malloc(mm->mem_total_size);
+	}
 	em_mutex_init(&mm->mutex);
-
 	pthread_cond_init(&mm->cond, NULL);
 	em_mutex_init(&mm->cond_mutex);
 
@@ -83,12 +100,15 @@ int em_memmng_create(em_memmng_t *mm,
 
 int em_memmng_delete(em_memmng_t *mm)
 {
-	free(mm->memory);
-	free(mm->minfo_ptr);
 	em_mutex_destroy(&mm->mutex);
 	em_mutex_destroy(&mm->cond_mutex);
 	pthread_cond_destroy(&mm->cond);
 
+	if (mm->is_malloc)
+	{
+		free(mm->memory);
+		free(mm->minfo_ptr);
+	}
 	return 0;
 }
 
@@ -123,7 +143,7 @@ int em_memmng_print(em_memmng_t *mm, int detail)
 	else
 	{
 		printf("%.1f%% (%d/%d) (%d/%d) [used %d, free %d]\n",
-			   total_used * 100.0 / total, total_used, total, 
+			   total_used * 100.0 / total, total_used, total,
 			   total_used * mm->mem_unit_size, total * mm->mem_unit_size,
 			   mm->mp_used.num_used, mm->mp_free.num_used);
 	}
@@ -138,10 +158,22 @@ static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 		return -1;
 	}
 	//メモリ単位変換
-	int blength = size >> mm->mem_unit_bshift;
-	if ((size & (mm->mem_unit_size - 1)) != 0)
+	int blength;
+	if (mm->is_bshiftable)
 	{
-		blength++;
+		blength = size >> mm->mem_unit_bshift;
+		if ((size & (mm->mem_unit_size - 1)) != 0)
+		{
+			blength++;
+		}
+	}
+	else
+	{
+		blength = size / mm->mem_unit_size;
+		if (size % mm->mem_unit_size != 0)
+		{
+			blength++;
+		}
 	}
 	em_printf(EM_LOG_TRACE, "alloc %d (%ld)\n", blength, size);
 
@@ -182,7 +214,14 @@ static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 
 			mm->minfo_ptr[meminfo_new->mem_index] = meminfo_new;
 
-			*mem = (char *)mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
+			if (mm->is_bshiftable)
+			{
+				*mem = (char *)mm->memory + (meminfo_new->mem_index << mm->mem_unit_bshift);
+			}
+			else
+			{
+				*mem = (char *)mm->memory + meminfo_new->mem_index * mm->mem_unit_size;
+			}
 			return 0;
 		}
 	}
@@ -235,8 +274,8 @@ void *em_trymalloc(em_memmng_t *mm, size_t size, int timeout_ms)
 			timeout_ts = em_get_offset_timestamp(10000);
 
 		pthread_mutex_lock(&mm->cond_mutex.mtx);
-		em_mutex_unlock(&mm->mutex); // free検知不可区間をつくらないため
-		pthread_cond_timedwait(&mm->cond, &mm->cond_mutex.mtx, &timeout_ts); //freeトリガで空き再チェック
+		em_mutex_unlock(&mm->mutex);										 // free検知不可区間をつくらないため
+		pthread_cond_timedwait(&mm->cond, &mm->cond_mutex.mtx, &timeout_ts); // freeトリガで空き再チェック
 		pthread_mutex_unlock(&mm->cond_mutex.mtx);
 
 		passed_ts = em_timespec_sub(em_get_timestamp(), start_ts);
@@ -254,7 +293,15 @@ void *em_trymalloc(em_memmng_t *mm, size_t size, int timeout_ms)
 void em_free(em_memmng_t *mm, void *addr)
 {
 	//メモリ単位変換
-	int index = ((char *)addr - (char *)mm->memory) >> mm->mem_unit_bshift;
+	int index;
+	if (mm->is_bshiftable)
+	{
+		index = ((char *)addr - (char *)mm->memory) >> mm->mem_unit_bshift;
+	}
+	else
+	{
+		index = ((char *)addr - (char *)mm->memory) / mm->mem_unit_size;
+	}
 	em_printf(EM_LOG_TRACE, "free %d (%p)\n", index, addr);
 
 	em_mutex_lock(&mm->mutex, EM_NO_TIMEOUT);

@@ -37,7 +37,7 @@ int em_semmng_init(em_semmng_t *smm, int max_sem_num,
 
 int em_semmng_destroy(em_semmng_t *smm)
 {
-	return em_mpool_delete(&smm->mp_semaphore);
+	return em_mpool_destroy(&smm->mp_semaphore);
 }
 
 em_sem_t *em_semmng_factory(em_semmng_t *smm, int value)

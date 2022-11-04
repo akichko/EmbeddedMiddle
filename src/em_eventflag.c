@@ -206,7 +206,7 @@ int em_evtmng_init(em_evtmng_t *evtmng, uint max_event_num,
 
 int em_evtmng_destroy(em_evtmng_t *evtmng)
 {
-	int ret = em_mpool_delete(&evtmng->mp_event);
+	int ret = em_mpool_destroy(&evtmng->mp_event);
 	if (ret != 0)
 	{
 		em_printf(EM_LOG_ERROR, "error\n");

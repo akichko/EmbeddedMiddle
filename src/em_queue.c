@@ -66,7 +66,7 @@ int em_queue_create(em_queue_t *qu,
 	return em_queue_create_with_mem(qu, block_size, block_num, block_ptr, rawdata);
 }
 
-int em_queue_delete(em_queue_t *qu)
+int em_queue_destroy(em_queue_t *qu)
 {
 	qu->free_func(qu->block_ptr);
 	qu->free_func(qu->rawdata);

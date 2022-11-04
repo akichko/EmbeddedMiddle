@@ -81,39 +81,39 @@ int em_udp_send(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 	return 0;
 }
 
-int em_udp_send_enqueue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
-{
-	if (!sk->has_queue)
-	{
-		em_printf(EM_LOG_ERROR, "no send queue\n");
-		return -1;
-	}
-	if (0 != em_enqueue(&sk->queue, packet, timeout_ms))
-	{
-		em_printf(EM_LOG_ERROR, "error em_udp_send_enqueue\n");
-		return -1;
-	}
+//int em_udp_send_enqueue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
+//{
+//	if (!sk->has_queue)
+//	{
+//		em_printf(EM_LOG_ERROR, "no send queue\n");
+//		return -1;
+//	}
+//	if (0 != em_enqueue(&sk->queue, packet, timeout_ms))
+//	{
+//		em_printf(EM_LOG_ERROR, "error em_udp_send_enqueue\n");
+//		return -1;
+//	}
+//
+//	return 0;
+//}
 
-	return 0;
-}
-
-int em_udp_send_dequeue(em_socket_t *sk, int timeout_ms)
-{
-	if (!sk->has_queue)
-	{
-		em_printf(EM_LOG_ERROR, "no send queue\n");
-		return -1;
-	}
-	em_ethpacket_t packet;
-	if (0 != em_dequeue(&sk->queue, &packet, timeout_ms))
-	{
-		em_printf(EM_LOG_ERROR, "error em_udp_send_dequeue\n");
-		return -1;
-	}
-	sendto(sk->sock, packet.data, packet.length, 0,
-		   (struct sockaddr *)&sk->addr, sizeof(sk->addr));
-	return 0;
-}
+//int em_udp_send_dequeue(em_socket_t *sk, int timeout_ms)
+//{
+//	if (!sk->has_queue)
+//	{
+//		em_printf(EM_LOG_ERROR, "no send queue\n");
+//		return -1;
+//	}
+//	em_ethpacket_t packet;
+//	if (0 != em_dequeue(&sk->queue, &packet, timeout_ms))
+//	{
+//		em_printf(EM_LOG_ERROR, "error em_udp_send_dequeue\n");
+//		return -1;
+//	}
+//	sendto(sk->sock, packet.data, packet.length, 0,
+//		   (struct sockaddr *)&sk->addr, sizeof(sk->addr));
+//	return 0;
+//}
 
 int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
@@ -136,37 +136,37 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 	return 0;
 }
 
-int em_udp_recv_enqueue(em_socket_t *sk, int timeout_ms)
-{
-	if (!sk->has_queue)
-	{
-		em_printf(EM_LOG_ERROR, "no recv queue\n");
-		return -1;
-	}
-	em_ethpacket_t packet;
-	if (0 != em_udp_recv(sk, &packet, timeout_ms))
-	{
-		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
-		return -1;
-	}
+//int em_udp_recv_enqueue(em_socket_t *sk, int timeout_ms)
+//{
+//	if (!sk->has_queue)
+//	{
+//		em_printf(EM_LOG_ERROR, "no recv queue\n");
+//		return -1;
+//	}
+//	em_ethpacket_t packet;
+//	if (0 != em_udp_recv(sk, &packet, timeout_ms))
+//	{
+//		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
+//		return -1;
+//	}
+//
+//	if (0 != em_enqueue(&sk->queue, &packet, EM_NO_WAIT))
+//		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
+//
+//	return 0;
+//}
 
-	if (0 != em_enqueue(&sk->queue, &packet, EM_NO_WAIT))
-		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
-
-	return 0;
-}
-
-int em_udp_recv_dequeue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
-{
-	if (!sk->has_queue)
-	{
-		em_printf(EM_LOG_ERROR, "no recv queue\n");
-		return -1;
-	}
-	if (0 != em_dequeue(&sk->queue, packet, timeout_ms))
-	{
-		em_printf(EM_LOG_ERROR, "error em_udp_recv_dequeue\n");
-		return -1;
-	}
-	return 0;
-}
+//int em_udp_recv_dequeue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
+//{
+//	if (!sk->has_queue)
+//	{
+//		em_printf(EM_LOG_ERROR, "no recv queue\n");
+//		return -1;
+//	}
+//	if (0 != em_dequeue(&sk->queue, packet, timeout_ms))
+//	{
+//		em_printf(EM_LOG_ERROR, "error em_udp_recv_dequeue\n");
+//		return -1;
+//	}
+//	return 0;
+//}

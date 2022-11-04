@@ -40,7 +40,7 @@ int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
 int em_mtxmng_destroy(em_mtxmng_t *mtxm)
 {
 	mtxm->free_func(mtxm->islock);
-	return em_mpool_delete(&mtxm->mp_mutex);
+	return em_mpool_destroy(&mtxm->mp_mutex);
 }
 
 int em_mtxmng_create_mutex(em_mtxmng_t *mtxm)

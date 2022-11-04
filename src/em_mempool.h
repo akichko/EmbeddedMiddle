@@ -28,71 +28,88 @@ SOFTWARE.
 #include "em_semaphore.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
-typedef struct
-{
-	uint index;		// block index
-	uint index_ptr;	// search index from
-	void *data_ptr; // raw data
-} em_blkinfo_t;
+	typedef struct
+	{
+		uint index;		// block index
+		uint index_ptr; // search index from
+		void *data_ptr; // raw data
+	} em_blkinfo_t;
 
-typedef struct
-{
-	uint block_size;
-	uint num_max;
-	uint num_used;
-	em_blkinfo_t **block_ptr; // search index
-	em_blkinfo_t *block;
-	void *rawdata; //実体
-	em_sem_t sem;
-	em_mutex_t mutex;
-	void (*free_func)(void *);
-} em_mpool_t;
+	typedef struct
+	{
+		uint block_size;
+		uint num_max;
+		uint num_used;
+		em_blkinfo_t **block_ptr; // search index
+		em_blkinfo_t *block;
+		void **data_ptr;
+		void *rawdata; //実体
+		em_sem_t sem;
+		em_mutex_t mutex;
+		void (*free_func)(void *);
+	} em_mpool_t;
 
-int em_mpool_create_with_mem(em_mpool_t *mp,
-							 uint block_size,
-							 uint block_num,
-							 em_blkinfo_t **block_ptr,
-							 em_blkinfo_t *block,
-							 void *rawdata);
+#define EM_MEMPOOL_CALC_MEMSIZE(block_size, block_num) \
+	(sizeof(em_blkinfo_t *) * block_num +              \
+	 sizeof(em_blkinfo_t) * block_num +                \
+	 sizeof(void *) * block_num +                      \
+	 block_size * block_num)
 
-int em_mpool_create(em_mpool_t *mp,
-					uint block_size,
-					uint block_num,
-					void *(*alloc_func)(size_t),
-					void (*free_func)(void *));
+	int em_mpool_create_with_mem(em_mpool_t *mp,
+								 uint block_size,
+								 uint block_num,
+								 em_blkinfo_t **block_ptr,
+								 em_blkinfo_t *block,
+								 void **data_ptr,
+								 void *rawdata);
 
-int em_mpool_delete(em_mpool_t *mp);
+	int em_mpool_create_with_mem2(em_mpool_t *mp,
+								  uint block_size,
+								  uint block_num,
+								  char *memory);
 
-int em_mpool_print(em_mpool_t *mp);
+	int em_mpool_calc_memsize(uint block_size,
+							  uint block_num);
 
-int em_mpool_alloc_block(em_mpool_t *mp,
-						 void **block_data,
-						 int timeout_ms);
+	int em_mpool_create(em_mpool_t *mp,
+						uint block_size,
+						uint block_num,
+						void *(*alloc_func)(size_t),
+						void (*free_func)(void *));
 
-int em_mpool_get_dataidx(em_mpool_t *mp,
-						 void *block_data);
+	int em_mpool_destroy(em_mpool_t *mp);
 
-void *em_mpool_get_dataptr(em_mpool_t *mp,
-						   uint data_idx);
+	int em_mpool_print(em_mpool_t *mp);
 
-int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
-								   uint data_idx);
+	int em_mpool_alloc_block(em_mpool_t *mp,
+							 void **block_data,
+							 int timeout_ms);
 
-int em_mpool_free_block(em_mpool_t *mp,
-						void *block_data);
+	int em_mpool_get_dataidx(em_mpool_t *mp,
+							 void *block_data);
 
-int em_mpool_get_dataptr_array(em_mpool_t *mp,
-							   uint max_size,
-							   uint *data_num,
-							   void **data_ptrs);
+	void *em_mpool_get_dataptr(em_mpool_t *mp,
+							   uint data_idx);
 
-int em_mpool_get_dataidx_array(em_mpool_t *mp,
-							   uint max_size,
-							   uint *data_num,
-							   uint *data_idxs);
+	int em_mpool_free_block_by_dataidx(em_mpool_t *mp,
+									   uint data_idx);
+
+	int em_mpool_free_block(em_mpool_t *mp,
+							void *block_data);
+
+	int em_mpool_get_dataptr_array(em_mpool_t *mp,
+								   uint max_size,
+								   uint *data_num,
+								   void **data_ptrs);
+
+	int em_mpool_get_dataidx_array(em_mpool_t *mp,
+								   uint max_size,
+								   uint *data_num,
+								   uint *data_idxs);
 
 #ifdef __cplusplus
 }

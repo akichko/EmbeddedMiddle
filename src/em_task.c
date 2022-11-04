@@ -80,7 +80,7 @@ int em_taskmng_destroy(em_taskmng_t *tm)
 	{
 		return -1;
 	}
-	return em_datamng_delete(&tm->taskinfo_mng);
+	return em_datamng_destroy(&tm->taskinfo_mng);
 }
 
 int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
@@ -243,7 +243,7 @@ int em_task_delete(em_taskmng_t *tm, em_taskid_t task_id)
 		tm->free_func(th_ret); // Free return value memory.
 	}
 
-	em_queue_delete(&taskinfo.msgqueue);
+	em_queue_destroy(&taskinfo.msgqueue);
 
 	em_datamng_remove_data(&tm->taskinfo_mng, task_id);
 
@@ -288,7 +288,8 @@ int em_msg_send(em_taskmng_t *tm, int taskid, void *msgdata, int timeout_ms)
 
 	if (0 != em_enqueue(mqueue, msgdata, timeout_ms))
 	{
-		em_printf(EM_LOG_ERROR, "msg send failed\n");
+		em_printf(EM_LOG_DEBUG, "msg send failed\n");
+		return -1;
 	}
 	return 0;
 }

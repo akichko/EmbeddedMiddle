@@ -354,8 +354,8 @@ void timer_func_evt(void *arg)
 int init()
 {
 	int max_alloc_num = 1000;
-	int mem_total_size = 1024 * 1024;
 	int mem_unit_size = 1024;
+	int mem_block_num = 1024;
 
 	sys_setting.max_num_mutex = 100;
 	sys_setting.max_num_sem = 100;
@@ -370,7 +370,7 @@ int init()
 
 	em_print_is_timeprint(TRUE);
 
-	if (0 != em_memmng_create(&memmng, mem_total_size, mem_unit_size, max_alloc_num))
+	if (0 != em_memmng_create(&memmng, mem_unit_size, mem_block_num, max_alloc_num, NULL))
 	{
 		em_printf(EM_LOG_ERROR, "memmng init error\n");
 		return -1;
@@ -398,7 +398,7 @@ int finalize()
 		printf("sys init error\n");
 		return -1;
 	}
-	em_datamng_delete(&dm);
+	em_datamng_destroy(&dm);
 
 	em_memmng_print(&memmng, TRUE);
 

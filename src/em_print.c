@@ -33,7 +33,8 @@ SOFTWARE.
 
 static int s_loglevel = EM_LOG_DEFAULT;
 static int s_is_timeprint = 0;
-static char s_loglevel_char[] = {' ', '-', 'D', 'I', 'W', 'E', 'T'};
+static char s_loglevel_char[] = {' ', 'T', 'D', 'I', 'W', 'E', '-'};
+static FILE *s_outstream = NULL;
 
 int em_print_set_loglevel(int newlevel)
 {
@@ -46,6 +47,12 @@ int em_print_is_timeprint(int is_timeprint)
 	s_is_timeprint = is_timeprint;
 	return 0;
 }
+
+int em_print_set_outstream(FILE *outstream){
+	s_outstream = outstream;
+	return 0;
+}
+
 
 void _em_printf(const char *file, const char *function, int line, int type, const char *fmt, ...)
 {
@@ -92,5 +99,8 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 	va_end(ap);
 
 	buf[511] = '\0';
-	fprintf(stdout, "%s", buf);
+	if(s_outstream == NULL)
+		fprintf(stdout, "%s", buf);
+	else
+		fprintf(s_outstream, "%s", buf);
 }

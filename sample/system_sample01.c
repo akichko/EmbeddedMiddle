@@ -7,12 +7,12 @@
 #define TASK_ID_APP2 200
 #define TASK_ID_CMD 300
 
-typedef enum{
+typedef enum
+{
 	EVENT_TIMER = 0,
 	EVENT_OTHER,
 	EVENT_MAXNUM
 } e_event_no;
-
 
 typedef struct
 {
@@ -20,18 +20,18 @@ typedef struct
 	int data;
 } testmsg_t;
 
-typedef struct
+typedef struct tag_timer_arg_msg
 {
 	int task_to;
 	int data;
 } timer_arg_msg_t;
 
-typedef struct
+typedef struct tag_timer_arg_evt
 {
 	e_event_no event_no;
 } timer_arg_evt_t;
 
-typedef struct
+typedef struct tag_em_systaskinfo
 {
 	em_tasksetting_t task_stg;
 	int (*initialize_func)(void *);
@@ -48,22 +48,28 @@ int cmd_main();
 void timer_func_msg(void *arg);
 void timer_func_evt(void *arg);
 void cmd_shutdown(int argc, char **argv);
+void cmd_pause(int argc, char **argv);
 
 em_memmng_t memmng;
 em_sysmng_t sysmng;
 em_datamng_t dm;
 
 em_systaskinfo_t systaskstg[] = {
-	{{"App1", TASK_ID_APP1, 0, 0, 256, app1_main}, &app1_init, &app1_signal},
-	{{"App2", TASK_ID_APP2, 0, 0, 256, app2_main}, &app2_init, &app2_signal},
+	{{"App1", TASK_ID_APP1, 0, 0, 16, app1_main}, &app1_init, &app1_signal},
+	{{"App2", TASK_ID_APP2, 0, 0, 16, app2_main}, &app2_init, &app2_signal},
 	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main}, NULL, NULL}};
 
 int b_shutdown1 = 0;
 int b_shutdown2 = 0;
 int b_shutdown = 0;
 
+int b_pause1 = 0;
+int b_pause2 = 0;
+
 em_sysmng_stg_t sys_setting = {0};
-em_cmdsetting_t shutdowncmd_setting = {"shutdown", &cmd_shutdown};
+em_cmdsetting_t cmd_setting[] = {
+	{"shutdown", &cmd_shutdown},
+	{"pause", &cmd_pause}};
 
 void *local_malloc(size_t size)
 {
@@ -94,6 +100,24 @@ void cmd_shutdown(int argc, char **argv)
 	em_cmd_stop(&sysmng.cmdmng);
 }
 
+void cmd_pause(int argc, char **argv)
+{
+	if (argc <= 2)
+		return;
+
+	if (atoi(argv[1]) == 1)
+	{
+		printf("==== app1 pause %s ! ====\n", argv[2]);
+		b_pause1 = atoi(argv[2]);
+	}
+
+	if (atoi(argv[1]) == 2)
+	{
+		printf("==== app2 pause %s ! ====\n", argv[2]);
+		b_pause2 = atoi(argv[2]);
+	}
+}
+
 int app1_init(void *arg)
 {
 	em_printf(EM_LOG_INFO, "app1 init\n");
@@ -102,7 +126,7 @@ int app1_init(void *arg)
 
 int app2_init(void *arg)
 {
-	//gevent = em_evtmng_factory(&sysmng.evtmng);	
+	// gevent = em_evtmng_factory(&sysmng.evtmng);
 	em_printf(EM_LOG_INFO, "app2 init\n");
 	return 0;
 }
@@ -137,6 +161,11 @@ int app1_main()
 
 	while (!b_shutdown1)
 	{
+		if (b_pause1)
+		{
+			sleep(1);
+			continue;
+		}
 		em_msg_recv(&sysmng.tskmng, &msg, EM_NO_TIMEOUT);
 
 		em_printf(EM_LOG_INFO, " => [App1] msgType=%d, data=%d\n", msg.msg_type, msg.data);
@@ -168,6 +197,11 @@ int app2_main()
 
 	while (!b_shutdown2)
 	{
+		if (b_pause2)
+		{
+			sleep(1);
+			continue;
+		}
 		em_evtarray_wait(&sysmng.gevents, EVENT_TIMER, EM_NO_TIMEOUT);
 		em_printf(EM_LOG_INFO, " => [App2] event received\n");
 
@@ -190,11 +224,13 @@ int app2_main()
 int cmd_main()
 {
 	// shutdown command
-	if (0 != em_cmd_regist(&sysmng.cmdmng, &shutdowncmd_setting))
-	{
-		em_printf(EM_LOG_INFO, "error\n");
+	int cmd_num = sizeof(cmd_setting) / sizeof(em_cmdsetting_t);
+	for (int i = 0; i < cmd_num; i++){
+		if (0 != em_cmd_regist(&sysmng.cmdmng, &cmd_setting[i]))
+		{
+			em_printf(EM_LOG_INFO, "error\n");
+		}
 	}
-
 	em_cmd_start(&sysmng.cmdmng);
 
 	return 1;
@@ -227,8 +263,8 @@ void timer_func_evt(void *arg)
 int init()
 {
 	int max_alloc_num = 1000;
-	int mem_total_size = 1024 * 1024;
 	int mem_unit_size = 1024;
+	int mem_block_num = 1024;
 
 	sys_setting.max_num_mutex = 100;
 	sys_setting.max_num_sem = 100;
@@ -243,8 +279,7 @@ int init()
 
 	em_print_is_timeprint(TRUE);
 
-
-	if (0 != em_memmng_create(&memmng, mem_total_size, mem_unit_size, max_alloc_num))
+	if (0 != em_memmng_create(&memmng, mem_unit_size, mem_block_num, max_alloc_num, NULL))
 	{
 		em_printf(EM_LOG_ERROR, "memmng init error\n");
 		return -1;
@@ -255,7 +290,7 @@ int init()
 		printf("sys init error\n");
 		return -1;
 	}
-	
+
 	em_datamng_create(&dm, 128, 128, EM_DMNG_DPLCT_ERROR, &local_malloc, &local_free);
 
 	em_memmng_print(&memmng, TRUE);
@@ -269,7 +304,7 @@ int finalize()
 		printf("sys init error\n");
 		return -1;
 	}
-	em_datamng_delete(&dm);
+	em_datamng_destroy(&dm);
 
 	em_memmng_print(&memmng, TRUE);
 

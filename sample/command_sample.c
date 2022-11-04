@@ -69,5 +69,7 @@ int main()
 	}
 
 	em_cmd_start(&cm);
+
+	printf("main ended\n");
 	return 0;
 }
