@@ -44,9 +44,9 @@ int app1_signal(int arg);
 int app2_signal(int arg);
 int app1_main();
 int app2_main();
-int cmd_main();
-void timer_func_msg(void *arg);
-void timer_func_evt(void *arg);
+static int cmd_main();
+static void timer_func_msg(void *arg);
+static void timer_func_evt(void *arg);
 void cmd_shutdown(int argc, char **argv);
 void cmd_pause(int argc, char **argv);
 
@@ -221,11 +221,12 @@ int app2_main()
 	return 1;
 }
 
-int cmd_main()
+static int cmd_main()
 {
 	// shutdown command
 	int cmd_num = sizeof(cmd_setting) / sizeof(em_cmdsetting_t);
-	for (int i = 0; i < cmd_num; i++){
+	for (int i = 0; i < cmd_num; i++)
+	{
 		if (0 != em_cmd_regist(&sysmng.cmdmng, &cmd_setting[i]))
 		{
 			em_printf(EM_LOG_INFO, "error\n");
@@ -236,7 +237,7 @@ int cmd_main()
 	return 1;
 }
 
-void timer_func_msg(void *arg)
+static void timer_func_msg(void *arg)
 {
 	timer_arg_msg_t *timer_arg = (timer_arg_msg_t *)arg;
 	em_printf(EM_LOG_INFO, "timer_func_msg => \n");
@@ -249,7 +250,7 @@ void timer_func_msg(void *arg)
 	}
 }
 
-void timer_func_evt(void *arg)
+static void timer_func_evt(void *arg)
 {
 	timer_arg_evt_t *timer_arg = (timer_arg_evt_t *)arg;
 	em_printf(EM_LOG_INFO, "timer_func_evt =>\n");
@@ -272,7 +273,11 @@ int init()
 	sys_setting.max_num_timer = 2;
 	sys_setting.max_num_cmd = 5;
 	sys_setting.max_num_task = 3;
-	sys_setting.msgdata_size = sizeof(testmsg_t);
+	sys_setting.size_msgdata = sizeof(testmsg_t);
+	sys_setting.mem_block_size = mem_unit_size;
+	sys_setting.mem_block_num = mem_block_num;
+	sys_setting.mem_alloc_num = max_alloc_num;
+	sys_setting.mem_static = NULL;
 	sys_setting.num_global_event = EVENT_MAXNUM;
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
@@ -308,7 +313,7 @@ int finalize()
 
 	em_memmng_print(&memmng, TRUE);
 
-	if (0 != em_memmng_delete(&memmng))
+	if (0 != em_memmng_destroy(&memmng))
 	{
 		em_printf(EM_LOG_ERROR, "memmng init error\n");
 		return -1;

@@ -35,7 +35,7 @@ int main(void)
 		em_printf(EM_LOG_ERROR, "em_mqttc_create error\n");
 	}
 	em_printf(EM_LOG_INFO, "mqttc_pub created\n");
-	if (0 != em_mqttc_connect(&mqc_pub))
+	if (0 != em_mqttc_connect(&mqc_pub, 10000))
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_connect error\n");
 	}
@@ -46,7 +46,7 @@ int main(void)
 		em_printf(EM_LOG_ERROR, "em_mqttc_create error\n");
 	}
 	em_printf(EM_LOG_INFO, "mqttc_sub created\n");
-	if (0 != em_mqttc_connect(&mqc_sub))
+	if (0 != em_mqttc_connect(&mqc_sub, 10000))
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_connect error\n");
 	}

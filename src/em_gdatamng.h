@@ -27,7 +27,8 @@ SOFTWARE.
 #include "em_mempool.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
 #define EM_DMNG_KEY_INTEGER 1
@@ -37,71 +38,85 @@ extern "C" {
 #define EM_DMNG_DPLCT_UPDATE 2
 #define EM_DMNG_DPLCT_COUNTUP 3
 
-typedef struct
-{
-	void *key;
-	int count;
-} em_keycnt_t;
+#define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
 
-typedef struct
-{
-	em_mpool_t mp;
-	em_keycnt_t *keycnt;
-	uint key_size;
-	void *keymem;
-	char duplicate_mode;
-	char key_type;
-	em_mutex_t mutex;
-	void (*free_func)(void *);
-} em_datamng_t;
+	typedef struct tag_keyval
+	{
+		void *key;
+		void *val;
+	} em_keyval_t;
 
-int em_gdatamng_create(em_datamng_t *dm,
-					   uint data_size,
-					   uint data_num,
-					   char key_type,
-					   uint key_size,
-					   char duplicate_mode,
-					   void *(*alloc_func)(size_t),
-					   void (*free_func)(void *));
+	typedef struct tag_keycnt
+	{
+		void *key;
+		int count;
+	} em_keycnt_t;
 
-int em_gdatamng_destroy(em_datamng_t *dm);
+	typedef struct tag_datamng
+	{
+		em_mpool_t mp;
+		em_keycnt_t *keycnt;
+		uint key_size;
+		void *keymem;
+		char duplicate_mode;
+		char key_type;
+		em_mutex_t mutex;
+		void (*free_func)(void *);
+	} em_datamng_t;
 
-int em_gdatamng_print(em_datamng_t *dm);
+	int em_gdatamng_create(em_datamng_t *dm,
+						   uint data_size,
+						   uint data_num,
+						   char key_type,
+						   uint key_size,
+						   char duplicate_mode,
+						   void *(*alloc_func)(size_t),
+						   void (*free_func)(void *));
 
-int em_gdatamng_add_data(em_datamng_t *dm,
-						 const void *key,
-						 const void *data);
+	int em_gdatamng_destroy(em_datamng_t *dm);
 
-void *em_gdatamng_get_data_ptr(em_datamng_t *dm,
-							   const void *key);
+	int em_gdatamng_print(em_datamng_t *dm);
 
-int em_gdatamng_get_dataidx(em_datamng_t *dm,
-							const void *key);
+	int em_gdatamng_add_data(em_datamng_t *dm,
+							 const void *key,
+							 const void *data);
 
-void *em_gdatamng_get_dataptr_by_dataidx(em_datamng_t *dm,
-										 uint data_idx);
+	void *em_gdatamng_get_data_ptr(em_datamng_t *dm,
+								   const void *key);
 
-int em_gdatamng_get_data(em_datamng_t *dm,
-						 const void *key,
-						 void *data);
+	// int em_gdatamng_get_dataidx(em_datamng_t *dm,
+	//							const void *key);
 
-int em_gdatamng_get_data_cnt(em_datamng_t *dm,
-							 const void *key);
+	// void *em_gdatamng_get_dataptr_by_dataidx(em_datamng_t *dm,
+	//										 uint data_idx);
 
-int em_gdatamng_remove_data(em_datamng_t *dm,
-							const void *key);
+	int em_gdatamng_get_data(em_datamng_t *dm,
+							 const void *key,
+							 void *data);
 
-void *em_gdatamng_get_key(em_datamng_t *dm,
-						  void *searchdata);
+	int em_gdatamng_get_data_cnt(em_datamng_t *dm,
+										 const void *key);
 
-void *em_gdatamng_get_key_by_func(em_datamng_t *dm,
-								  void *searchdata,
-								  char (*comparator)(void *, void *));
+	int em_gdatamng_remove_data(em_datamng_t *dm,
+								const void *key);
 
-int em_gdatamng_get_data_by_func(em_datamng_t *dm,
-								 void *searchdata,
-								 char (*comparator)(void *, void *),
-								 void *data);
+	void *em_gdatamng_get_key(em_datamng_t *dm,
+							  void *searchdata);
+
+	void *em_gdatamng_get_key_by_func(em_datamng_t *dm,
+									  void *searchdata,
+									  char (*comparator)(void *, void *));
+
+	int em_gdatamng_get_data_by_func(em_datamng_t *dm,
+									 void *searchdata,
+									 char (*comparator)(void *, void *),
+									 void *data);
+
+	int em_gdatamng_get_data_num(em_datamng_t *dm);
+
+	int em_gdatamng_get_keyval_by_idx(em_datamng_t *dm,
+									   uint elem_idx,
+									   em_keyval_t *dst);
 
 #ifdef __cplusplus
 }

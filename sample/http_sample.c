@@ -51,6 +51,18 @@ int main(void)
 		printf("%s\n", response.data);
 	}
 
+	// Blank POST test
+	printf("\n** BLANK POST TEST ***********************************\n");
+	url = "http://cserver:8080/ConnectedService/RequestInfo";
+
+	printf("request to %s\n", url);
+
+	ret = em_httpc_post(&hc, url, NULL, NULL, 0, &response);
+	if (ret != 0)
+	{
+		em_printf(EM_LOG_ERROR, "em_httpc_post error\n");
+	}
+
 	// POST multi form test
 	printf("\n** POST multiform TEST ***********************************\n");
 	url = "http://cserver:8080/ConnectedService/RequestInfo";

@@ -30,7 +30,8 @@ SOFTWARE.
 #include "em_datamng.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
 typedef struct
@@ -52,9 +53,9 @@ typedef struct
 } em_timermng_t;
 
 int em_timermng_init(em_timermng_t *tmrmng,
-					 int num_timer,
-					 void *(*alloc_func)(size_t),
-					 void (*free_func)(void *));
+						int num_timer,
+						void *(*alloc_func)(size_t),
+						void (*free_func)(void *));
 
 int em_timermng_destroy(em_timermng_t *tmrmng);
 
@@ -64,6 +65,10 @@ int em_timer_create(em_timermng_t *tmrmng,
 
 int em_timer_delete(em_timermng_t *tmrmng,
 					uint timer_id);
+
+int em_timer_set_interval(em_timermng_t *tmrmng,
+							uint timer_id,
+							int interval_ms);
 
 #ifdef __cplusplus
 }

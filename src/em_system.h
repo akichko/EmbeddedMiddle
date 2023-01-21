@@ -14,20 +14,20 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct
+typedef struct tag_em_sysmng
 {
 	em_timemng_t timemng;
+	em_memmng_t memmng;
 	em_timermng_t tmrmng;
 	em_mtxmng_t mtxmng;
 	em_semmng_t semmng;
 	em_evtmng_t evtmng;
-	// em_memmng_t memmng;
 	em_taskmng_t tskmng;
 	em_cmdmng_t cmdmng;
 	em_evtarray_t gevents;
 } em_sysmng_t;
 
-typedef struct
+typedef struct tag_em_sysmng_stg
 {
 	int max_num_mutex;
 	int max_num_sem;
@@ -35,10 +35,11 @@ typedef struct
 	int max_num_timer;
 	int max_num_cmd;
 	int max_num_task;
-	int max_alloc_num;
-	int mem_total_size;
-	int mem_unit_size;
-	int msgdata_size;
+	int size_msgdata;
+	int mem_block_size;
+	int mem_block_num;
+	int mem_alloc_num;
+	char *mem_static;
 	int num_global_event;
 	void *(*alloc_func)(size_t);
 	void (*free_func)(void *);

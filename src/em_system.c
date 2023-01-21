@@ -39,6 +39,13 @@ int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 		return -1;
 	}
 
+	if (0 != em_memmng_create(&sysmng->memmng, setting->mem_block_size, setting->mem_block_num,
+							  setting->mem_alloc_num, setting->mem_static))
+	{
+		em_printf(EM_LOG_ERROR, "memory init error\n");
+		return -1 ;
+	}
+	
 	if (0 != em_timermng_init(&sysmng->tmrmng, setting->max_num_mutex,
 							  setting->alloc_func, setting->free_func))
 	{
@@ -74,7 +81,7 @@ int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 		return -1;
 	}
 
-	if (0 != em_taskmng_init(&sysmng->tskmng, setting->max_num_task, setting->msgdata_size,
+	if (0 != em_taskmng_init(&sysmng->tskmng, setting->max_num_task, setting->size_msgdata,
 							 setting->alloc_func, setting->free_func))
 	{
 		em_printf(EM_LOG_ERROR, "tskmng init error\n");
@@ -97,43 +104,49 @@ int em_sysmng_finalize(em_sysmng_t *sysmng)
 	if (0 != em_timermng_destroy(&sysmng->tmrmng))
 	{
 		em_printf(EM_LOG_ERROR, "timer destroy error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_mtxmng_destroy(&sysmng->mtxmng))
 	{
 		em_printf(EM_LOG_ERROR, "mtxmng destroy error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_semmng_destroy(&sysmng->semmng))
 	{
 		em_printf(EM_LOG_ERROR, "semmng destroy error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_evtmng_destroy(&sysmng->evtmng))
 	{
 		em_printf(EM_LOG_ERROR, "evtmng destroy error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_cmd_destroy(&sysmng->cmdmng))
 	{
 		em_printf(EM_LOG_ERROR, "cmdmng destroy error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_taskmng_destroy(&sysmng->tskmng))
 	{
 		em_printf(EM_LOG_ERROR, "tskmng init error\n");
-		return -1;
+		//return -1;
 	}
 
 	if (0 != em_evtarray_destroy(&sysmng->gevents))
 	{
 		em_printf(EM_LOG_ERROR, "event array destroy error\n");
-		return -1;
+		//return -1;
+	}
+
+	if (0 != em_memmng_destroy(&sysmng->memmng))
+	{
+		em_printf(EM_LOG_ERROR, "memmng destroy error\n");
+		//return -1;
 	}
 
 	return 0;

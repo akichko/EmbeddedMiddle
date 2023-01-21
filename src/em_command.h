@@ -33,11 +33,10 @@ extern "C" {
 
 #define EM_CMD_NAME_LENGTH_MAX 16
 #define EM_CMD_WORD_NUM_MAX 10
-#define EM_CMD_WORD_LENGTH_MAX 20
+#define EM_CMD_WORD_LENGTH_MAX 128
 
-typedef struct
+typedef struct tag_cmdsetting
 {
-	//int cmd_id;
 	const char *cmd_name;
 	void (*cmd_func)(int, char **);
 } em_cmdsetting_t;

@@ -32,7 +32,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define EM_DATAMNG_INVALID_ID 0xffffffffffffffff
 
 
 int em_datamng_create(em_datamng_t *dm,

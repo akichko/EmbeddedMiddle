@@ -193,7 +193,7 @@ int app1_main()
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_create error\n");
 	}
-	if (0 != em_mqttc_connect(&mc))
+	if (0 != em_mqttc_connect(&mc,10000))
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_connect error\n");
 		em_timer_delete(&sysmng.tmrmng, timer_id);
@@ -265,7 +265,7 @@ int app2_main()
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_create error\n");
 	}
-	if (0 != em_mqttc_connect(&mc))
+	if (0 != em_mqttc_connect(&mc, 10000))
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_connect error\n");
 		em_timer_delete(&sysmng.tmrmng, timer_id);
@@ -363,7 +363,11 @@ int init()
 	sys_setting.max_num_timer = 2;
 	sys_setting.max_num_cmd = 5;
 	sys_setting.max_num_task = 3;
-	sys_setting.msgdata_size = sizeof(testmsg_t);
+	sys_setting.size_msgdata = sizeof(testmsg_t);
+	sys_setting.mem_block_size = mem_unit_size;
+	sys_setting.mem_block_num = mem_block_num;
+	sys_setting.mem_alloc_num = max_alloc_num;
+	sys_setting.mem_static = NULL;
 	sys_setting.num_global_event = EVENT_MAXNUM;
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
@@ -402,7 +406,7 @@ int finalize()
 
 	em_memmng_print(&memmng, TRUE);
 
-	if (0 != em_memmng_delete(&memmng))
+	if (0 != em_memmng_destroy(&memmng))
 	{
 		em_printf(EM_LOG_ERROR, "memmng init error\n");
 		return -1;

@@ -148,6 +148,11 @@ int em_httpc_get(em_httpc_t *hc, char *url, em_httphdr_t *headers, em_httpres_t 
 int em_httpc_post(em_httpc_t *hc, char *url, em_httphdr_t *headers,
 				  void *postdata, int postdata_size, em_httpres_t *response)
 {
+	if (postdata == NULL || postdata_size <= 0)
+	{
+		return -1;
+	}
+
 	CURLcode curlRet;
 
 	_em_curl_init(hc);

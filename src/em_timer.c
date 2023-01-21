@@ -103,7 +103,8 @@ int em_timer_create(em_timermng_t *tmrmng, em_timersetting_t *setting, uint *tim
 int em_timer_delete(em_timermng_t *tmrmng, uint timer_id)
 {
 	int ret;
-	em_timerinfo_t *timer_info = (em_timerinfo_t*)em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
+	em_timerinfo_t *timer_info =
+		(em_timerinfo_t *)em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
 
 	if (timer_info == NULL)
 	{
@@ -118,6 +119,36 @@ int em_timer_delete(em_timermng_t *tmrmng, uint timer_id)
 	}
 	em_mpool_free_block(&tmrmng->mp_timerinfo, timer_info);
 	em_printf(EM_LOG_INFO, "timer deleted. id=%d %p\n", timer_id, timer_info->linux_timer_id);
+
+	return ret;
+}
+
+int em_timer_set_interval(em_timermng_t *tmrmng, uint timer_id, int interval_ms)
+{
+	int ret;
+	em_timerinfo_t *timer_info =
+		(em_timerinfo_t *)em_mpool_get_dataptr(&tmrmng->mp_timerinfo, timer_id - 1);
+
+	if (timer_info == NULL)
+	{
+		em_printf(EM_LOG_ERROR, "error\n");
+		return -1;
+	}
+
+	struct itimerspec ts;
+	ts.it_value = em_calc_timespec(interval_ms);
+	ts.it_interval = em_calc_timespec(interval_ms);
+
+	ret = timer_settime(timer_info->linux_timer_id, 0, &ts, 0);
+	if (ret == -1)
+	{
+		em_printf(EM_LOG_ERROR, "Fail to set timer\n");
+		em_mpool_free_block(&tmrmng->mp_timerinfo, timer_info);
+		return -2;
+	}
+
+	em_printf(EM_LOG_INFO, "timer interval changed to %d. id=%d %p\n",
+			  interval_ms, timer_id, timer_info->linux_timer_id);
 
 	return ret;
 }

@@ -55,9 +55,11 @@ int em_cmd_regist(em_cmdmng_t *cm,
 {
 	if (0 != em_gdatamng_add_data(&cm->cmdmng, cmdsetting->cmd_name, cmdsetting))
 	{
-		em_printf(EM_LOG_ERROR, "cmd register error\n");
+		em_printf(EM_LOG_ERROR, "command register error: %s\n");
 		return -1;
 	}
+
+	em_printf(EM_LOG_INFO, "command '%s' registered\n", cmdsetting->cmd_name);
 	return 0;
 }
 
@@ -202,16 +204,34 @@ static int _em_read_line_old(char **dst, int *word_num, int max_word_num, int ma
 	return ret;
 }
 
+#define WLEN EM_CMD_WORD_LENGTH_MAX
+#define CAT(a, b) PCAT2(a, b)
+#define PCAT2(a, b) %a##b // %の後にスペースがあるとNG
+#define STR(s) STR2(s)
+#define STR2(s) #s
+
+#define SCANFMT(WLEN) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) \
+	CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s)\n
+
 static int _em_read_line(char *src, char **dst, int *word_num, int max_word_num, int max_word_length)
 {
 	int ret_scan;
 
-	ret_scan = sscanf(src, "%20s %20s %20s %20s %20s %20s %20s %20s %20s %20s",
+	//printf("%s", STR(SCANFMT(10)));
+
+	ret_scan = sscanf(src,
+					  "%128s %128s %128s %128s %128s %128s %128s %128s %128s %128s\n",
+					  //STR(SCANFMT(WLEN)),
 					  dst[0], dst[1], dst[2], dst[3], dst[4],
 					  dst[5], dst[6], dst[7], dst[8], dst[9]);
 
 	if (ret_scan <= 0)
 		return -1;
+
+	for (int i = 0; i < EM_CMD_WORD_NUM_MAX; i++)
+	{
+	}
+
 	*word_num = ret_scan;
 
 	return 0;
@@ -269,7 +289,7 @@ int em_cmd_start(em_cmdmng_t *cm)
 		{
 			_em_cmd_exec(cm, pos_word, (char **)cmdstr_ptr);
 		}
-		
+
 		if (cm->is_running)
 		{
 			printf("cmd > ");

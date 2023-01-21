@@ -42,14 +42,17 @@ void em_mqtt_lib_cleanup()
 static void on_connect_sync(struct mosquitto *mosq, void *obj, int rc)
 {
 	em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
+	obj_mc->is_connected = TRUE;
 
-	if(0 !=em_event_broadcast(&obj_mc->evt_connect)){
+	em_printf(EM_LOG_INFO, "connected to broker. rd = %d\n", rc);
+	if (0 != em_event_broadcast(&obj_mc->evt_connect))
+	{
 		em_printf(EM_LOG_ERROR, "error\n");
 	}
 
-	//if(0 !=em_sem_post(&obj_mc->sem_connect)){
+	// if(0 !=em_sem_post(&obj_mc->sem_connect)){
 	//	em_printf(EM_LOG_ERROR, "error\n");
-	//}
+	// }
 
 	return;
 }
@@ -57,8 +60,10 @@ static void on_connect_sync(struct mosquitto *mosq, void *obj, int rc)
 // Broker切断時callback
 static void on_disconnect(struct mosquitto *mosq, void *obj, int rc)
 {
-	// em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
-	em_printf(EM_LOG_DEBUG, "on_disconnect: rc = %d\n", rc);
+	em_mqttc_t *obj_mc = (em_mqttc_t *)obj;
+	obj_mc->is_connected = FALSE;
+
+	em_printf(EM_LOG_INFO, "on_disconnect: rc = %d\n", rc);
 }
 
 // メッセージ送信callback
@@ -120,6 +125,7 @@ int em_mqttc_create(em_mqttc_t *mc,
 	mc->env.certfile = certfile;
 	mc->env.keyfile = keyfile;
 	mc->env.keepalive = keepalive;
+	mc->is_connected = FALSE;
 
 	em_event_init(&mc->evt_connect);
 
@@ -136,7 +142,6 @@ int em_mqttc_create(em_mqttc_t *mc,
 int em_mqttc_destroy(em_mqttc_t *mc)
 {
 	mosquitto_destroy(mc->mosq);
-	// mosquitto_lib_cleanup();
 	return 0;
 }
 
@@ -157,7 +162,7 @@ static int _em_mqttc_connect(em_mqttc_t *mc)
 	return ret;
 }
 
-int em_mqttc_connect(em_mqttc_t *mc)
+int em_mqttc_connect(em_mqttc_t *mc, int timeout_ms)
 {
 	int ret;
 
@@ -167,17 +172,19 @@ int em_mqttc_connect(em_mqttc_t *mc)
 
 	if (0 != _em_mqttc_connect(mc))
 	{
-		fprintf(stderr, "failed to connect broker.\n");
+		em_printf(EM_LOG_ERROR, "failed to connect broker.\n");
 		return -2;
 	}
 
 	ret = mosquitto_loop_start(mc->mosq);
 
-	if (0 != em_event_wait(&mc->evt_connect, 10000)){
+	if (0 != em_event_wait(&mc->evt_connect, timeout_ms))
+	{
 		em_printf(EM_LOG_WARNING, "on_connect func wait timeout\n");
 		mosquitto_disconnect(mc->mosq);
+		return -1;
 	}
-
+	
 	return ret;
 }
 
@@ -198,7 +205,7 @@ int em_mqttc_disconnect(em_mqttc_t *mc)
 	return ret;
 }
 
-int em_mqttc_subscribe(em_mqttc_t *mc, char *topic, void (*callback)(em_mqbuf_t *))
+int em_mqttc_subscribe(em_mqttc_t *mc, char *topic, em_mqtt_sub_callback_t callback)
 {
 	int ret;
 	// param check
@@ -210,7 +217,7 @@ int em_mqttc_subscribe(em_mqttc_t *mc, char *topic, void (*callback)(em_mqbuf_t 
 	mc->sub_callback = callback;
 	mosquitto_message_callback_set(mc->mosq, on_message);
 
-	ret = mosquitto_subscribe(mc->mosq, NULL, mc->topic_subscribe, 1);
+	ret = mosquitto_subscribe(mc->mosq, NULL, mc->topic_subscribe, 0);
 	return ret;
 }
 
@@ -224,7 +231,7 @@ int em_mqttc_unsubscribe(em_mqttc_t *mc, char *topic)
 	}
 	mc->topic_subscribe = NULL;
 	mc->sub_callback = NULL;
-	
+
 	ret = mosquitto_unsubscribe(mc->mosq, NULL, topic);
 	return ret;
 }
@@ -237,8 +244,13 @@ int em_mqttc_publish(em_mqttc_t *mc, int *mid, char *topic, char *payload, int p
 	{
 		return -1;
 	}
+	if (!mc->is_connected)
+	{
+		em_printf(EM_LOG_DEBUG, "not connected\n");
+		return -1;
+	}
 
-	ret = mosquitto_publish(mc->mosq, mid, topic, payload_length, payload, 1, true);
+	ret = mosquitto_publish(mc->mosq, mid, topic, payload_length, payload, 0, false);
 
 	return ret;
 }

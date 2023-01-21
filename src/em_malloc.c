@@ -98,7 +98,7 @@ int em_memmng_create(em_memmng_t *mm,
 	return 0;
 }
 
-int em_memmng_delete(em_memmng_t *mm)
+int em_memmng_destroy(em_memmng_t *mm)
 {
 	em_mutex_destroy(&mm->mutex);
 	em_mutex_destroy(&mm->cond_mutex);

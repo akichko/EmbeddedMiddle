@@ -67,6 +67,14 @@ int main()
 
 	sleep(7);
 
+	if (0 != em_timer_set_interval(&tmrmng, timer_id[0], 300))
+	{
+		printf("em_timer_set_interval error!!\n");
+		exit(1);
+	}
+
+	sleep(3);
+
 	for (int i = 0; i < timer_num; i++)
 	{
 		if (0 != em_timer_delete(&tmrmng, timer_id[i]))

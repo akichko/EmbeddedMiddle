@@ -44,6 +44,14 @@ typedef struct
 
 typedef struct
 {
+	uint status_code;
+	uint contents_length;
+	char *headers;
+	char *content;
+} em_httpres2_t;
+
+typedef struct
+{
 	struct curl_slist *header_slist;
 } em_httphdr_t;
 
@@ -85,6 +93,12 @@ int em_httpc_get(em_httpc_t *hc,
 				 char *url,
 				 em_httphdr_t *headers,
 				 em_httpres_t *response);
+
+//return: http status code
+int em_httpc_get2(em_httpc_t *hc,
+				 char *url,
+				 em_httphdr_t *headers,
+				 em_buf_t *buf_response);
 
 int em_httpc_post(em_httpc_t *hc,
 				  char *url,

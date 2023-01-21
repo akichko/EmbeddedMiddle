@@ -52,7 +52,7 @@ typedef struct _em_meminfo_t em_meminfo_t;
 struct _em_meminfo_t //メモリ管理情報
 {
 	int mem_index;				//物理ブロック位置
-	short mem_length;			//物理ブロック長
+	int mem_length;			//物理ブロック長
 	char is_used;				//メモリ割り当て済み
 	em_meminfo_t *next_meminfo; //１つ先のアドレスのメモリ管理情報
 	em_meminfo_t *back_meminfo; //１つ前のアドレスのメモリ管理情報
@@ -89,7 +89,7 @@ int em_memmng_create(em_memmng_t *mm,
 					 int alloc_max_num,
 					 char *memory);
 
-int em_memmng_delete(em_memmng_t *mm);
+int em_memmng_destroy(em_memmng_t *mm);
 
 int em_memmng_print(em_memmng_t *mm,
 					int detail);

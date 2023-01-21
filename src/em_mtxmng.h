@@ -44,6 +44,7 @@ int em_mtxmng_init(em_mtxmng_t *mtxm, int max_mutex_num,
 
 int em_mtxmng_destroy(em_mtxmng_t *mtxm);
 
+//ret: mutex ID
 int em_mtxmng_create_mutex(em_mtxmng_t *mtxm);
 
 int em_mtxmng_delete_mutex(em_mtxmng_t *mtxm,

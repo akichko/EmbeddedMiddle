@@ -32,7 +32,7 @@ SOFTWARE.
 static int _em_gdatamng_keycmp(char key_type, const void *s1, const void *s2, size_t n)
 {
 	if (key_type == EM_DMNG_KEY_STRING)
-		return strncmp((const char*)s1, (const char*)s2, n);
+		return strncmp((const char *)s1, (const char *)s2, n);
 	else
 		return memcmp(s1, s2, n);
 }
@@ -348,4 +348,25 @@ int em_gdatamng_get_data_by_func(em_datamng_t *dm,
 
 	em_mutex_unlock(&dm->mutex);
 	return ret;
+}
+
+int em_gdatamng_get_data_num(em_datamng_t *dm)
+{
+	return dm->mp.num_used;
+}
+
+
+int em_gdatamng_get_keyval_by_idx(em_datamng_t *dm, uint elem_idx, em_keyval_t *dst)
+{
+	if (elem_idx >= dm->mp.num_used || dst == NULL)
+	{
+		return -1;
+	}
+
+	int data_index = dm->mp.block_ptr[elem_idx]->index;
+
+	dst->key = dm->keycnt[data_index].key;
+	dst->val = dm->mp.block_ptr[elem_idx]->data_ptr;
+
+	return 0;
 }

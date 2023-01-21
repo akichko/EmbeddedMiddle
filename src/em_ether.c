@@ -31,7 +31,7 @@ SOFTWARE.
 #include "em_timer.h"
 #include "em_print.h"
 
-int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, uint queue_size,
+int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, //uint queue_size,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	sk->alloc_func = alloc_func;
@@ -40,19 +40,19 @@ int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_por
 	sk->addr.sin_family = AF_INET;
 	sk->addr.sin_port = htons(dest_port);
 	sk->addr.sin_addr.s_addr = inet_addr(dest_ip);
-	if (queue_size > 0)
-	{
-		em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
-		sk->has_queue = TRUE;
-	}
-	else
-	{
-		sk->has_queue = FALSE;
-	}
+	//if (queue_size > 0)
+	//{
+	//	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
+	//	sk->has_queue = TRUE;
+	//}
+	//else
+	//{
+	//	sk->has_queue = FALSE;
+	//}
 	return 0;
 }
 
-int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, uint queue_size,
+int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, //uint queue_size,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	sk->alloc_func = alloc_func;
@@ -61,15 +61,15 @@ int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_po
 	sk->addr.sin_family = AF_INET;
 	sk->addr.sin_port = htons(local_port);
 	sk->addr.sin_addr.s_addr = inet_addr(ip_from);
-	if (queue_size > 0)
-	{
-		em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
-		sk->has_queue = TRUE;
-	}
-	else
-	{
-		sk->has_queue = FALSE;
-	}
+	//if (queue_size > 0)
+	//{
+	//	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
+	//	sk->has_queue = TRUE;
+	//}
+	//else
+	//{
+	//	sk->has_queue = FALSE;
+	//}
 	bind(sk->sock, (struct sockaddr *)&sk->addr, sizeof(sk->addr));
 	return 0;
 }
@@ -128,6 +128,7 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 		if (0 == select(sk->sock + 1, &fds, NULL, NULL, &tv))
 		{
 			em_printf(EM_LOG_DEBUG, "em_udp_recv timeout [%ds]\n", timeout_ms);
+			return -1;
 		}
 	}
 

@@ -51,6 +51,8 @@ extern "C"
 		char *payload;
 		int payload_length;
 	} em_mqbuf_t;
+	
+	typedef void (*em_mqtt_sub_callback_t)(em_mqbuf_t *);
 
 	typedef struct
 	{
@@ -58,8 +60,10 @@ extern "C"
 		em_mqttenv_t env;
 		em_mqbuf_t buf_publish;
 		char *topic_subscribe;
+		char is_connected;
 		char connect_desire;
-		void (*sub_callback)(em_mqbuf_t *);
+		// void (*sub_callback)(em_mqbuf_t *);
+		em_mqtt_sub_callback_t sub_callback;
 		void (*free_func)(void *);
 		em_event_t evt_connect;
 	} em_mqttc_t;
@@ -81,27 +85,28 @@ extern "C"
 
 	int em_mqttc_destroy(em_mqttc_t *mc);
 
-	int em_mqttc_connect(em_mqttc_t *mc);
+	int em_mqttc_connect(em_mqttc_t *mc,
+						 int timeout_ms);
 
 	int em_mqttc_disconnect(em_mqttc_t *mc);
 
 	int em_mqttc_subscribe(em_mqttc_t *mc,
-								 char *topic,
-								 void (*callback)(em_mqbuf_t *));
+						   char *topic,
+						   em_mqtt_sub_callback_t callback);
 
 	int em_mqttc_unsubscribe(em_mqttc_t *mc,
 							 char *topic);
 
 	int em_mqttc_publish(em_mqttc_t *mc,
-								  int *mid,
-								  char *topic,
-								  char *payload,
-								  int payload_length);
+						 int *mid,
+						 char *topic,
+						 char *payload,
+						 int payload_length);
 
 	int em_mqttc_publish_txt(em_mqttc_t *mc,
-									  int *mid,
-									  char *topic,
-									  char *message);
+							 int *mid,
+							 char *topic,
+							 char *message);
 
 #ifdef __cplusplus
 }

@@ -74,8 +74,6 @@ typedef struct
 	void (*free_func)(void *);
 } em_thrdarg_t;
 
-// static void *thread_starter(void *func);
-
 int em_taskmng_init(em_taskmng_t *tm,
 					int max_num_task,
 					int msgdata_size,
@@ -87,9 +85,6 @@ int em_taskmng_destroy(em_taskmng_t *tm);
 int em_task_create_msgqueue(em_taskmng_t *tm,
 							em_tasksetting_t tasksetting);
 
-// int em_task_initialize_task(em_taskmng_t *tm,
-//							em_tasksetting_t tasksetting);
-
 int em_task_start_task(em_taskmng_t *tm,
 					   em_tasksetting_t tasksetting);
 
@@ -98,6 +93,7 @@ int em_task_create(em_taskmng_t *tm,
 
 int em_task_delete(em_taskmng_t *tm,
 				   em_taskid_t task_id);
+				   
 em_taskid_t em_get_task_id(em_taskmng_t *tm);
 
 // msssage

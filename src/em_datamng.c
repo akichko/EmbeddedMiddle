@@ -26,7 +26,7 @@ SOFTWARE.
 #include <memory.h>
 #include <string.h>
 
-#include "em_datamng.h"
+#include "em_gdatamng.h"
 #include "em_print.h"
 
 int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
@@ -57,15 +57,15 @@ void *em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
 	return em_gdatamng_get_data_ptr(dm, &id);
 }
 
-int em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
-{
-	return em_gdatamng_get_dataidx(dm, &id);
-}
+//int em_datamng_get_dataidx(em_datamng_t *dm, ulong id)
+//{
+//	return em_gdatamng_get_dataidx(dm, &id);
+//}
 
-void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
-{
-	return em_gdatamng_get_dataptr_by_dataidx(dm, data_idx);
-}
+//void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm, uint data_idx)
+//{
+//	return em_gdatamng_get_dataptr_by_dataidx(dm, data_idx);
+//}
 
 int em_datamng_get_data(em_datamng_t *dm, ulong id, void *data)
 {
@@ -84,7 +84,7 @@ int em_datamng_remove_data(em_datamng_t *dm, ulong id)
 
 ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 {
-	ulong *ret = (ulong*)em_gdatamng_get_key(dm, searchdata);
+	ulong *ret = (ulong *)em_gdatamng_get_key(dm, searchdata);
 	if (ret == NULL)
 		return EM_DATAMNG_INVALID_ID;
 
@@ -94,7 +94,7 @@ ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 ulong em_datamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
 								char (*comparator)(void *, void *))
 {
-	ulong *ret = (ulong*)em_gdatamng_get_key_by_func(dm, searchdata, comparator);
+	ulong *ret = (ulong *)em_gdatamng_get_key_by_func(dm, searchdata, comparator);
 	if (ret == NULL)
 		return EM_DATAMNG_INVALID_ID;
 

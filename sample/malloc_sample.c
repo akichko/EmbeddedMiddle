@@ -106,5 +106,5 @@ int main()
 	em_free(&mm, pt[4]);
 	em_memmng_print(&mm, detail);
 
-	em_memmng_delete(&mm);
+	em_memmng_destroy(&mm);
 }
