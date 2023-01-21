@@ -24,7 +24,7 @@ SOFTWARE.
 #ifndef __EM_TASK_H__
 #define __EM_TASK_H__
 
-#include "em_datamng.h"
+#include "em_idatamng.h"
 #include "em_queue.h"
 #include "em_mutex.h"
 //#include "em_eventflag.h"

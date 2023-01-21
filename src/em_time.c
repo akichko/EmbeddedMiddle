@@ -30,7 +30,6 @@ SOFTWARE.
 #include <sys/timerfd.h>
 #include <time.h>
 #include "em_time.h"
-#include "em_datamng.h"
 #include "em_print.h"
 
 struct timespec em_get_timestamp()

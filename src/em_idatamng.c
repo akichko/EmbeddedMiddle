@@ -29,7 +29,7 @@ SOFTWARE.
 #include "em_gdatamng.h"
 #include "em_print.h"
 
-int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
+int em_idatamng_create(em_datamng_t *dm, uint data_size, uint data_num, int duplicate_mode,
 					  void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	return em_gdatamng_create(dm, data_size, data_num,
@@ -37,22 +37,22 @@ int em_datamng_create(em_datamng_t *dm, uint data_size, uint data_num, int dupli
 							  alloc_func, free_func);
 }
 
-int em_datamng_destroy(em_datamng_t *dm)
+int em_idatamng_destroy(em_datamng_t *dm)
 {
 	return em_gdatamng_destroy(dm);
 }
 
-int em_datamng_print(em_datamng_t *dm)
+int em_idatamng_print(em_datamng_t *dm)
 {
 	return em_gdatamng_print(dm);
 }
 
-int em_datamng_add_data(em_datamng_t *dm, ulong id, void *data)
+int em_idatamng_add_data(em_datamng_t *dm, ulong id, void *data)
 {
 	return em_gdatamng_add_data(dm, &id, data);
 }
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
+void *em_idatamng_get_data_ptr(em_datamng_t *dm, ulong id)
 {
 	return em_gdatamng_get_data_ptr(dm, &id);
 }
@@ -67,22 +67,22 @@ void *em_datamng_get_data_ptr(em_datamng_t *dm, ulong id)
 //	return em_gdatamng_get_dataptr_by_dataidx(dm, data_idx);
 //}
 
-int em_datamng_get_data(em_datamng_t *dm, ulong id, void *data)
+int em_idatamng_get_data(em_datamng_t *dm, ulong id, void *data)
 {
 	return em_gdatamng_get_data(dm, &id, data);
 }
 
-int em_datamng_get_data_cnt(em_datamng_t *dm, ulong id)
+int em_idatamng_get_data_cnt(em_datamng_t *dm, ulong id)
 {
 	return em_gdatamng_get_data_cnt(dm, &id);
 }
 
-int em_datamng_remove_data(em_datamng_t *dm, ulong id)
+int em_idatamng_remove_data(em_datamng_t *dm, ulong id)
 {
 	return em_gdatamng_remove_data(dm, &id);
 }
 
-ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
+ulong em_idatamng_get_id(em_datamng_t *dm, void *searchdata)
 {
 	ulong *ret = (ulong *)em_gdatamng_get_key(dm, searchdata);
 	if (ret == NULL)
@@ -91,7 +91,7 @@ ulong em_datamng_get_id(em_datamng_t *dm, void *searchdata)
 	return *ret;
 }
 
-ulong em_datamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
+ulong em_idatamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
 								char (*comparator)(void *, void *))
 {
 	ulong *ret = (ulong *)em_gdatamng_get_key_by_func(dm, searchdata, comparator);
@@ -101,7 +101,7 @@ ulong em_datamng_get_id_by_func(em_datamng_t *dm, void *searchdata,
 	return *ret;
 }
 
-int em_datamng_get_data_by_func(em_datamng_t *dm, void *searchdata,
+int em_idatamng_get_data_by_func(em_datamng_t *dm, void *searchdata,
 								char (*comparator)(void *, void *), void *data)
 {
 	return em_gdatamng_get_data_by_func(dm, searchdata, comparator, data);

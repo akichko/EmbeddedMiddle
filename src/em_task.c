@@ -71,7 +71,7 @@ int em_taskmng_init(em_taskmng_t *tm, int max_num_task, int msgdata_size,
 	{
 		return -1;
 	}
-	return em_datamng_create(&tm->taskinfo_mng, sizeof(_em_taskinfo_t), max_num_task, EM_DMNG_DPLCT_ERROR, alloc_func, free_func);
+	return em_idatamng_create(&tm->taskinfo_mng, sizeof(_em_taskinfo_t), max_num_task, EM_DMNG_DPLCT_ERROR, alloc_func, free_func);
 }
 
 int em_taskmng_destroy(em_taskmng_t *tm)
@@ -80,7 +80,7 @@ int em_taskmng_destroy(em_taskmng_t *tm)
 	{
 		return -1;
 	}
-	return em_datamng_destroy(&tm->taskinfo_mng);
+	return em_idatamng_destroy(&tm->taskinfo_mng);
 }
 
 int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
@@ -90,7 +90,7 @@ int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		// message not available
 		return 0;
 	}
-	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
+	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_idatamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
 	if (task_info != NULL) //タスク登録済み
 	{
 		return em_queue_create(&task_info->msgqueue, tm->msgdata_size, tasksetting.mqueue_size, tm->alloc_func, tm->free_func);
@@ -102,7 +102,7 @@ int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		{
 			return -1;
 		}
-		return em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
+		return em_idatamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
 	}
 }
 
@@ -128,7 +128,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	thrdarg->alloc_func = tm->alloc_func;
 	thrdarg->free_func = tm->free_func;
 
-	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
+	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_idatamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
 
 	if (task_info == NULL && tm->taskinfo_mng.mp.num_used == tm->taskinfo_mng.mp.num_max)
 	{
@@ -182,7 +182,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		_em_taskinfo_t newtask_info;
 		memcpy(newtask_info.task_name, tasksetting.task_name, strlen(tasksetting.task_name) + 1);
 		newtask_info.thread_id = thread_id;
-		em_datamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
+		em_idatamng_add_data(&tm->taskinfo_mng, tasksetting.task_id, &newtask_info);
 	}
 
 	if (0 != em_sem_post(&tm->sem))
@@ -228,7 +228,7 @@ int em_task_delete(em_taskmng_t *tm, em_taskid_t task_id)
 
 	void *th_ret;
 
-	ret = em_datamng_get_data(&tm->taskinfo_mng, task_id, &taskinfo);
+	ret = em_idatamng_get_data(&tm->taskinfo_mng, task_id, &taskinfo);
 	if (ret != 0)
 	{
 		em_printf(EM_LOG_ERROR, "task %d not found\n", task_id);
@@ -245,7 +245,7 @@ int em_task_delete(em_taskmng_t *tm, em_taskid_t task_id)
 
 	em_queue_destroy(&taskinfo.msgqueue);
 
-	em_datamng_remove_data(&tm->taskinfo_mng, task_id);
+	em_idatamng_remove_data(&tm->taskinfo_mng, task_id);
 
 	return 0;
 }
@@ -254,9 +254,9 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm)
 {
 	pthread_t thread_id = pthread_self();
 	em_taskid_t task_id;
-	// ret = em_datamng_get_data(&tm->thread_task_mng, thread_id, &task_id);
+	// ret = em_idatamng_get_data(&tm->thread_task_mng, thread_id, &task_id);
 	// if (ret != 0)
-	task_id = em_datamng_get_id_by_func(&tm->taskinfo_mng, &thread_id, &_em_threadid_comparator);
+	task_id = em_idatamng_get_id_by_func(&tm->taskinfo_mng, &thread_id, &_em_threadid_comparator);
 	if (task_id < 0)
 	{
 		em_printf(EM_LOG_ERROR, "task id %d not found (thread id = %ld)\n", task_id, thread_id);
@@ -268,7 +268,7 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm)
 
 em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm, int taskid)
 {
-	_em_taskinfo_t *taskinfo = (_em_taskinfo_t *)em_datamng_get_data_ptr(&tm->taskinfo_mng, taskid);
+	_em_taskinfo_t *taskinfo = (_em_taskinfo_t *)em_idatamng_get_data_ptr(&tm->taskinfo_mng, taskid);
 	if (taskinfo == NULL)
 	{
 		em_printf(EM_LOG_ERROR, "taskinfo of id %d not found\n", taskid);

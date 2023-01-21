@@ -29,7 +29,6 @@ SOFTWARE.
 #include <time.h>
 #include "em_time.h"
 #include "em_timer.h"
-#include "em_datamng.h"
 
 int em_timermng_init(em_timermng_t *tmrmng, int num_timer, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {

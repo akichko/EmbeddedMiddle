@@ -21,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ============================================================================*/
-#ifndef __EM_DATAMNG_H__
-#define __EM_DATAMNG_H__
+#ifndef __EM_IDATAMNG_H__
+#define __EM_IDATAMNG_H__
 
 #include "em_mempool.h"
 #include "em_gdatamng.h"
@@ -34,48 +34,48 @@ extern "C" {
 
 
 
-int em_datamng_create(em_datamng_t *dm,
+int em_idatamng_create(em_datamng_t *dm,
 					  uint data_size,
 					  uint data_num,
 					  int duplicate_mode,
 					  void *(*alloc_func)(size_t),
 					  void (*free_func)(void *));
 
-int em_datamng_destroy(em_datamng_t *dm);
+int em_idatamng_destroy(em_datamng_t *dm);
 
-int em_datamng_print(em_datamng_t *dm);
+int em_idatamng_print(em_datamng_t *dm);
 
-int em_datamng_add_data(em_datamng_t *dm,
+int em_idatamng_add_data(em_datamng_t *dm,
 						ulong id,
 						void *data);
 
-void *em_datamng_get_data_ptr(em_datamng_t *dm,
+void *em_idatamng_get_data_ptr(em_datamng_t *dm,
 							  ulong id);
 
-int em_datamng_get_dataidx(em_datamng_t *dm,
+int em_idatamng_get_dataidx(em_datamng_t *dm,
 						   ulong id);
 
-void *em_datamng_get_dataptr_by_dataidx(em_datamng_t *dm,
+void *em_idatamng_get_dataptr_by_dataidx(em_datamng_t *dm,
 										uint data_idx);
 
-int em_datamng_get_data(em_datamng_t *dm,
+int em_idatamng_get_data(em_datamng_t *dm,
 						ulong id,
 						void *data);
 
-int em_datamng_get_data_cnt(em_datamng_t *dm,
+int em_idatamng_get_data_cnt(em_datamng_t *dm,
 							ulong id);
 
-int em_datamng_remove_data(em_datamng_t *dm,
+int em_idatamng_remove_data(em_datamng_t *dm,
 						   ulong id);
 
-ulong em_datamng_get_id(em_datamng_t *dm,
+ulong em_idatamng_get_id(em_datamng_t *dm,
 						void *searchdata);
 
-ulong em_datamng_get_id_by_func(em_datamng_t *dm,
+ulong em_idatamng_get_id_by_func(em_datamng_t *dm,
 								void *searchdata,
 								char (*comparator)(void *, void *));
 
-int em_datamng_get_data_by_func(em_datamng_t *dm,
+int em_idatamng_get_data_by_func(em_datamng_t *dm,
 								void *searchdata,
 								char (*comparator)(void *, void *),
 								void *data);
@@ -83,4 +83,4 @@ int em_datamng_get_data_by_func(em_datamng_t *dm,
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-#endif //__EM_DATAMNG_H__
+#endif //__EM_IDATAMNG_H__

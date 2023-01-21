@@ -386,7 +386,7 @@ int init()
 		return -1;
 	}
 
-	em_datamng_create(&dm, 128, 128, EM_DMNG_DPLCT_ERROR, &local_malloc, &local_free);
+	em_idatamng_create(&dm, 128, 128, EM_DMNG_DPLCT_ERROR, &local_malloc, &local_free);
 
 	em_memmng_print(&memmng, TRUE);
 
@@ -402,7 +402,7 @@ int finalize()
 		printf("sys init error\n");
 		return -1;
 	}
-	em_datamng_destroy(&dm);
+	em_idatamng_destroy(&dm);
 
 	em_memmng_print(&memmng, TRUE);
 
