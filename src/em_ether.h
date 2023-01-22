@@ -35,30 +35,31 @@ typedef struct tag_em_ethpacket
 {
 	int length;
 	unsigned char data[1500];
+	struct sockaddr_in src_addr;
+	struct sockaddr_in dst_addr;
 } em_ethpacket_t;
 
 typedef struct
 {
 	int sock;
 	int socket_type;
-	struct sockaddr_in addr;
-	//char has_queue;
-	//em_queue_t queue;
+	struct sockaddr_in local_addr;
+	struct sockaddr_in remote_addr;
 	void *(*alloc_func)(size_t);
 	void (*free_func)(void *);
 } em_socket_t;
 
 int em_udp_tx_init(em_socket_t *sk,
+				   const char *local_ip, //NULLならIP・ポートを自動設定
+				   const uint16_t local_port, //0ならIP・ポートを自動設定
 				   const char *dest_ip,
 				   const uint16_t dest_port,
-				   //uint queue_size,
 				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *));
 
 int em_udp_rx_init(em_socket_t *sk,
-				   const char *ip_from, //送信元フィルタ
+				   const char *local_ip, //"0.0.0.0"なら自動設定
 				   const uint16_t local_port,
-				   //uint queue_size,
 				   void *(*alloc_func)(size_t),
 				   void (*free_func)(void *));
 
@@ -66,23 +67,9 @@ int em_udp_send(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);
 
-//int em_udp_send_enqueue(em_socket_t *sk,
-//						em_ethpacket_t *packet,
-//						int timeout_ms);
-//
-//int em_udp_send_dequeue(em_socket_t *sk,
-//						int timeout_ms);
-
 int em_udp_recv(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);
-
-//int em_udp_recv_enqueue(em_socket_t *sk,
-//						int timeout_ms);
-//
-//int em_udp_recv_dequeue(em_socket_t *sk,
-//						em_ethpacket_t *packet,
-//						int timeout_ms);
 
 #ifdef __cplusplus
 }

@@ -83,7 +83,7 @@ int em_event_wait(em_event_t *event, int timeout_ms)
 		if (ret != 0)
 		{
 			em_printf(EM_LOG_DEBUG, "wait timeout\n");
-			return EM_E_TIMEOUT;
+			return EM_ERR_TIMEOUT;
 		}
 	}
 	return EM_SUCCESS;

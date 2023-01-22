@@ -185,7 +185,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	if (ret != 0)
 	{
 		// printf("em_dequeue timeout\n");
-		return EM_E_TIMEOUT;
+		return EM_ERR_TIMEOUT;
 	}
 	// lock
 	ret = em_mutex_lock(&qu->mutex, EM_WAIT);
@@ -193,7 +193,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 	{
 		em_printf(EM_LOG_ERROR, "lock error\n");
 		em_sem_post(&qu->sem_out);
-		return EM_E_OTHER;
+		return EM_ERR_OTHER;
 	}
 
 	data_ptr = _em_dequeue_get_dataptr(qu);
@@ -204,7 +204,7 @@ int em_dequeue(em_queue_t *qu, void *block_data, int timeout_ms)
 		em_printf(EM_LOG_ERROR, "Fatal queue error\n");
 		em_sem_post(&qu->sem_out);
 		em_mutex_unlock(&qu->mutex);
-		return EM_E_OTHER;
+		return EM_ERR_OTHER;
 	}
 
 	memcpy(block_data, data_ptr, qu->block_size);

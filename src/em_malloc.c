@@ -155,7 +155,7 @@ static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 	if (size <= 0)
 	{
 		*mem = NULL;
-		return -1;
+		return EM_ERR_PARAM;
 	}
 	//メモリ単位変換
 	int blength;
@@ -222,12 +222,12 @@ static int _em_malloc(em_memmng_t *mm, size_t size, void **mem)
 			{
 				*mem = (char *)mm->memory + meminfo_new->mem_index * mm->mem_unit_size;
 			}
-			return 0;
+			return EM_SUCCESS;
 		}
 	}
 	em_printf(EM_LOG_TRACE, "allocation failed\n");
 	*mem = NULL;
-	return -1;
+	return -2;
 }
 
 void *em_malloc(em_memmng_t *mm, size_t size)

@@ -28,92 +28,71 @@ SOFTWARE.
 #include "em_ether.h"
 #include "em_queue.h"
 #include "em_time.h"
-#include "em_timer.h"
 #include "em_print.h"
 
-int em_udp_tx_init(em_socket_t *sk, const char *dest_ip, const uint16_t dest_port, //uint queue_size,
+int em_udp_tx_init(em_socket_t *sk, const char *local_ip, const uint16_t local_port,
+				   const char *dest_ip, const uint16_t dest_port,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	sk->alloc_func = alloc_func;
 	sk->free_func = free_func;
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
-	sk->addr.sin_family = AF_INET;
-	sk->addr.sin_port = htons(dest_port);
-	sk->addr.sin_addr.s_addr = inet_addr(dest_ip);
-	//if (queue_size > 0)
-	//{
-	//	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
-	//	sk->has_queue = TRUE;
-	//}
-	//else
-	//{
-	//	sk->has_queue = FALSE;
-	//}
+
+	sk->remote_addr.sin_family = AF_INET;
+	sk->remote_addr.sin_port = htons(dest_port);
+	sk->remote_addr.sin_addr.s_addr = inet_addr(dest_ip);
+
+	if (local_ip != NULL && local_port > 0)
+	{
+		sk->local_addr.sin_family = AF_INET;
+		sk->local_addr.sin_port = htons(local_port);
+		sk->local_addr.sin_addr.s_addr = inet_addr(local_ip);
+
+		if (0 != bind(sk->sock, (struct sockaddr *)&sk->local_addr, sizeof(sk->local_addr)))
+		{
+			em_printf(EM_LOG_ERROR, "bind error\n");
+			close(sk->sock);
+			return -1;
+		}
+	}
+
 	return 0;
 }
 
-int em_udp_rx_init(em_socket_t *sk, const char *ip_from, const uint16_t local_port, //uint queue_size,
+int em_udp_rx_init(em_socket_t *sk, const char *local_ip, const uint16_t local_port, // uint queue_size,
 				   void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
 	sk->alloc_func = alloc_func;
 	sk->free_func = free_func;
 	sk->sock = socket(AF_INET, SOCK_DGRAM, 0);
-	sk->addr.sin_family = AF_INET;
-	sk->addr.sin_port = htons(local_port);
-	sk->addr.sin_addr.s_addr = inet_addr(ip_from);
-	//if (queue_size > 0)
+	sk->local_addr.sin_family = AF_INET;
+	sk->local_addr.sin_port = htons(local_port);
+	sk->local_addr.sin_addr.s_addr = inet_addr(local_ip);
+	// if (queue_size > 0)
 	//{
 	//	em_queue_create(&sk->queue, sizeof(em_ethpacket_t), queue_size, alloc_func, free_func);
 	//	sk->has_queue = TRUE;
-	//}
-	//else
+	// }
+	// else
 	//{
 	//	sk->has_queue = FALSE;
-	//}
-	bind(sk->sock, (struct sockaddr *)&sk->addr, sizeof(sk->addr));
+	// }
+	if (0 != bind(sk->sock, (struct sockaddr *)&sk->local_addr, sizeof(sk->local_addr)))
+	{
+		em_printf(EM_LOG_ERROR, "bind error\n");
+		close(sk->sock);
+		return -1;
+	}
 	return 0;
 }
 
 int em_udp_send(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
 	sendto(sk->sock, packet->data, packet->length, 0,
-		   (struct sockaddr *)&sk->addr, sizeof(sk->addr));
+		   (struct sockaddr *)&sk->remote_addr, sizeof(sk->remote_addr));
 	return 0;
 }
 
-//int em_udp_send_enqueue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
-//{
-//	if (!sk->has_queue)
-//	{
-//		em_printf(EM_LOG_ERROR, "no send queue\n");
-//		return -1;
-//	}
-//	if (0 != em_enqueue(&sk->queue, packet, timeout_ms))
-//	{
-//		em_printf(EM_LOG_ERROR, "error em_udp_send_enqueue\n");
-//		return -1;
-//	}
-//
-//	return 0;
-//}
-
-//int em_udp_send_dequeue(em_socket_t *sk, int timeout_ms)
-//{
-//	if (!sk->has_queue)
-//	{
-//		em_printf(EM_LOG_ERROR, "no send queue\n");
-//		return -1;
-//	}
-//	em_ethpacket_t packet;
-//	if (0 != em_dequeue(&sk->queue, &packet, timeout_ms))
-//	{
-//		em_printf(EM_LOG_ERROR, "error em_udp_send_dequeue\n");
-//		return -1;
-//	}
-//	sendto(sk->sock, packet.data, packet.length, 0,
-//		   (struct sockaddr *)&sk->addr, sizeof(sk->addr));
-//	return 0;
-//}
 
 int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
@@ -128,46 +107,20 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 		if (0 == select(sk->sock + 1, &fds, NULL, NULL, &tv))
 		{
 			em_printf(EM_LOG_DEBUG, "em_udp_recv timeout [%ds]\n", timeout_ms);
-			return -1;
+			return EM_ERR_TIMEOUT;
 		}
 	}
 
-	memset(packet, 0, sizeof(*packet));
-	packet->length = recv(sk->sock, packet->data, sizeof(packet->data), 0);
+	memset(packet, 0, sizeof(*packet));	
+	socklen_t src_addr_len = sizeof(&packet->src_addr);
+
+	int ret = recvfrom(sk->sock, packet->data, sizeof(packet->data), 0, (struct sockaddr *)&packet->src_addr, &src_addr_len);
+	if (ret < 0)
+	{
+		return -1;
+	}
+	packet->length = ret;
+	//printf("received from %s:%d\n", inet_ntoa(packet->src_addr.sin_addr), ntohs(packet->src_addr.sin_port));
+
 	return 0;
 }
-
-//int em_udp_recv_enqueue(em_socket_t *sk, int timeout_ms)
-//{
-//	if (!sk->has_queue)
-//	{
-//		em_printf(EM_LOG_ERROR, "no recv queue\n");
-//		return -1;
-//	}
-//	em_ethpacket_t packet;
-//	if (0 != em_udp_recv(sk, &packet, timeout_ms))
-//	{
-//		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
-//		return -1;
-//	}
-//
-//	if (0 != em_enqueue(&sk->queue, &packet, EM_NO_WAIT))
-//		em_printf(EM_LOG_ERROR, "error em_udp_recv_enqueue\n");
-//
-//	return 0;
-//}
-
-//int em_udp_recv_dequeue(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
-//{
-//	if (!sk->has_queue)
-//	{
-//		em_printf(EM_LOG_ERROR, "no recv queue\n");
-//		return -1;
-//	}
-//	if (0 != em_dequeue(&sk->queue, packet, timeout_ms))
-//	{
-//		em_printf(EM_LOG_ERROR, "error em_udp_recv_dequeue\n");
-//		return -1;
-//	}
-//	return 0;
-//}

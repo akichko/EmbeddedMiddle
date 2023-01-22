@@ -89,126 +89,9 @@ static int _em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 	return 0;
 }
 
-static int _em_read_until_line_end()
-{
-	char c;
-
-	while (1) // 1単語
-	{
-		c = getchar();
-
-		if (c == '\n')
-		{
-			return 0;
-		}
-	}
-}
-
-static int _em_read_word(char *dst, int max_size)
-{
-	char c;
-	int pos_letter = 0;
-
-	while (1) // 1単語
-	{
-		c = getchar();
-
-		if (c == ' ' || c == '\t')
-		{
-			if (pos_letter > 0)
-			{
-				dst[pos_letter] = '\0';
-				return 0;
-			}
-		}
-		else if (c == EOF || c == '\n')
-		{
-			dst[pos_letter] = '\0';
-			if (pos_letter == 0)
-			{
-				return 2; //空文字
-			}
-			return 1; //最終単語
-		}
-		else //正常文字
-		{
-			if (pos_letter >= max_size - 1)
-			{
-				dst[pos_letter] = '\0';
-				return -1; //文字数オーバー
-			}
-			dst[pos_letter] = c;
-			pos_letter++;
-		}
-	}
-}
-
-static int _em_read_line_old(char **dst, int *word_num, int max_word_num, int max_word_length)
-{
-	int pos_word = 0;
-	int ret_word;
-	int ret = -1;
-
-	while (1) // 1単語
-	{
-		ret_word = _em_read_word(dst[pos_word], EM_CMD_WORD_LENGTH_MAX);
-
-		if (ret_word < 0)
-		{
-			em_printf(EM_LOG_ERROR, "word length over %d\n", EM_CMD_WORD_LENGTH_MAX);
-			_em_read_until_line_end();
-			break;
-		}
-		else if (ret_word == 0)
-		{
-			if (pos_word >= EM_CMD_WORD_NUM_MAX)
-			{
-				em_printf(EM_LOG_ERROR, "word num over %d\n", EM_CMD_WORD_NUM_MAX);
-				_em_read_until_line_end();
-				break;
-			}
-			pos_word++;
-			continue;
-		}
-		else if (ret_word == 1) //最終単語＋改行
-		{
-			if (pos_word >= EM_CMD_WORD_NUM_MAX)
-			{
-				em_printf(EM_LOG_ERROR, "word num over %d\n", EM_CMD_WORD_NUM_MAX);
-				if (pos_word > EM_CMD_WORD_NUM_MAX)
-				{
-					_em_read_until_line_end();
-				}
-				break;
-			}
-			pos_word++;
-			ret = 0;
-			break;
-		}
-		else if (ret_word == 2) //空単語＋改行
-		{
-			if (pos_word > 0)
-			{
-				ret = 0;
-			}
-			break;
-		}
-		else
-		{
-			em_printf(EM_LOG_ERROR, "_em_read_line unknown error\n");
-			break;
-		}
-	}
-	*word_num = pos_word;
-
-	return ret;
-}
-
 #define WLEN EM_CMD_WORD_LENGTH_MAX
 #define CAT(a, b) PCAT2(a, b)
 #define PCAT2(a, b) %a##b // %の後にスペースがあるとNG
-#define STR(s) STR2(s)
-#define STR2(s) #s
 
 #define SCANFMT(WLEN) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) \
 	CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s)\n
@@ -217,11 +100,8 @@ static int _em_read_line(char *src, char **dst, int *word_num, int max_word_num,
 {
 	int ret_scan;
 
-	//printf("%s", STR(SCANFMT(10)));
-
 	ret_scan = sscanf(src,
 					  "%128s %128s %128s %128s %128s %128s %128s %128s %128s %128s\n",
-					  //STR(SCANFMT(WLEN)),
 					  dst[0], dst[1], dst[2], dst[3], dst[4],
 					  dst[5], dst[6], dst[7], dst[8], dst[9]);
 

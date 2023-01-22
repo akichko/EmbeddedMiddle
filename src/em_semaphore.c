@@ -48,7 +48,7 @@ int em_sem_wait(em_sem_t *sem, int timeout_ms)
 	else
 	{
 		struct timespec ts = em_get_offset_timestamp(timeout_ms);
-		return 0 == sem_timedwait(&sem->smf, &ts) ? EM_SUCCESS : EM_E_TIMEOUT;
+		return 0 == sem_timedwait(&sem->smf, &ts) ? EM_SUCCESS : EM_ERROR;
 	}
 }
 

@@ -101,9 +101,9 @@ int main(void)
     static int cnt = 0;
     pthread_t p1, p2, p3;
 
-    em_udp_tx_init(&sock_tx, "127.0.0.1", 23456, &malloc, &free);
+    em_udp_tx_init(&sock_tx, "127.0.0.2", 20000, "127.0.0.1", 23456, &malloc, &free);
     em_udp_rx_init(&sock_rx, "0.0.0.0", 23456, &malloc, &free);
-    em_udp_tx_init(&sock_txq, "127.0.0.1", 34567, &malloc, &free);
+    em_udp_tx_init(&sock_txq, "0.0.0.0", 19999, "127.0.0.1", 34567, &malloc, &free);
     em_udp_rx_init(&sock_rxq, "0.0.0.0", 34567, &malloc, &free);
 
     em_queue_create(&queue_tx, sizeof(em_ethpacket_t), 10, &malloc, &free);

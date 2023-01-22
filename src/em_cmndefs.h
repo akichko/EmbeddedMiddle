@@ -42,9 +42,9 @@ typedef unsigned long int	ulong;
 
 #define EM_SUCCESS 0
 #define EM_ERROR -1
-#define EM_E_TIMEOUT -2
-#define EM_E_PARAM -11
-#define EM_E_OTHER -99
+#define EM_ERR_TIMEOUT -2
+#define EM_ERR_PARAM -11
+#define EM_ERR_OTHER -99
 
 
 #define EM_WAIT -1
