@@ -42,7 +42,6 @@ typedef struct
 	int priority;	   // 0-99. 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size
 	int mqueue_size;
-	// int (*initialize_func)();
 	int (*entry_func)();
 	// int (*system_cbfunc)(int);
 	char wait_shutdown;
@@ -53,8 +52,6 @@ typedef struct
 	pthread_t thread_id;
 	char task_name[32];
 	em_queue_t msgqueue;
-	em_mpool_t msgmpool;
-
 } _em_taskinfo_t;
 
 typedef struct
@@ -98,9 +95,6 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm);
 
 // msssage
 
-em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm,
-								 int taskid);
-
 int em_msg_send(em_taskmng_t *tm,
 				int taskid,
 				void *msgdata,
@@ -109,6 +103,8 @@ int em_msg_send(em_taskmng_t *tm,
 int em_msg_recv(em_taskmng_t *tm,
 				void *msgdata,
 				int timeout_ms);
+
+int em_msg_recv_num_check(em_taskmng_t *tm);
 
 #ifdef __cplusplus
 }

@@ -227,7 +227,7 @@ static int cmd_main()
 	int cmd_num = sizeof(cmd_setting) / sizeof(em_cmdsetting_t);
 	for (int i = 0; i < cmd_num; i++)
 	{
-		if (0 != em_cmd_regist(&sysmng.cmdmng, &cmd_setting[i]))
+		if (0 != em_cmd_register(&sysmng.cmdmng, &cmd_setting[i]))
 		{
 			em_printf(EM_LOG_INFO, "error\n");
 		}

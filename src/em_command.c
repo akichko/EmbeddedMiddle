@@ -28,10 +28,6 @@ SOFTWARE.
 #include "em_command.h"
 #include "em_print.h"
 
-#define EM_LAST_WORD 1
-#define EM_LAST_EMPTY 2
-#define EM_WORD_SUCCESS 0
-#define EM_WORD_ERROR -1
 
 int em_cmd_init(em_cmdmng_t *cm, int num_cmd, void *(*alloc_func)(size_t), void (*free_func)(void *))
 {
@@ -50,7 +46,7 @@ int em_cmd_destroy(em_cmdmng_t *cm)
 	return em_gdatamng_destroy(&cm->cmdmng);
 }
 
-int em_cmd_regist(em_cmdmng_t *cm,
+int em_cmd_register(em_cmdmng_t *cm,
 				  em_cmdsetting_t *cmdsetting)
 {
 	if (0 != em_gdatamng_add_data(&cm->cmdmng, cmdsetting->cmd_name, cmdsetting))
@@ -90,8 +86,10 @@ static int _em_cmd_exec(em_cmdmng_t *cm, int argc, char **argv)
 }
 
 #define WLEN EM_CMD_WORD_LENGTH_MAX
-#define CAT(a, b) PCAT2(a, b)
-#define PCAT2(a, b) %a##b // %の後にスペースがあるとNG
+#define CAT(a, b) CAT2(a, b)
+#define CAT2(a, b) %a##b // %の後にスペースがあるとNG
+#define STR(s) STR2(s)
+#define STR2(s) #s
 
 #define SCANFMT(WLEN) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) \
 	CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s) CAT(WLEN, s)\n
@@ -100,8 +98,11 @@ static int _em_read_line(char *src, char **dst, int *word_num, int max_word_num,
 {
 	int ret_scan;
 
+	//printf("%s", STR(SCANFMT(10)));
+
 	ret_scan = sscanf(src,
 					  "%128s %128s %128s %128s %128s %128s %128s %128s %128s %128s\n",
+					  //STR(SCANFMT(WLEN)),
 					  dst[0], dst[1], dst[2], dst[3], dst[4],
 					  dst[5], dst[6], dst[7], dst[8], dst[9]);
 

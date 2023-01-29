@@ -39,8 +39,8 @@ static void *_em_thread_starter(void *thrdarg)
 
 	int (*funcptr)() = arg->entry_func;
 
-	//開始同期制御
-	// em_printf(EM_LOG_INFO, "event wait start\n");
+	// 開始同期制御
+	//  em_printf(EM_LOG_INFO, "event wait start\n");
 	em_sem_wait(arg->sem_ptr, EM_WAIT);
 	// em_printf(EM_LOG_INFO, "event wait end\n");
 
@@ -91,11 +91,11 @@ int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		return 0;
 	}
 	_em_taskinfo_t *task_info = (_em_taskinfo_t *)em_idatamng_get_data_ptr(&tm->taskinfo_mng, tasksetting.task_id);
-	if (task_info != NULL) //タスク登録済み
+	if (task_info != NULL) // タスク登録済み
 	{
 		return em_queue_create(&task_info->msgqueue, tm->msgdata_size, tasksetting.mqueue_size, tm->alloc_func, tm->free_func);
 	}
-	else //タスク未登録⇒新規作成
+	else // タスク未登録⇒新規作成
 	{
 		_em_taskinfo_t newtask_info;
 		if (0 != em_queue_create(&newtask_info.msgqueue, tm->msgdata_size, tasksetting.mqueue_size, tm->alloc_func, tm->free_func))
@@ -106,22 +106,12 @@ int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 	}
 }
 
-// int em_task_initialize_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
-//{
-//	if (tasksetting.initialize_func != NULL)
-//	{
-//		return tasksetting.initialize_func();
-//	}
-//
-//	return 0;
-// }
-
 int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
-	em_thrdarg_t *thrdarg = (em_thrdarg_t*)tm->alloc_func(sizeof(em_thrdarg_t));
+	em_thrdarg_t *thrdarg = (em_thrdarg_t *)tm->alloc_func(sizeof(em_thrdarg_t));
 
 	thrdarg->sem_ptr = &tm->sem;
 	thrdarg->entry_func = tasksetting.entry_func;
@@ -177,7 +167,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		memcpy(task_info->task_name, tasksetting.task_name, strlen(tasksetting.task_name) + 1);
 		task_info->thread_id = thread_id;
 	}
-	else //新規作成
+	else // 新規作成
 	{
 		_em_taskinfo_t newtask_info;
 		memcpy(newtask_info.task_name, tasksetting.task_name, strlen(tasksetting.task_name) + 1);
@@ -205,12 +195,6 @@ int em_task_create(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_printf(EM_LOG_ERROR, "create msgqueue error\n");
 		return -1;
 	}
-
-	// if (0 != em_task_initialize_task(tm, tasksetting))
-	//{
-	//	em_printf(EM_LOG_ERROR, "task initialize error\n");
-	//	return -1;
-	// }
 
 	if (0 != em_task_start_task(tm, tasksetting))
 	{
@@ -266,7 +250,7 @@ em_taskid_t em_get_task_id(em_taskmng_t *tm)
 	return task_id;
 }
 
-em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm, int taskid)
+static em_queue_t *_em_msgmng_get_queue(em_taskmng_t *tm, int taskid)
 {
 	_em_taskinfo_t *taskinfo = (_em_taskinfo_t *)em_idatamng_get_data_ptr(&tm->taskinfo_mng, taskid);
 	if (taskinfo == NULL)
@@ -312,4 +296,21 @@ int em_msg_recv(em_taskmng_t *tm, void *msgdata, int timeout_ms)
 	}
 
 	return 0;
+}
+
+//メッセージ数を返却
+int em_msg_recv_num_check(em_taskmng_t *tm)
+{
+	int taskid = em_get_task_id(tm);
+
+	em_queue_t *mqueue = _em_msgmng_get_queue(tm, taskid);
+	if (mqueue == NULL)
+	{
+		em_printf(EM_LOG_ERROR, "msgqueue not found taskid=%d\n", taskid);
+		return -1;
+	}
+
+	int num_msg = em_queue_getnum(mqueue);
+
+	return num_msg;
 }

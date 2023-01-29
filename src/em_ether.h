@@ -67,6 +67,12 @@ int em_udp_send(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);
 
+int em_udp_send2(em_socket_t *sk,
+				em_ethpacket_t *packet,
+				int timeout_ms,
+				const char *dest_ip, 
+				const uint16_t dest_port);
+
 int em_udp_recv(em_socket_t *sk,
 				em_ethpacket_t *packet,
 				int timeout_ms);

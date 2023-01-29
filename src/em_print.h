@@ -25,7 +25,8 @@ SOFTWARE.
 #define __EM_PRINT_H__
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
 
 #include <stdio.h>
@@ -38,9 +39,28 @@ extern "C" {
 #define EM_LOG_TRACE 1
 #define EM_LOG_DEFAULT EM_LOG_INFO
 
-#define em_printf(type, fmt, ...) _em_printf(__FILE__, __FUNCTION__, __LINE__, type, fmt, ##__VA_ARGS__)
+	typedef struct tag_printsetting
+{
+	int maxlength;
+	int loglevel;
+	int is_timeprint;
+	int is_errorlevelprint;
+	int is_funcprint;
+	int is_stdout;
+	FILE *outstream;
+} em_printsetting_t;
 
-void _em_printf(const char *file, const char *function, int line, int type, const char *fmt, ...);
+#define em_printf(type, fmt, ...) _em_printf(NULL, __FILE__, __FUNCTION__, __LINE__, type, fmt, ##__VA_ARGS__)
+
+#define em_printfext(setting, type, fmt, ...) _em_printf(setting, __FILE__, __FUNCTION__, __LINE__, type, fmt, ##__VA_ARGS__)
+
+int _em_printf(em_printsetting_t *setting,
+				const char *file,
+				const char *function,
+				int line,
+				int type,
+				const char *fmt,
+				...);
 
 int em_print_set_loglevel(int newlevel);
 int em_print_is_timeprint(int is_timeprint);

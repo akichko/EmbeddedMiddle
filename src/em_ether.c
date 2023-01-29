@@ -93,6 +93,23 @@ int em_udp_send(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 	return 0;
 }
 
+int em_udp_send2(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms,
+				 const char *dest_ip, const uint16_t dest_port)
+{
+	struct sockaddr_in dst_addr = sk->remote_addr;
+
+	if (dest_ip != NULL && dest_port > 0)
+	{
+		dst_addr.sin_family = AF_INET;
+		dst_addr.sin_port = htons(dest_port);
+		dst_addr.sin_addr.s_addr = inet_addr(dest_ip);
+	}
+
+	sendto(sk->sock, packet->data, packet->length, 0,
+		   (struct sockaddr *)&dst_addr, sizeof(dst_addr));
+
+	return 0;
+}
 
 int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 {
@@ -111,7 +128,7 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 		}
 	}
 
-	memset(packet, 0, sizeof(*packet));	
+	memset(packet, 0, sizeof(*packet));
 	socklen_t src_addr_len = sizeof(&packet->src_addr);
 
 	int ret = recvfrom(sk->sock, packet->data, sizeof(packet->data), 0, (struct sockaddr *)&packet->src_addr, &src_addr_len);
@@ -120,7 +137,7 @@ int em_udp_recv(em_socket_t *sk, em_ethpacket_t *packet, int timeout_ms)
 		return -1;
 	}
 	packet->length = ret;
-	//printf("received from %s:%d\n", inet_ntoa(packet->src_addr.sin_addr), ntohs(packet->src_addr.sin_port));
+	// printf("received from %s:%d\n", inet_ntoa(packet->src_addr.sin_addr), ntohs(packet->src_addr.sin_port));
 
 	return 0;
 }

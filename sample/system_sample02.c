@@ -317,7 +317,7 @@ int app2_main()
 int cmd_main()
 {
 	// shutdown command
-	if (0 != em_cmd_regist(&sysmng.cmdmng, &shutdowncmd_setting))
+	if (0 != em_cmd_register(&sysmng.cmdmng, &shutdowncmd_setting))
 	{
 		em_printf(EM_LOG_INFO, "error\n");
 	}

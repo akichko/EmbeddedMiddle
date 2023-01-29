@@ -31,48 +31,51 @@ SOFTWARE.
 #include <unistd.h>
 #include "em_print.h"
 
-static int s_loglevel = EM_LOG_DEFAULT;
-static int s_is_timeprint = 0;
 static char s_loglevel_char[] = {' ', 'T', 'D', 'I', 'W', 'E', '-'};
-static FILE *s_outstream = NULL;
+
+static em_printsetting_t defaultsetting = {512, EM_LOG_DEFAULT, 0, 1, 1, 1, NULL};
 
 int em_print_set_loglevel(int newlevel)
 {
-	s_loglevel = newlevel;
+	defaultsetting.loglevel = newlevel;
 	return 0;
 }
 
 int em_print_is_timeprint(int is_timeprint)
 {
-	s_is_timeprint = is_timeprint;
+	defaultsetting.is_timeprint = is_timeprint;
 	return 0;
 }
 
-int em_print_set_outstream(FILE *outstream){
-	s_outstream = outstream;
-	return 0;
-}
-
-
-void _em_printf(const char *file, const char *function, int line, int type, const char *fmt, ...)
+int em_print_set_outstream(FILE *outstream)
 {
-	char buf[512];
+	defaultsetting.outstream = outstream;
+	return 0;
+}
+
+int _em_printf(em_printsetting_t *setting, const char *file, const char *function, int line, int type, const char *fmt, ...)
+{
+	em_printsetting_t *psetting = &defaultsetting;
+	if (setting != NULL)
+		psetting = setting;
+
+	char buf[psetting->maxlength];
 	int length;
 	int total_length = 0;
 
-	if (type < s_loglevel)
+	if (type < psetting->loglevel)
 	{
-		return;
+		return 0;
 	}
 
-	if (s_is_timeprint)
+	if (psetting->is_timeprint)
 	{
 		struct timeval tv;
 		struct tm *time_st;
 		gettimeofday(&tv, NULL);
 		time_st = localtime(&tv.tv_sec);
 
-		length = snprintf(buf + total_length, 64, "[%d/%02d/%02d %02d:%02d:%02d.%03ld] ", // 現在時刻
+		length = snprintf(buf + total_length, psetting->maxlength - total_length, "[%d/%02d/%02d %02d:%02d:%02d.%03ld] ", // 現在時刻
 						  time_st->tm_year + 1900,
 						  time_st->tm_mon + 1,
 						  time_st->tm_mday,
@@ -83,24 +86,38 @@ void _em_printf(const char *file, const char *function, int line, int type, cons
 		total_length += length;
 	}
 
-	const char *filename = file;
-	const char *tmppos;
-	while (NULL != (tmppos = strstr(filename, "/")))
+	if (psetting->is_errorlevelprint)
 	{
-		filename = tmppos + 1;
+		length = snprintf(buf + total_length, psetting->maxlength - total_length, "[%c] ", s_loglevel_char[type]);
+		total_length += length;
 	}
-	length = snprintf(buf + total_length, 64, "[%c][%s:%d %s] ", s_loglevel_char[type], filename, line, function);
-	total_length += length;
+
+	if (psetting->is_funcprint)
+	{
+		const char *filename = file;
+		const char *tmppos;
+		while (NULL != (tmppos = strstr(filename, "/")))
+		{
+			filename = tmppos + 1;
+		}
+		length = snprintf(buf + total_length, psetting->maxlength - total_length, "[%s:%d %s] ", filename, line, function);
+		total_length += length;
+	}
 
 	va_list ap;
 	va_start(ap, fmt);
-	length = vsnprintf(buf + total_length, 256, fmt, ap);
-	total_length += length;
+	if (0 < psetting->maxlength - total_length)
+	{
+		length = vsnprintf(buf + total_length, psetting->maxlength - total_length, fmt, ap);
+		total_length += length;
+	}
 	va_end(ap);
 
-	buf[511] = '\0';
-	if(s_outstream == NULL)
+	if (psetting->is_stdout == 1)
 		fprintf(stdout, "%s", buf);
-	else
-		fprintf(s_outstream, "%s", buf);
+
+	if (psetting->outstream != NULL)
+		fprintf(psetting->outstream, "%s", buf);
+
+	return strlen(buf);
 }

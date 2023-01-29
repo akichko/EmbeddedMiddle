@@ -95,7 +95,7 @@ int main()
 
 	// shutdown command
 	em_cmdsetting_t shutdowncmd_setting = {"shutdown", &cmd_shutdown};
-	if (0 != em_cmd_regist(&cmdmng, &shutdowncmd_setting))
+	if (0 != em_cmd_register(&cmdmng, &shutdowncmd_setting))
 	{
 		printf("error\n");
 	}
