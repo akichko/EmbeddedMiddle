@@ -4,7 +4,7 @@
 
 int main()
 {
-	int ret;
+	int ret = 0;
 	const char *msg = "abc";
 	em_printf(EM_LOG_TRACE,"EM_LOG_TRACE\n");
 	em_printf(EM_LOG_DEBUG,"EM_LOG_DEBUG %s\n", msg);
@@ -66,5 +66,5 @@ int main()
 
 	fclose(fp);
 
-	return 0;
+	return ret;
 }

@@ -9,9 +9,11 @@
 #define BLOCK_NUM 50
 #define ALLOC_MAX_NUM 100
 
+#if 1
 static char memory[EM_MEMMNG_CALC_MEMSIZE(BLOCK_SIZE, BLOCK_NUM, ALLOC_MAX_NUM)];
-
-static char memory2[10000];
+#else
+static char memory[10000];
+#endif
 
 int main()
 {

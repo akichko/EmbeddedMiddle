@@ -23,7 +23,7 @@ int main(void)
 	em_uldata_t uldata3[3];
 	em_uldata_t *uldata3ptr[3];
 	em_httpres_t response;
-	int ret;
+	int ret = 0;
 	char *url;
 	url = "http://cserver:8080/ConnectedService/Fileupload";
 
@@ -89,5 +89,5 @@ int main(void)
 
 	em_upload_destroy(&ul);
 
-	return EXIT_SUCCESS;
+	return ret;
 }

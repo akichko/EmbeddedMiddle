@@ -17,9 +17,9 @@ int add_buf(em_ring_t *rb, int val)
 int main()
 {
 	em_ring_t rb;
-	int *setbuf;
+	//int *setbuf;
 	int *getbuf;
-	int ret;
+	int ret = 0;
 
 	em_ring_create(&rb, sizeof(int), 4, EM_RINGBUF_ERROR, &malloc, &free);
 	em_ring_print(&rb);
@@ -87,4 +87,6 @@ int main()
 	em_printf(EM_LOG_INFO, "getbuf(tail 1) = %d\n", *getbuf);
 
 	em_ring_destroy(&rb);
+
+	return ret;
 }
