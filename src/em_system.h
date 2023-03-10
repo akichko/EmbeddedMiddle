@@ -24,7 +24,7 @@ typedef struct tag_em_sysmng
 	em_evtmng_t evtmng;
 	em_taskmng_t tskmng;
 	em_cmdmng_t cmdmng;
-	em_evtarray_t gevents;
+	em_eventflg_t ef;
 } em_sysmng_t;
 
 typedef struct tag_em_sysmng_stg
@@ -40,7 +40,6 @@ typedef struct tag_em_sysmng_stg
 	int mem_block_num;
 	int mem_alloc_num;
 	char *mem_static;
-	int num_global_event;
 	void *(*alloc_func)(size_t);
 	void (*free_func)(void *);
 } em_sysmng_stg_t;

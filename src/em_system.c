@@ -88,8 +88,7 @@ int em_sysmng_init(em_sysmng_t *sysmng, em_sysmng_stg_t *setting)
 		return -1;
 	}
 
-	if (0 != em_evtarray_init(&sysmng->gevents, setting->num_global_event,
-							  setting->alloc_func, setting->free_func))
+	if (0 != em_eventflag_init(&sysmng->ef))
 	{
 		em_printf(EM_LOG_ERROR, "event array init error\n");
 		return -1;
@@ -137,7 +136,7 @@ int em_sysmng_finalize(em_sysmng_t *sysmng)
 		//return -1;
 	}
 
-	if (0 != em_evtarray_destroy(&sysmng->gevents))
+	if (0 != em_eventflag_destroy(&sysmng->ef))
 	{
 		em_printf(EM_LOG_ERROR, "event array destroy error\n");
 		//return -1;

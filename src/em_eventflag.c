@@ -30,6 +30,8 @@ SOFTWARE.
 #include "em_eventflag.h"
 #include "em_time.h"
 
+// event
+
 int em_event_init(em_event_t *event)
 {
 	if (0 != pthread_cond_init(&event->cond, NULL))
@@ -124,68 +126,131 @@ int em_event_set(em_event_t *event)
 	return 0;
 }
 
-// event array
+// event flag
 
-int em_evtarray_init(em_evtarray_t *evtarray, uint array_size,
-					 void *(*alloc_func)(size_t),
-					 void (*free_func)(void *))
+int em_eventflag_init(em_eventflg_t *ef)
 {
-	evtarray->array_size = array_size;
-	evtarray->free_func = free_func;
-	evtarray->events = (em_event_t *)alloc_func(sizeof(em_event_t) * array_size);
-	for (uint i = 0; i < array_size; i++)
+	if (ef == NULL)
+		return EM_ERR_PARAM;
+
+	ef->flags = 0;
+
+	if (pthread_cond_init(&ef->cond, NULL) != 0)
 	{
-		int ret = em_event_init(&evtarray->events[i]);
-		if (ret != 0)
+		em_printf(EM_LOG_ERROR, "cond init error\n");
+		return EM_ERR_SYS;
+	}
+	if (pthread_mutex_init(&ef->mtx, NULL) != 0)
+	{
+		em_printf(EM_LOG_ERROR, "mutex init error\n");
+		return EM_ERR_SYS;
+	}
+
+	return EM_SUCCESS;
+}
+
+int em_eventflag_destroy(em_eventflg_t *ef)
+{
+	if (ef == NULL)
+		return EM_ERR_PARAM;
+
+	if (pthread_cond_destroy(&ef->cond) != 0)
+	{
+		em_printf(EM_LOG_ERROR, "cond destroy error\n");
+		return EM_ERR_SYS;
+	}
+	if (pthread_mutex_destroy(&ef->mtx) != 0)
+	{
+		em_printf(EM_LOG_ERROR, "mutex destroy error\n");
+		return EM_ERR_SYS;
+	}
+
+	return EM_SUCCESS;
+}
+
+int em_eventflag_wait(em_eventflg_t *ef, uint flags, int timeout_ms, int reset_flag)
+{
+	if (ef == NULL)
+		return EM_ERR_PARAM;
+
+	int ret = 0;
+	struct timespec timeout_ts;
+
+	if (timeout_ms != EM_NO_TIMEOUT)
+		timeout_ts = em_get_offset_timestamp(timeout_ms);
+
+	pthread_mutex_lock(&ef->mtx); // acquire the lock for thread safety
+
+	// loop until the desired flag is set or the timeout expires
+	while ((ef->flags & flags) == 0)
+	{
+		if (timeout_ms == EM_NO_TIMEOUT)
 		{
-			em_printf(EM_LOG_ERROR, "init error\n");
-			return -1;
+			// wait indefinitely until the flag is set
+			ret = pthread_cond_wait(&ef->cond, &ef->mtx);
+			if (ret != 0)
+			{
+				ret = EM_ERROR;
+				break;
+			}
+		}
+		else
+		{
+			// wait for the specified timeout period
+			ret = pthread_cond_timedwait(&ef->cond, &ef->mtx, &timeout_ts);
+			if (ret == ETIMEDOUT)
+			{
+				ret = EM_ERR_TIMEOUT;
+				break;
+			}
+			else if (ret != 0)
+			{
+				ret = EM_ERROR;
+				break;
+			}
 		}
 	}
-	return 0;
+
+	if (ret == 0)
+		ret = EM_SUCCESS;
+
+	pthread_mutex_unlock(&ef->mtx); // release the lock
+
+	if (ret == EM_SUCCESS && reset_flag)
+	{
+		pthread_mutex_lock(&ef->mtx); // acquire the lock for thread safety
+		ef->flags &= ~flags;
+		pthread_mutex_unlock(&ef->mtx); // release the lock
+	}
+
+	return ret;
 }
 
-int em_evtarray_destroy(em_evtarray_t *evtarray)
+int em_eventflag_set(em_eventflg_t *ef, uint flags)
 {
+	if (ef == NULL)
+		return EM_ERR_PARAM;
 
-	for (uint i = 0; i < evtarray->array_size; i++)
-	{
-		int ret = em_event_destroy(&evtarray->events[i]);
-		if (ret != 0)
-		{
-			em_printf(EM_LOG_ERROR, "destroy error\n");
-			return -1;
-		}
-	}
-	evtarray->free_func(evtarray->events);
-	return 0;
+	pthread_mutex_lock(&ef->mtx); // acquire the lock for thread safety
+
+	ef->flags |= flags;				   // set the desired flag
+	pthread_cond_broadcast(&ef->cond); // wake up all waiting threads
+
+	pthread_mutex_unlock(&ef->mtx); // release the lock
+
+	return EM_SUCCESS;
 }
 
-int em_evtarray_wait(em_evtarray_t *evtarray, uint event_id, int timeout_ms)
+int em_eventflag_clear(em_eventflg_t *ef)
 {
-	if (event_id >= evtarray->array_size)
-	{
-		em_printf(EM_LOG_ERROR, "param error\n");
-	}
-	return em_event_wait(&evtarray->events[event_id], timeout_ms);
-}
+	if (ef == NULL)
+		return EM_ERR_PARAM;
 
-int em_evtarray_broadcast(em_evtarray_t *evtarray, uint event_id)
-{
-	if (event_id >= evtarray->array_size)
-	{
-		em_printf(EM_LOG_ERROR, "param error\n");
-	}
-	return em_event_broadcast(&evtarray->events[event_id]);
-}
+	pthread_mutex_lock(&ef->mtx);
+	ef->flags = 0;
+	pthread_mutex_unlock(&ef->mtx);
 
-int em_evtarray_set(em_evtarray_t *evtarray, uint event_id)
-{
-	if (event_id >= evtarray->array_size)
-	{
-		em_printf(EM_LOG_ERROR, "param error\n");
-	}
-	return em_event_set(&evtarray->events[event_id]);
+	return EM_SUCCESS;
 }
 
 // event manage

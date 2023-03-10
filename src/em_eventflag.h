@@ -52,29 +52,28 @@ int em_event_broadcast(em_event_t *event);
 
 int em_event_set(em_event_t *event);
 
+//event flag
 typedef struct
 {
-	uint array_size;
-	em_event_t *events;
-	void (*free_func)(void *);
-} em_evtarray_t;
+    uint flags;
+    pthread_cond_t cond;
+    pthread_mutex_t mtx;
+} em_eventflg_t;
 
-int em_evtarray_init(em_evtarray_t *evtarray,
-					 uint array_size,
-					 void *(*alloc_func)(size_t),
-					 void (*free_func)(void *));
+int em_eventflag_init(em_eventflg_t *ef);
 
-int em_evtarray_destroy(em_evtarray_t *evtarray);
+int em_eventflag_destroy(em_eventflg_t *ef);
 
-int em_evtarray_wait(em_evtarray_t *evtarray,
-					 uint event_id,
-					 int timeout_ms);
+int em_eventflag_wait(em_eventflg_t *ef,
+					  uint flags,
+					  int timeout_ms,
+					  int reset_flag);
 
-int em_evtarray_broadcast(em_evtarray_t *evtarray,
-						  uint event_id);
+int em_eventflag_set(em_eventflg_t *event,
+					 uint flags);
 
-int em_evtarray_set(em_evtarray_t *evtarray,
-					uint event_id);
+int em_eventflag_clear(em_eventflg_t *ef);
+
 
 typedef struct
 {
