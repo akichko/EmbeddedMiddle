@@ -9,9 +9,8 @@
 
 typedef enum
 {
-	EVENT_TIMER = 0,
-	EVENT_OTHER,
-	EVENT_MAXNUM
+	B_EVENT_TIMER = 0x01,
+	B_EVENT_OTHER = 0x02
 } e_event_no;
 
 typedef struct
@@ -47,8 +46,8 @@ int app2_main();
 static int cmd_main();
 static void timer_func_msg(void *arg);
 static void timer_func_evt(void *arg);
-void cmd_shutdown(int argc, char **argv);
-void cmd_pause(int argc, char **argv);
+int cmd_shutdown(int argc, char **argv);
+int cmd_pause(int argc, char **argv);
 
 em_memmng_t memmng;
 em_sysmng_t sysmng;
@@ -81,7 +80,7 @@ void local_free(void *addr)
 	em_free(&memmng, addr);
 }
 
-void cmd_shutdown(int argc, char **argv)
+int cmd_shutdown(int argc, char **argv)
 {
 	printf("==== shutdown exec! ====\n");
 
@@ -98,12 +97,13 @@ void cmd_shutdown(int argc, char **argv)
 	b_shutdown = 1;
 
 	em_cmd_stop(&sysmng.cmdmng);
+	return 0;
 }
 
-void cmd_pause(int argc, char **argv)
+int cmd_pause(int argc, char **argv)
 {
 	if (argc <= 2)
-		return;
+		return 0;
 
 	if (atoi(argv[1]) == 1)
 	{
@@ -116,6 +116,7 @@ void cmd_pause(int argc, char **argv)
 		printf("==== app2 pause %s ! ====\n", argv[2]);
 		b_pause2 = atoi(argv[2]);
 	}
+	return 0;
 }
 
 int app1_init(void *arg)
@@ -184,7 +185,7 @@ int app1_main()
 int app2_main()
 {
 	testmsg_t msg;
-	timer_arg_evt_t timerarg = {EVENT_TIMER};
+	timer_arg_evt_t timerarg = {B_EVENT_TIMER};
 	uint timer_id;
 
 	em_timersetting_t timersetting = {2500, timer_func_evt, &timerarg};
@@ -202,7 +203,7 @@ int app2_main()
 			sleep(1);
 			continue;
 		}
-		em_evtarray_wait(&sysmng.gevents, EVENT_TIMER, EM_NO_TIMEOUT);
+		em_eventflag_wait(&sysmng.ef, 0x01, EM_NO_TIMEOUT, TRUE);
 		em_printf(EM_LOG_INFO, " => [App2] event received\n");
 
 		memset(&msg, 0, sizeof(testmsg_t));
@@ -255,7 +256,7 @@ static void timer_func_evt(void *arg)
 	timer_arg_evt_t *timer_arg = (timer_arg_evt_t *)arg;
 	em_printf(EM_LOG_INFO, "timer_func_evt =>\n");
 
-	if (0 != em_evtarray_broadcast(&sysmng.gevents, timer_arg->event_no))
+	if (0 != em_eventflag_set(&sysmng.ef, timer_arg->event_no))
 	{
 		em_printf(EM_LOG_ERROR, "event broadcast failed\n");
 	}
@@ -278,7 +279,6 @@ int init()
 	sys_setting.mem_block_num = mem_block_num;
 	sys_setting.mem_alloc_num = max_alloc_num;
 	sys_setting.mem_static = NULL;
-	sys_setting.num_global_event = EVENT_MAXNUM;
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
 

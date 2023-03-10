@@ -12,9 +12,8 @@
 
 typedef enum _event_no
 {
-	EVENT_TIMER = 0,
-	EVENT_OTHER,
-	EVENT_MAXNUM
+	B_EVENT_TIMER = 0x01,
+	B_EVENT_OTHER = 0x02
 } e_event_no;
 
 typedef struct
@@ -50,7 +49,7 @@ int app2_main();
 int cmd_main();
 void timer_func_msg(void *arg);
 void timer_func_evt(void *arg);
-void cmd_shutdown(int argc, char **argv);
+int cmd_shutdown(int argc, char **argv);
 
 em_memmng_t memmng;
 em_sysmng_t sysmng;
@@ -78,7 +77,7 @@ void local_free(void *addr)
 	em_free(&memmng, addr);
 }
 
-void cmd_shutdown(int argc, char **argv)
+int cmd_shutdown(int argc, char **argv)
 {
 	printf("==== shutdown exec! ====\n");
 
@@ -94,7 +93,7 @@ void cmd_shutdown(int argc, char **argv)
 	}
 	b_shutdown = 1;
 
-	em_cmd_stop(&sysmng.cmdmng);
+	return em_cmd_stop(&sysmng.cmdmng);
 }
 
 int app1_init(void *arg)
@@ -132,7 +131,7 @@ void subscribe_callback1(em_mqbuf_t *mqbuf)
 	else
 		mid = *mqbuf->mid;
 
-	printf("subscribe_callback1: mid=%d, topic=%s, payload=%s\n",
+	em_printf(EM_LOG_INFO, "subscribe_callback1: mid=%d, topic=%s, payload=%s\n",
 		   mid, mqbuf->topic, mqbuf->payload);
 }
 
@@ -149,7 +148,7 @@ void subscribe_callback2(em_mqbuf_t *mqbuf)
 	else
 		mid = *mqbuf->mid;
 
-	printf("subscribe_callback2: mid=%d, topic=%s, payload=%s\n",
+	em_printf(EM_LOG_INFO, "subscribe_callback2: mid=%d, topic=%s, payload=%s\n",
 		   mid, mqbuf->topic, mqbuf->payload);
 
 	if (0 == strcmp(mqbuf->topic, "sys1/app2/api/location"))
@@ -160,7 +159,11 @@ void subscribe_callback2(em_mqbuf_t *mqbuf)
 	}
 	else if (0 == strcmp(mqbuf->topic, "sys1/app2/api/command"))
 	{
-		em_cmd_exec(&sysmng.cmdmng, mqbuf->payload);
+		int ret = em_cmd_exec_string(&sysmng.cmdmng, mqbuf->payload);
+		if (ret < 0)
+		{
+			em_printf(EM_LOG_ERROR, "command exec error: ret = %d\n", ret);
+		}
 	}
 }
 
@@ -174,7 +177,7 @@ int app1_main()
 	double lon = 139.6217787;
 	double lat = 35.4691287;
 	double lon_diff = 0;
-	double lat_diff = 0;
+	//double lat_diff = 0;
 
 	testmsg_t msg;
 	timer_arg_msg_t timerarg = {TASK_ID_APP1, 10};
@@ -193,7 +196,7 @@ int app1_main()
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_create error\n");
 	}
-	if (0 != em_mqttc_connect(&mc,10000))
+	if (0 != em_mqttc_connect(&mc, 10000))
 	{
 		em_printf(EM_LOG_ERROR, "em_mqttc_connect error\n");
 		em_timer_delete(&sysmng.tmrmng, timer_id);
@@ -248,8 +251,8 @@ int app2_main()
 	em_jelem_t *elems[2] = {&elem_id, &elem_name};
 	em_jobj_t property = {2, elems};
 
-	testmsg_t msg;
-	timer_arg_evt_t timerarg = {EVENT_TIMER};
+	//testmsg_t msg;
+	timer_arg_evt_t timerarg = {B_EVENT_TIMER};
 	uint timer_id;
 
 	em_timersetting_t timersetting = {2500, timer_func_evt, &timerarg};
@@ -280,7 +283,7 @@ int app2_main()
 
 	while (!b_shutdown2)
 	{
-		em_evtarray_wait(&sysmng.gevents, EVENT_TIMER, EM_NO_TIMEOUT);
+		em_eventflag_wait(&sysmng.ef, B_EVENT_TIMER, EM_NO_TIMEOUT, TRUE);
 		// em_printf(EM_LOG_INFO, " => [App2] event received\n");
 
 		app2_lon_diff += 0.001;
@@ -345,7 +348,7 @@ void timer_func_evt(void *arg)
 	timer_arg_evt_t *timer_arg = (timer_arg_evt_t *)arg;
 	// em_printf(EM_LOG_INFO, "timer_func_evt =>\n");
 
-	if (0 != em_evtarray_broadcast(&sysmng.gevents, timer_arg->event_no))
+	if (0 != em_eventflag_set(&sysmng.ef, timer_arg->event_no))
 	{
 		em_printf(EM_LOG_ERROR, "event broadcast failed\n");
 	}
@@ -368,7 +371,6 @@ int init()
 	sys_setting.mem_block_num = mem_block_num;
 	sys_setting.mem_alloc_num = max_alloc_num;
 	sys_setting.mem_static = NULL;
-	sys_setting.num_global_event = EVENT_MAXNUM;
 	sys_setting.alloc_func = &local_malloc;
 	sys_setting.free_func = &local_free;
 

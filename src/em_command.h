@@ -25,26 +25,31 @@ SOFTWARE.
 #define EM_COMMAND_H
 
 #include "em_gdatamng.h"
+#include "em_queue.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif /* __cplusplus */
-
 
 #define EM_CMD_NAME_LENGTH_MAX 16
 #define EM_CMD_WORD_NUM_MAX 10
 #define EM_CMD_WORD_LENGTH_MAX 128
+#define EM_CMD_BUF_LENGTH (EM_CMD_WORD_NUM_MAX * (EM_CMD_WORD_LENGTH_MAX + 1))
+#define EM_CMD_ASYNC_CMDNAME "async"
+#define EM_CMD_ASYNC_QUEUE_SIZE 4
 
 typedef struct tag_cmdsetting
 {
 	const char *cmd_name;
-	void (*cmd_func)(int, char **);
+	int (*cmd_func)(int, char **);
 } em_cmdsetting_t;
 
 typedef struct
 {
 	char is_running;
-	em_datamng_t cmdmng;
+	em_datamng_t dm_cmd;
+	em_queue_t qu_cmd;
 } em_cmdmng_t;
 
 int em_cmd_init(em_cmdmng_t *cm,
@@ -56,13 +61,19 @@ int em_cmd_destroy(em_cmdmng_t *cm);
 
 int em_cmd_start(em_cmdmng_t *cm);
 
+int em_cmd_start_bg(em_cmdmng_t *cm);
+
 int em_cmd_stop(em_cmdmng_t *cm);
 
 int em_cmd_register(em_cmdmng_t *cm,
-				  em_cmdsetting_t *cmdsetting);
+					em_cmdsetting_t *cmdsetting);
 
-int em_cmd_exec(em_cmdmng_t *cm,
-				char *input_buf);
+int em_cmd_exec_string(em_cmdmng_t *cm,
+					   char *cmd_str);
+
+int em_cmd_exec_args(em_cmdmng_t *cm,
+					 int argc,
+					 char **argv);
 
 #ifdef __cplusplus
 }

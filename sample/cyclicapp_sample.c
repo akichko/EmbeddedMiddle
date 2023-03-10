@@ -15,18 +15,19 @@ em_cmdmng_t cmdmng;
 
 int app1_main();
 void timer_func(void *arg);
-void shutdown(int argc, char **argv);
+int shutdown(int argc, char **argv);
 
 em_tasksetting_t tasksetting =
 	{"App1", TASK_ID_APP1, 0, 0, 5, app1_main};
 
 int b_shutdown = 0;
 
-void cmd_shutdown(int argc, char **argv)
+int cmd_shutdown(int argc, char **argv)
 {
 	printf("shutdown exec\n");
 	b_shutdown = 1;
 	em_cmd_stop(&cmdmng);
+	return 0;
 }
 
 typedef struct
