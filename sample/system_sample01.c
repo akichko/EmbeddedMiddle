@@ -41,8 +41,8 @@ int app1_init(void *arg);
 int app2_init(void *arg);
 int app1_signal(int arg);
 int app2_signal(int arg);
-int app1_main();
-int app2_main();
+int app1_main(void *arg);
+int app2_main(void *arg);
 static int cmd_main();
 static void timer_func_msg(void *arg);
 static void timer_func_evt(void *arg);
@@ -54,9 +54,9 @@ em_sysmng_t sysmng;
 em_datamng_t dm;
 
 em_systaskinfo_t systaskstg[] = {
-	{{"App1", TASK_ID_APP1, 0, 0, 16, app1_main}, &app1_init, &app1_signal},
-	{{"App2", TASK_ID_APP2, 0, 0, 16, app2_main}, &app2_init, &app2_signal},
-	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main}, NULL, NULL}};
+	{{"App1", TASK_ID_APP1, 0, 0, 16, app1_main, NULL}, &app1_init, &app1_signal},
+	{{"App2", TASK_ID_APP2, 0, 0, 16, app2_main, NULL}, &app2_init, &app2_signal},
+	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main, NULL}, NULL, NULL}};
 
 int b_shutdown1 = 0;
 int b_shutdown2 = 0;
@@ -146,7 +146,7 @@ int app2_signal(int arg)
 	return 0;
 }
 
-int app1_main()
+int app1_main(void *arg)
 {
 	testmsg_t msg;
 	timer_arg_msg_t timerarg = {TASK_ID_APP1, 10};
@@ -182,7 +182,7 @@ int app1_main()
 	return 0;
 }
 
-int app2_main()
+int app2_main(void *arg)
 {
 	testmsg_t msg;
 	timer_arg_evt_t timerarg = {B_EVENT_TIMER};

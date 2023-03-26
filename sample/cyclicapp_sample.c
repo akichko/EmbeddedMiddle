@@ -13,12 +13,12 @@ em_cmdmng_t cmdmng;
 
 #define TASK_ID_APP1 100
 
-int app1_main();
+int app1_main(void *arg);
 void timer_func(void *arg);
 int shutdown(int argc, char **argv);
 
 em_tasksetting_t tasksetting =
-	{"App1", TASK_ID_APP1, 0, 0, 5, app1_main};
+	{"App1", TASK_ID_APP1, 0, 0, 5, app1_main, "argstr"};
 
 int b_shutdown = 0;
 
@@ -36,7 +36,7 @@ typedef struct
 	int data;
 } testmsg_t;
 
-int app1_main()
+int app1_main(void *arg)
 {
 	testmsg_t msg;
 	em_timersetting_t timersetting = {1000, timer_func, NULL};

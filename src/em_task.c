@@ -37,14 +37,14 @@ static void *_em_thread_starter(void *thrdarg)
 
 	int *ret = (int *)arg->alloc_func(sizeof(int)); // Allocate a return value area.
 
-	int (*funcptr)() = arg->entry_func;
+	int (*funcptr)(void*) = arg->entry_func;
 
 	// 開始同期制御
 	//  em_printf(EM_LOG_INFO, "event wait start\n");
 	em_sem_wait(arg->sem_ptr, EM_WAIT);
 	// em_printf(EM_LOG_INFO, "event wait end\n");
 
-	*ret = (*funcptr)();
+	*ret = (*funcptr)(arg->entry_func_arg);
 
 	arg->free_func(thrdarg);
 
@@ -55,9 +55,9 @@ static char _em_threadid_comparator(void *dm_data, void *thread_id)
 {
 	if (*(ulong *)thread_id == ((_em_taskinfo_t *)dm_data)->thread_id)
 	{
-		return 1;
+		return TRUE;
 	}
-	return 0;
+	return FALSE;
 }
 
 int em_taskmng_init(em_taskmng_t *tm, int max_num_task, int msgdata_size,
@@ -115,6 +115,7 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 
 	thrdarg->sem_ptr = &tm->sem;
 	thrdarg->entry_func = tasksetting.entry_func;
+	thrdarg->entry_func_arg = tasksetting.entry_func_arg;
 	thrdarg->alloc_func = tm->alloc_func;
 	thrdarg->free_func = tm->free_func;
 

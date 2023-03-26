@@ -36,6 +36,7 @@ typedef struct
 typedef struct
 {
 	em_tasksetting_t task_stg;
+	char wait_shutdown;
 	int (*initialize_func)(void *);
 	int (*system_cbfunc)(int);
 } em_systaskinfo_t;
@@ -56,9 +57,9 @@ em_sysmng_t sysmng;
 em_datamng_t dm;
 
 em_systaskinfo_t systaskstg[] = {
-	{{"App1", TASK_ID_APP1, 0, 0, 256, app1_main, TRUE}, &app1_init, &app1_signal},
-	{{"App2", TASK_ID_APP2, 0, 0, 256, app2_main, TRUE}, &app2_init, &app2_signal},
-	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main, FALSE}, NULL, NULL}};
+	{{"App1", TASK_ID_APP1, 0, 0, 256, app1_main, NULL}, TRUE, &app1_init, &app1_signal},
+	{{"App2", TASK_ID_APP2, 0, 0, 256, app2_main, NULL}, TRUE, &app2_init, &app2_signal},
+	{{"Cmd", TASK_ID_CMD, 0, 0, 5, cmd_main, NULL}, FALSE, NULL, NULL}};
 
 int b_shutdown1 = 0;
 int b_shutdown2 = 0;
@@ -456,7 +457,7 @@ int main()
 
 	for (int i = 0; i < task_num; i++)
 	{
-		if (systaskstg[i].task_stg.wait_shutdown == FALSE)
+		if (systaskstg[i].wait_shutdown == FALSE)
 			continue;
 
 		if (0 != em_task_delete(&sysmng.tskmng, systaskstg[i].task_stg.task_id))

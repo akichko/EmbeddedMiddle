@@ -8,17 +8,17 @@
 
 #include "../src/em_task.h"
 
-int thread1(); // Thread Entry function 1
-int thread2(); // Thread Entry function 2
+int thread1(void *); // Thread Entry function 1
+int thread2(void *); // Thread Entry function 2
 
 #define TASK_ID_APP1 100
 #define TASK_ID_APP2 200
 #define TASK_ID_APP3 300
 
 em_tasksetting_t tasklist[] = {
-	{"App1", TASK_ID_APP1, 0, 0, 5, thread1},
-	{"App2", TASK_ID_APP2, 0, 0, 5, thread2},
-	{"App3", TASK_ID_APP3, 0, 0, 5, thread1}};
+	{"App1", TASK_ID_APP1, 0, 0, 5, thread1, "app1_str"},
+	{"App2", TASK_ID_APP2, 0, 0, 5, thread2, "app2_str"},
+	{"App3", TASK_ID_APP3, 0, 0, 5, thread1, "app3_str"}};
 
 em_taskmng_t tm;
 
@@ -57,9 +57,9 @@ int main(int argc, char **argv)
 
 
 // Thread entry function 1
-int thread1()
+int thread1(void *arg)
 {
-	printf("Thread1 started.\n");
+	printf("Thread1 started (%s).\n", (char*)arg);
 	int t = 3;
 	sleep(t);
 	printf("Thread1 (task id = %d) ended. %ds\n", em_get_task_id(&tm), t);
@@ -68,9 +68,9 @@ int thread1()
 }
 
 // Thread entry function 2
-int thread2()
+int thread2(void *arg)
 {
-	printf("Thread2 started.\n");
+	printf("Thread2 started (%s).\n", (char*)arg);
 
 	int t = 1;
 	sleep(t);

@@ -42,9 +42,8 @@ typedef struct
 	int priority;	   // 0-99. 1以上にするとroot権限必要
 	size_t stack_size; // 0: default size
 	int mqueue_size;
-	int (*entry_func)();
-	// int (*system_cbfunc)(int);
-	char wait_shutdown;
+	int (*entry_func)(void *);
+	void *entry_func_arg;
 } em_tasksetting_t;
 
 typedef struct
@@ -65,7 +64,8 @@ typedef struct
 
 typedef struct
 {
-	int (*entry_func)();
+	int (*entry_func)(void *);
+	void *entry_func_arg;
 	em_sem_t *sem_ptr;
 	void *(*alloc_func)(size_t);
 	void (*free_func)(void *);
