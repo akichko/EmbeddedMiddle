@@ -35,6 +35,8 @@ SOFTWARE.
 int em_socket_init(em_socket_t *sk, em_ethertype_t type,
 				   const char *local_ip, const uint16_t local_port, char is_reuseaddr)
 {
+	sk->is_connected = FALSE;
+
 	switch (type)
 	{
 	case EM_ETHER_TYPE_UDP:
@@ -84,10 +86,6 @@ void em_socket_close(em_socket_t *sk)
 	{
 		return;
 	}
-
-	// ソケットが接続中の場合、切断を試みる
-	//    shutdown(socket->sock, SHUT_RDWR);
-
 	close(sk->sock);
 }
 
@@ -114,7 +112,10 @@ int em_udp_tx_init(em_socket_t *sk, const char *local_ip, const uint16_t local_p
 	{
 		return -1;
 	}
-	em_socket_set_destination(sk, dest_ip, dest_port);
+	if (0 != em_socket_set_destination(sk, dest_ip, dest_port))
+	{
+		return -2;
+	}
 
 	return 0;
 }
@@ -244,6 +245,8 @@ int em_tcp_connect_client(em_socket_t *sk,
 		return -1;
 	}
 
+	sk->is_connected = TRUE;
+
 	return 0;
 }
 
@@ -284,14 +287,35 @@ int em_tcp_connect_server(em_socket_t *sk_listen, em_socket_t *sk_client,
 	em_printf(EM_LOG_INFO, "connection accepted on %s:%d\n", client_ip, client_port);
 
 	sk_client->sock = client_sock;
+	sk_client->is_connected = TRUE;
 	memcpy(&sk_client->local_addr, &sk_listen->local_addr, sizeof(sk_listen->local_addr));
 	memcpy(&sk_client->remote_addr, &client_addr, sizeof(client_addr));
 
 	return 0;
 }
 
+int em_tcp_disconnect(em_socket_t *sk)
+{
+	if (sk == NULL)
+	{
+		return -1;
+	}
+
+	// ソケットが接続中の場合、切断を試みる
+	shutdown(sk->sock, SHUT_RDWR);
+
+	sk->is_connected = FALSE;
+	em_socket_close(sk);
+	return 0;
+}
+
 int em_tcp_send(em_socket_t *sk, unsigned char *send_buf, int size, int timeout_ms)
 {
+	if (sk->is_connected == FALSE)
+	{
+		return -1;
+	}
+
 	if (timeout_ms != EM_NO_TIMEOUT)
 	{
 		fd_set fds;
@@ -318,6 +342,11 @@ int em_tcp_send(em_socket_t *sk, unsigned char *send_buf, int size, int timeout_
 
 int em_tcp_recv(em_socket_t *sk, unsigned char *recv_buf, int size, int timeout_ms)
 {
+	if (sk->is_connected == FALSE)
+	{
+		return -1;
+	}
+
 	if (timeout_ms != EM_NO_TIMEOUT)
 	{
 		fd_set fds;

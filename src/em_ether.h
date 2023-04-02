@@ -54,6 +54,7 @@ typedef struct
 	int socket_type;
 	struct sockaddr_in local_addr;
 	struct sockaddr_in remote_addr;
+	char is_connected;
 } em_socket_t;
 
 int em_socket_init(em_socket_t *sk,
@@ -114,6 +115,8 @@ int em_tcp_connect_server(em_socket_t *sk_listen,
 						  const ushort local_port,
 						  char is_reuseaddr,
 						  int timeout_ms);
+
+int em_tcp_disconnect(em_socket_t *sk);
 
 int em_tcp_send(em_socket_t *sk,
 				unsigned char *send_buf,
