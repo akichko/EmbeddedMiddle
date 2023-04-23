@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     {
         if (0 != em_task_create(&tm, tasklist[i]))
         {
-            printf("em_task_create error [%d]\n", i);
+            printf("em_task_create error (id=%d)\n", tasklist[i].task_id);
             exit(1);
         }
     }

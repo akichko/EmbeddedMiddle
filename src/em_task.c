@@ -37,7 +37,7 @@ static void *_em_thread_starter(void *thrdarg)
 
 	int *ret = (int *)arg->alloc_func(sizeof(int)); // Allocate a return value area.
 
-	int (*funcptr)(void*) = arg->entry_func;
+	int (*funcptr)(void *) = arg->entry_func;
 
 	// 開始同期制御
 	//  em_printf(EM_LOG_INFO, "event wait start\n");
@@ -108,6 +108,7 @@ int em_task_create_msgqueue(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 
 int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 {
+	int ret;
 	pthread_attr_t tattr;
 	pthread_t thread_id;
 	struct sched_param scheprm;
@@ -155,9 +156,16 @@ int em_task_start_task(em_taskmng_t *tm, em_tasksetting_t tasksetting)
 		em_printf(EM_LOG_ERROR, "error: pthread_attr_setschedparam\n");
 		return -1;
 	}
-	if (0 != pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)thrdarg))
+	ret = pthread_create(&thread_id, &tattr, _em_thread_starter, (void *)thrdarg);
+	if (ret != 0)
 	{
-		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]\n", tasksetting.task_id);
+		em_printf(EM_LOG_ERROR, "pthread_create error [TaskId=%d]: ret=%d(%s)\n", tasksetting.task_id, ret, strerror(ret));
+		int policy;
+		struct sched_param param;
+		pthread_getschedparam(pthread_self(), &policy, &param);
+		int max_priority = sched_get_priority_max(policy);
+		int min_priority = sched_get_priority_min(policy);
+		em_printf(EM_LOG_ERROR, "Possible priority range for current thread: [%d, %d]\n", min_priority, max_priority);
 		return -1;
 	}
 	em_printf(EM_LOG_TOP, "TaskId %d (%s) created. threadId=%ld\n", tasksetting.task_id, tasksetting.task_name, thread_id);
@@ -299,7 +307,7 @@ int em_msg_recv(em_taskmng_t *tm, void *msgdata, int timeout_ms)
 	return 0;
 }
 
-//メッセージ数を返却
+// メッセージ数を返却
 int em_msg_recv_num_check(em_taskmng_t *tm)
 {
 	int taskid = em_get_task_id(tm);
